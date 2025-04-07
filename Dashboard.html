@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FinAi - Dashboard</title>
+    <link rel="stylesheet" href="./css/Dashboard.css">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+</head>
+<body>
+    <div class="dashboard-container">
+        <aside class="sidebar">
+            <div class="sidebar-logo">
+                </div>
+            <nav class="sidebar-nav">
+                <button class="nav-button active" id="btnProfile">
+                    <i class="fas fa-user"></i>
+                    <span>Perfil</span>
+                </button>
+                <button class="nav-button" id="btnIncome">
+                    <i class="fas fa-plus"></i>
+                    <span>Income</span>
+                </button>
+                <button class="nav-button" id="btnExpense">
+                    <i class="fas fa-minus"></i> <span>Expense</span>
+                </button>
+                 <button class="nav-button" id="btnTravel">
+                    <i class="fas fa-car"></i>
+                    <span>Travel</span>
+                </button>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <header class="main-header">
+                <div class="header-title">
+                    <span class="app-name">FinAi</span>
+                    <span class="page-title">Dashboard</span>
+                </div>
+                <button class="minimize-button" aria-label="Minimize">
+                    <i class="fas fa-window-minimize"></i>
+                </button>
+                <button id="logoutButton">Cerrar Sesión</button>
+            </header>
+
+            <section class="dashboard-grid">
+                <div class="panel summary-panel">
+                    <h3>Monthly Summary</h3>
+                    <p class="summary-amount">$5,200</p>
+                </div>
+
+                <div class="panel category-expenses-panel">
+                    <h3>Expenses by Category</h3>
+                    <div class="chart-container">
+                        <div class="donut-chart expenses-chart"></div>
+                        <ul class="chart-legend">
+                            <li><span class="legend-color food"></span> Food</li>
+                            <li><span class="legend-color shopping"></span> Shopping</li>
+                            <li><span class="legend-color housing"></span> Housing</li>
+                            <li><span class="legend-color transport"></span> Transport</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="panel allocation-panel">
+                    <h3>Capital Allocation</h3>
+                     <div class="chart-container">
+                         <div class="donut-chart allocation-chart"></div>
+                         </div>
+                </div>
+
+                <div class="panel calendar-panel">
+                    <div class="calendar-header">
+                        <h3>Calendar</h3>
+                        <span>April</span>
+                    </div>
+                    <div class="calendar-grid">
+                        <div class="day-header">S</div>
+                        <div class="day-header">M</div>
+                        <div class="day-header">T</div>
+                        <div class="day-header">W</div>
+                        <div class="day-header">T</div>
+                        <div class="day-header">F</div>
+                        <div class="day-header">S</div>
+                        <div class="day empty"></div> <div class="day">1</div>
+                        <div class="day">2</div>
+                        <div class="day">3</div>
+                        <div class="day">4</div>
+                        <div class="day current-day">5</div> <div class="day">6</div>
+                        <div class="day">7</div>
+                        <div class="day">8</div>
+                        <div class="day">9</div>
+                        <div class="day">10</div>
+                        <div class="day">11</div>
+                        <div class="day">12</div>
+                        <div class="day">13</div>
+                        <div class="day">14</div>
+                        <div class="day">15</div>
+                        <div class="day">16</div>
+                        <div class="day">17</div>
+                        <div class="day">18</div>
+                        <div class="day">19</div>
+                        <div class="day">20</div>
+                        <div class="day">21</div>
+                        <div class="day">22</div>
+                        <div class="day">23</div>
+                        <div class="day">24</div>
+                        <div class="day event"><i class="fas fa-shopping-bag"></i> 25</div>
+                        <div class="day">26</div>
+                        <div class="day event"><i class="fas fa-home"></i> 27</div>
+                        <div class="day">28</div>
+                        <div class="day">29</div>
+                        <div class="day">30</div>
+                         <div class="day empty"></div>
+                         <div class="day empty"></div>
+                         <div class="day empty"></div>
+                         <div class="day empty"></div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./Js/supabase-init.js"></script>
+    <script src="./Js/auth-listener.js"></script>
+    <script src="./Js/Dashboard.js"></script>
+</body>
+</html>

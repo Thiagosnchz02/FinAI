@@ -1,0 +1,441 @@
+/* --- Reset básico y Variables de Color (ajusta según prefieras) --- */
+:root {
+    --primary-blue: #6BB9F0; /* Azul principal frame/botones */
+    --light-blue-bg: #E1F5FE; /* Fondo claro área principal */
+    --panel-bg: #FFF3E0; /* Fondo paneles (crema) */
+    --text-dark: #333;
+    --text-light: #fff;
+    --accent-orange: #FFA726;
+    --accent-green: #81C784;
+    --accent-red: #E57373;
+    --accent-blue-travel: #64B5F6;
+    --shadow-color: rgba(0, 0, 0, 0.15);
+    --font-family: 'Nunito', sans-serif;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: var(--font-family);
+    background-color: #ADD8E6; /* Fondo general fuera del dashboard */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px; /* Espacio alrededor del dashboard */
+}
+
+/* --- Contenedor Principal del Dashboard --- */
+.dashboard-container {
+    display: flex;
+    width: 100%;
+    max-width: 1200px; /* Ancho máximo del dashboard */
+    min-height: 80vh; /* Altura mínima */
+    background-color: var(--primary-blue); /* Color del marco */
+    border-radius: 30px; /* Bordes muy redondeados */
+    box-shadow: 0 15px 35px var(--shadow-color);
+    overflow: hidden; /* Para que los bordes redondeados afecten a los hijos */
+}
+
+/* --- Sidebar (Barra Lateral Izquierda) --- */
+.sidebar {
+    background-color: var(--primary-blue); /* Mismo azul que el marco */
+    padding: 25px 15px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 90px; /* Ancho fijo de la sidebar */
+    border-right: 3px solid rgba(255, 255, 255, 0.2); /* Línea divisoria sutil */
+}
+
+.sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 20px; /* Espacio entre botones */
+    margin-top: 30px;
+}
+
+.nav-button {
+    background-color: var(--accent-orange); /* Color base, será sobrescrito */
+    color: var(--text-light);
+    border: none;
+    border-radius: 15px; /* Bordes redondeados */
+    width: 60px;
+    height: 60px;
+    display: flex;
+    flex-direction: column; /* Icono arriba, texto abajo (oculto por defecto) */
+    justify-content: center;
+    align-items: center;
+    font-size: 1.4rem; /* Tamaño icono */
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: inset 0 -3px 5px rgba(0,0,0,0.1), 0 3px 5px rgba(0,0,0,0.2);
+    position: relative; /* Para el estado activo */
+}
+.nav-button span { /* Texto oculto por defecto, para tooltips o layout futuro */
+    display: none;
+    font-size: 0.7rem;
+}
+
+/* Colores específicos botones sidebar */
+#btnProfile { background-color: var(--accent-orange); }
+#btnIncome { background-color: var(--accent-green); }
+#btnExpense { background-color: var(--accent-red); }
+#btnTravel { background-color: var(--accent-blue-travel); }
+
+.nav-button:hover {
+    transform: translateY(-3px);
+    box-shadow: inset 0 -2px 4px rgba(0,0,0,0.1), 0 6px 10px rgba(0,0,0,0.25);
+}
+
+.nav-button.active {
+    box-shadow: inset 0 3px 5px rgba(0,0,0,0.2); /* Efecto presionado */
+    transform: translateY(1px);
+}
+.nav-button.active::after { /* Indicador visual de activo */
+    content: '';
+    position: absolute;
+    right: -17px; /* Ajusta para que quede justo fuera del botón, en el borde */
+    top: 50%;
+    transform: translateY(-50%);
+    width: 6px;
+    height: 30px;
+    background-color: var(--text-light);
+    border-radius: 3px;
+}
+
+
+/* --- Área Principal del Contenido --- */
+.main-content {
+    flex-grow: 1; /* Ocupa el espacio restante */
+    background-color: var(--light-blue-bg); /* Fondo azul muy claro */
+    padding: 20px 25px;
+    display: flex;
+    flex-direction: column;
+}
+
+/* --- Cabecera Principal --- */
+.main-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
+.header-title .app-name {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: var(--text-light);
+    margin-right: 10px;
+    text-shadow: 1px 1px 3px rgba(0,0,0,0.1);
+}
+.header-title .page-title {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: #555; /* Color más oscuro para "Dashboard" */
+}
+
+.minimize-button {
+    background: #f8a5a5; /* Rojo claro */
+    border: none;
+    color: var(--text-light);
+    width: 25px;
+    height: 25px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    font-size: 0.8rem;
+    padding-bottom: 5px; /* Ajuste para centrar el icono de minimizar */
+}
+.minimize-button:hover {
+    background-color: #e57373; /* Rojo más oscuro */
+}
+
+
+/* --- Grid del Dashboard --- */
+.dashboard-grid {
+    flex-grow: 1;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); /* 2 columnas */
+    grid-template-rows: auto auto; /* Filas automáticas */
+    gap: 20px; /* Espacio entre paneles */
+}
+
+/* --- Paneles Individuales --- */
+.panel {
+    background-color: var(--panel-bg);
+    border-radius: 20px;
+    padding: 20px;
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.08);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.panel:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 20px rgba(0, 0, 0, 0.12);
+}
+
+.panel h3 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-dark);
+    margin-bottom: 15px;
+}
+
+/* Panel Resumen */
+.summary-panel .summary-amount {
+    font-size: 2.8rem;
+    font-weight: 800;
+    color: #0D47A1; /* Azul oscuro */
+    text-align: center;
+    margin-top: 10px;
+}
+
+/* Panel Gastos y Asignación (Charts) */
+.chart-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-around; /* Espacio entre gráfico y leyenda */
+    margin-top: 10px;
+    flex-wrap: wrap; /* Para pantallas pequeñas */
+    gap: 15px;
+}
+
+.donut-chart {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    position: relative; /* Para el pseudo-elemento del agujero */
+}
+/* Agujero del Donut */
+.donut-chart::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 60%; /* Tamaño del agujero */
+    height: 60%;
+    background-color: var(--panel-bg); /* Mismo color que el fondo del panel */
+    border-radius: 50%;
+    box-shadow: 0 0 5px rgba(0,0,0,0.1);
+}
+
+/* Simulación de Gráfico Donut con conic-gradient */
+/* Colores basados en la imagen */
+.expenses-chart {
+    background: conic-gradient(
+        #4FC3F7 0% 25%,    /* Food (Light Blue) */
+        #FFB74D 25% 55%,   /* Shopping (Orange) */
+        #AED581 55% 80%,   /* Housing (Light Green) */
+        #E57373 80% 100%   /* Transport (Light Red) */
+    );
+}
+.allocation-chart {
+     background: conic-gradient(
+        #29B6F6 0% 40%,    /* Azul más brillante */
+        #FFA726 40% 65%,   /* Naranja */
+        #9CCC65 65% 85%,   /* Verde */
+        #EF5350 85% 100%   /* Rojo */
+    );
+}
+
+/* Leyenda */
+.chart-legend {
+    list-style: none;
+    padding: 0;
+    font-size: 0.9rem;
+}
+.chart-legend li {
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+}
+.legend-color {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin-right: 8px;
+}
+.legend-color.food { background-color: #4FC3F7; }
+.legend-color.shopping { background-color: #FFB74D; }
+.legend-color.housing { background-color: #AED581; }
+.legend-color.transport { background-color: #E57373; }
+
+
+/* Panel Calendario */
+.calendar-panel {
+    padding-bottom: 10px; /* Menos padding abajo */
+}
+.calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+.calendar-header span {
+    font-weight: 700;
+    color: #777;
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr); /* 7 columnas para los días */
+    gap: 5px;
+    text-align: center;
+}
+.day-header {
+    font-weight: 700;
+    font-size: 0.8rem;
+    color: #999;
+    margin-bottom: 8px;
+}
+.day {
+    font-size: 0.9rem;
+    padding: 5px 0;
+    border-radius: 8px;
+    cursor: default;
+    position: relative;
+}
+.day:not(.empty):hover {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+.day.empty {
+    visibility: hidden;
+}
+.day.current-day {
+    background-color: var(--accent-orange);
+    color: var(--text-light);
+    font-weight: 700;
+}
+.day.event {
+    font-weight: 700;
+}
+/* Iconos dentro del calendario */
+.day.event i {
+    font-size: 0.8rem;
+    color: var(--primary-blue); /* Iconos en azul */
+    margin-right: 3px; /* Espacio antes del número */
+    vertical-align: middle; /* Alinear icono con número */
+}
+.day.event .fa-shopping-bag { color: #FFB74D; } /* Icono tienda naranja */
+.day.event .fa-home { color: #AED581; } /* Icono casa verde */
+
+
+/* --- Responsividad --- */
+@media (max-width: 1024px) {
+    .dashboard-grid {
+        grid-template-columns: 1fr 1fr; /* Mantiene 2 columnas un poco más */
+        grid-template-rows: auto; /* Dejar que las filas se ajusten */
+    }
+    .summary-panel .summary-amount {
+        font-size: 2.4rem;
+    }
+}
+
+@media (max-width: 768px) {
+    body {
+        padding: 0; /* Sin padding en pantallas muy pequeñas */
+        align-items: stretch; /* Permitir que el dashboard ocupe toda la altura */
+    }
+    .dashboard-container {
+        flex-direction: column; /* Sidebar arriba del contenido */
+        border-radius: 0; /* Sin bordes redondeados en móvil */
+        min-height: 100vh;
+        max-width: 100%;
+    }
+    .sidebar {
+        width: 100%; /* Sidebar ocupa todo el ancho */
+        flex-direction: row; /* Botones en fila */
+        justify-content: space-around; /* Espaciar botones */
+        padding: 10px 15px;
+        height: 70px; /* Altura fija */
+        border-right: none;
+        border-bottom: 3px solid rgba(255, 255, 255, 0.2);
+    }
+    .sidebar-nav {
+        flex-direction: row;
+        margin-top: 0;
+        gap: 10px; /* Menos espacio entre botones */
+        flex-grow: 1; /* Ocupar espacio */
+        justify-content: space-evenly;
+    }
+    .nav-button {
+        width: 50px;
+        height: 50px;
+        font-size: 1.2rem;
+    }
+    .nav-button.active::after { /* Ocultar indicador lateral en móvil */
+        display: none;
+    }
+     .nav-button.active { /* Podríamos añadir un borde inferior o cambio de fondo */
+        background-color: rgba(255,255,255, 0.2);
+        box-shadow: inset 0 2px 4px rgba(0,0,0,0.15);
+    }
+
+
+    .main-content {
+        padding: 15px;
+    }
+    .main-header {
+        margin-bottom: 20px;
+    }
+     .header-title .app-name { font-size: 1.5rem; }
+     .header-title .page-title { font-size: 1.3rem; }
+
+
+    .dashboard-grid {
+        grid-template-columns: 1fr; /* 1 columna en móvil */
+    }
+
+    .chart-container {
+        flex-direction: column; /* Gráfico encima de leyenda */
+        align-items: center; /* Centrar gráfico */
+    }
+    .donut-chart {
+        width: 100px;
+        height: 100px;
+    }
+    .chart-legend {
+        margin-top: 15px;
+        text-align: center; /* Centrar texto leyenda */
+    }
+    .legend-color {
+        margin-right: 5px; /* Menos margen */
+    }
+}
+
+@media (max-width: 480px) {
+    .panel {
+        padding: 15px;
+        border-radius: 15px;
+    }
+    .summary-panel .summary-amount {
+        font-size: 2rem;
+    }
+    .header-title .app-name { font-size: 1.3rem; }
+    .header-title .page-title { font-size: 1.1rem; }
+
+    .calendar-grid {
+        gap: 3px;
+    }
+    .day {
+        font-size: 0.8rem;
+        padding: 3px 0;
+    }
+    .day.event i {
+        font-size: 0.7rem;
+    }
+    .nav-button {
+        width: 45px;
+        height: 45px;
+        font-size: 1rem;
+    }
+}

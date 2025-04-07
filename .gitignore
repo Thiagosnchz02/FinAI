@@ -1,0 +1,19 @@
+# Ignorar archivos del sistema operativo
+.DS_Store
+Thumbs.db
+
+# Ignorar archivos de configuración de VS Code (opcional)
+.vscode/
+
+# Ignorar dependencias de Node (si usaras Node.js/npm más adelante)
+# node_modules/
+
+# Ignorar archivos de entorno con claves (si los usaras)
+# .env
+# *.env
+# .env.*
+
+# Ignorar otros archivos temporales o de caché
+*.log
+*.temp
+*.tmp

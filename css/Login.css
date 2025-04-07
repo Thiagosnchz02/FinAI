@@ -1,0 +1,261 @@
+/* Reset básico y configuración general */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Nunito', sans-serif;
+    background-color: #FFDAB9; /* Color durazno/naranja claro de fondo */
+    background: linear-gradient(135deg, #FFDAB9 60%, #ADD8E6 100%); /* Gradiente suave como en la imagen */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+    color: #333;
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    max-width: 800px; /* Ancho máximo para los paneles juntos */
+}
+
+.main-title {
+    font-size: 4rem;
+    font-weight: 800;
+    color: #ffffff;
+    margin-bottom: 30px;
+    text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.panels-container {
+    display: flex;
+    justify-content: center;
+    gap: 30px; /* Espacio entre paneles */
+    width: 100%;
+    flex-wrap: wrap; /* Para que se apilen en pantallas pequeñas */
+}
+
+.panel {
+    background-color: #fff;
+    padding: 35px 30px;
+    border-radius: 25px; /* Bordes bien redondeados */
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    width: 100%;
+    max-width: 350px; /* Ancho de cada panel */
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.panel:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+}
+
+/* Estilos específicos de paneles */
+.sign-in-panel {
+    background-color: #6BB9F0; /* Azul claro */
+    color: #fff;
+}
+
+.sign-up-panel {
+    background-color: #FFF3E0; /* Crema / Naranja muy pálido */
+    color: #555;
+    position: relative; /* Para posicionar el robot */
+}
+
+.panel h2 {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 25px;
+    text-align: center;
+}
+
+.sign-in-panel h2 {
+    color: #fff;
+}
+
+.sign-up-panel h2 {
+    color: #FF9800; /* Naranja */
+}
+
+
+/* Formularios y campos */
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 18px; /* Espacio entre elementos del form */
+}
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.input-group label {
+    font-size: 0.9rem;
+    font-weight: 700;
+    margin-bottom: 5px;
+    color: inherit; /* Hereda color del panel */
+    padding-left: 5px;
+}
+
+.sign-in-panel .input-group label {
+    color: #f0f0f0;
+}
+
+.sign-up-panel .input-group label {
+     color: #777;
+}
+
+
+input[type="email"],
+input[type="password"],
+input[type="text"] {
+    padding: 12px 15px;
+    border: 1px solid #ddd;
+    border-radius: 15px; /* Bordes redondeados para inputs */
+    font-size: 1rem;
+    font-family: 'Nunito', sans-serif;
+    background-color: #fff;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+input[type="email"]:focus,
+input[type="password"]:focus,
+input[type="text"]:focus {
+    outline: none;
+    border-color: #FF9800; /* Naranja al enfocar */
+    box-shadow: 0 0 0 3px rgba(255, 152, 0, 0.2);
+}
+
+/* Botones */
+.btn {
+    padding: 12px 15px;
+    border: none;
+    border-radius: 15px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    font-family: 'Nunito', sans-serif;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.btn-primary { /* Botón Sign In */
+    background-color: #FFA726; /* Naranja */
+    color: #fff;
+    margin-top: 10px; /* Espacio extra arriba */
+}
+.btn-primary:hover {
+    background-color: #FB8C00; /* Naranja más oscuro */
+}
+
+.btn-secondary { /* Botón Sign Up */
+    background-color: #FFA726; /* Naranja */
+    color: #fff;
+    width: 100%; /* Ocupa el ancho disponible en su contenedor */
+}
+.btn-secondary:hover {
+    background-color: #FB8C00; /* Naranja más oscuro */
+}
+
+.btn-google {
+    background-color: #ffffff;
+    color: #555;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    border: 1px solid #ddd;
+}
+.btn-google:hover {
+    background-color: #f7f7f7;
+}
+.btn-google i {
+    color: #DB4437; /* Color de Google */
+}
+
+
+/* Enlace "Forgot Password" */
+.forgot-password {
+    color: #f0f0f0;
+    text-decoration: none;
+    font-size: 0.9rem;
+    text-align: center;
+    margin-top: 10px;
+    transition: color 0.3s ease;
+}
+
+.forgot-password:hover {
+    color: #ffffff;
+    text-decoration: underline;
+}
+
+
+/* Robot */
+.robot-container {
+    display: flex;
+    align-items: flex-end; /* Alinea el botón abajo */
+    gap: 15px; /* Espacio entre robot y botón */
+    margin-top: 15px; /* Espacio sobre el contenedor del robot */
+}
+
+.robot-image {
+    width: 80px; /* Tamaño del robot */
+    height: auto;
+    margin-bottom: -10px; /* Ajuste fino para que toque el borde inferior visualmente */
+}
+
+
+/* Responsividad */
+@media (max-width: 768px) {
+    .panels-container {
+        flex-direction: column;
+        align-items: center;
+        gap: 20px;
+    }
+    .panel {
+        max-width: 400px; /* Permitir que los paneles sean un poco más anchos en móvil */
+    }
+    .main-title {
+        font-size: 3rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .main-title {
+        font-size: 2.5rem;
+    }
+    .panel {
+        padding: 25px 20px;
+        border-radius: 20px;
+    }
+    .panel h2 {
+        font-size: 1.8rem;
+    }
+    .btn {
+        font-size: 1rem;
+        padding: 10px 12px;
+    }
+    .robot-image {
+        width: 60px;
+    }
+}
