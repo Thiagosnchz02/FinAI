@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FinAi - Mi Perfil</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/19.5.6/css/intlTelInput.css"/>
+
+    <link rel="stylesheet" href="/css/Profile.css">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <style>
+        /* Asegura que el contenedor del input de teléfono se muestre correctamente */
+        .iti { display: block; width: 100%; }
+        /* Puedes ajustar estilos aquí para que se parezca más a tus otros inputs si es necesario */
+        .iti__flag-container { border-radius: 15px 0 0 15px !important; }
+        .iti input[type="tel"] { border-radius: 0 15px 15px 0 !important; }
+    </style>
+</head>
+<body>
+    <div class="page-container">
+
+        <div class="profile-header">
+            <button id="backButton" class="btn-icon" aria-label="Volver"><i class="fas fa-arrow-left"></i></button>
+            <div class="app-branding">
+                 <img src="https://finai.es/images/Logo_robot_FinAI_sf.png" alt="FinAi Logo" class="header-logo">
+                 </div>
+            <button id="settingsButton" class="btn-icon" aria-label="Configuración"><i class="fas fa-cog"></i></button>
+        </div>
+
+        <div class="profile-container">
+            <h2 class="profile-title">Mi Perfil</h2>
+            <form id="profileForm">
+
+                <div class="profile-main-info">
+                    <div class="avatar-section">
+                        <img id="profileAvatar" src="https://finai.es/images/avatar_predeterminado.png" alt="Avatar de Usuario" class="profile-avatar">
+                        <input type="file" id="avatarUpload" accept="image/*" style="display: none;">
+                        <button type="button" id="changeAvatarButton" class="btn-change-avatar" style="display: none;">
+                            <i class="fas fa-camera"></i> Cambiar
+                        </button>
+                    </div>
+                    <div class="info-fields">
+                        <div class="input-group">
+                            <label for="profileName">Nombre y Apellidos</label>
+                            <input type="text" id="profileName" name="fullName" readonly>
+                        </div>
+                        <div class="input-group">
+                            <label for="profileEmail">Correo Electrónico</label>
+                            <input type="email" id="profileEmail" name="email" readonly disabled>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label for="profilePhone">Número de Teléfono</label>
+                    <input type="tel" id="profilePhone" name="phone" readonly>
+                 </div>
+
+                 <div class="input-group">
+                    <label>Contraseña</label>
+                    <div class="password-display">
+                        <span>********</span>
+                        <button type="button" id="changePasswordButton" class="btn-link">Cambiar Contraseña</button>
+                    </div>
+                 </div>
+
+                <div class="form-actions">
+                    <button type="button" id="editSaveButton" class="btn btn-primary">
+                       <i class="fas fa-pencil-alt"></i> Editar Perfil
+                    </button>
+                     </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/ruta/a/supabase-init.js"></script>
+    <script src="/ruta/a/auth-listener.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/19.5.6/js/intlTelInput.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/19.5.6/js/utils.js"></script>
+
+    <script src="/Js/Profile.js"></script>
+</body>
+</html>

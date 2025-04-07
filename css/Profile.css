@@ -1,0 +1,392 @@
+/* profile.css */
+/* Asegúrate de importar Nunito si no lo haces globalmente */
+/* @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800&display=swap'); */
+
+body {
+    font-family: 'Nunito', sans-serif;
+    background-color: #a0d2eb; /* Fondo azul cielo */
+    margin: 0;
+    padding: 0; /* Quitamos padding general del body */
+}
+
+.page-container {
+    max-width: 700px; /* Ancho máximo para el contenido */
+    margin: 0 auto; /* Centrar contenedor de página */
+    padding: 20px; /* Espaciado interior */
+    box-sizing: border-box;
+}
+
+.profile-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding: 0 10px; /* Padding horizontal ligero */
+}
+
+.app-branding {
+    text-align: center; /* Centra el logo/título */
+}
+
+.header-logo {
+    height: 100px; /* Ajusta altura del logo en cabecera */
+    width: auto;
+}
+
+.app-title { /* Estilo si usas texto en vez de logo */
+    margin: 0;
+    font-size: 1.8em;
+    font-weight: 800;
+    color: #334; /* Un color oscuro pero no negro puro */
+}
+
+.profile-container {
+    background-color: #ffffff;
+    /*background: linear-gradient(to bottom, #ffffff, #F9FAFF);*/
+    padding: 30px 40px;
+    border-radius: 25px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    box-sizing: border-box;
+}
+
+.profile-title {
+    text-align: center;
+    font-size: 1.6em;
+    font-weight: 800;
+    color: #8a82d5; /* Título en morado */
+    margin-top: 0;
+    margin-bottom: 30px;
+}
+
+#profileForm {
+    width: 100%;
+}
+
+/* Sección principal con Flexbox */
+.profile-main-info {
+    display: flex;
+    align-items: flex-start; /* Alinea arriba */
+    gap: 30px; /* Espacio entre avatar y campos */
+    margin-bottom: 20px;
+    flex-wrap: wrap; /* Permitir que se coloque debajo en pantallas pequeñas */
+}
+
+.avatar-section {
+    flex-shrink: 0; /* Evita que el contenedor del avatar se encoja */
+    text-align: center;
+    position: relative; /* Para posicionar el botón de cambiar */
+    width: 120px; /* Ancho fijo para el contenedor del avatar */
+}
+
+/* Asegúrate de que los inputs tengan transition */
+.input-group input[type="text"],
+.input-group input[type="email"],
+.input-group input[type="tel"] {
+    /* ... tus estilos existentes ... */
+    width: 100%;
+    padding: 14px 18px;
+    border: 1px solid #d0d0d0;
+    border-radius: 15px;
+    font-size: 1em;
+    box-sizing: border-box;
+    background-color: #f8f9fa;
+    color: #333;
+    /* AÑADE ESTA LÍNEA para transiciones suaves */
+    transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Estilo cuando SÍ se puede editar y tiene foco */
+.input-group input:not([readonly]):not([disabled]):focus {
+    background-color: #ffffff;
+    border-color: #8a82d5;
+    /* Sombra suave al enfocar */
+    box-shadow: 0 0 0 3px rgba(138, 130, 213, 0.25);
+    outline: none;
+}
+
+.profile-avatar {
+    width: 120px;
+    height: 120px;
+    /* Cambia 50% por un valor fijo para esquinas redondeadas */
+    border-radius: 15px;
+    object-fit: cover; /* Importante para que la imagen no se deforme */
+    border: 5px solid #e8efff;
+    background-color: #f0f0f0;
+    margin-bottom: 10px;
+    display: inline-block;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.btn-change-avatar {
+    background-color: #8a82d5; /* Botón morado */
+    color: white;
+    border: none;
+    border-radius: 50%; /* Botón redondo */
+    width: 35px;
+    height: 35px;
+    font-size: 1em;
+    cursor: pointer;
+    position: absolute;
+    bottom: 10px; /* Ajusta */
+    right: 5px; /* Ajusta */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    transition: background-color 0.2s ease;
+}
+.btn-change-avatar:hover {
+    background-color: #7068b8;
+}
+
+.btn {
+    /* ... tus estilos existentes ... */
+    padding: 12px 30px;
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    font-weight: 800;
+    font-size: 1em;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    /* Ajusta la transition para incluir transform */
+    transition: background-color 0.2s ease, transform 0.15s ease;
+}
+.btn:hover {
+    /* Añade un ligero escalado al pasar el ratón */
+    transform: scale(1.05);
+}
+.btn:active {
+    /* Mantenemos el efecto al hacer clic */
+    transform: scale(0.98);
+}
+
+/* Lo mismo para el botón de cambiar avatar */
+.btn-change-avatar {
+     /* ... tus estilos existentes ... */
+     transition: background-color 0.2s ease, transform 0.15s ease; /* Añade transition */
+}
+.btn-change-avatar:hover {
+    background-color: #7068b8;
+    transform: scale(1.1); /* Un poco más de zoom para este botón pequeño */
+}
+.btn-change-avatar:active {
+     transform: scale(0.95);
+}
+
+/* Y para los botones de icono de la cabecera */
+.btn-icon {
+     /* ... tus estilos existentes ... */
+     transition: color 0.2s ease, transform 0.15s ease; /* Añade transition */
+}
+.btn-icon:hover {
+    color: #8a82d5;
+    transform: scale(1.1);
+}
+.btn-icon:active {
+     transform: scale(0.95);
+}
+
+
+.info-fields {
+    flex-grow: 1; /* Ocupa el espacio restante */
+    min-width: 200px; /* Ancho mínimo antes de envolver */
+}
+
+.input-group {
+    margin-bottom: 20px;
+}
+
+.input-group label {
+    display: block;
+    margin-bottom: 8px;
+    color: #8a82d5;
+    font-weight: 700;
+    font-size: 0.9em;
+}
+
+.input-group input[type="text"],
+.input-group input[type="email"],
+.input-group input[type="tel"] {
+    width: 100%;
+    padding: 14px 18px; /* Más padding */
+    border: 1px solid #d0d0d0;
+    border-radius: 15px;
+    font-size: 1em;
+    box-sizing: border-box;
+    background-color: #f8f9fa; /* Gris muy claro */
+    color: #333;
+    transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Estilo cuando SÍ se puede editar */
+.input-group input:not([readonly]):not([disabled]) {
+    background-color: #ffffff;
+    border-color: #8a82d5; /* Borde morado al editar */
+    box-shadow: 0 0 0 2px rgba(138, 130, 213, 0.2); /* Sombra suave al enfocar/editar */
+    outline: none;
+}
+
+.input-group input[disabled] {
+    background-color: #e9ecef;
+    color: #6c757d;
+    cursor: not-allowed;
+    border-color: #e0e0e0;
+}
+
+.password-display {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 18px;
+    border: 1px solid #d0d0d0;
+    border-radius: 15px;
+    background-color: #f8f9fa;
+}
+
+.password-display span {
+    font-size: 1em;
+    color: #555;
+    font-family: monospace; /* Para que los asteriscos se vean uniformes */
+}
+
+.btn-link {
+    background: none;
+    border: none;
+    color: #ff9800; /* Naranja para acción secundaria */
+    cursor: pointer;
+    font-weight: 700;
+    padding: 0;
+    font-size: 0.9em;
+}
+.btn-link:hover {
+    text-decoration: underline;
+}
+
+
+.form-actions {
+    margin-top: 35px;
+    text-align: center;
+}
+
+/* Botones generales */
+.btn {
+    padding: 12px 30px;
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    font-weight: 800; /* Más negrita */
+    font-size: 1em;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+    display: inline-flex; /* Para alinear icono y texto */
+    align-items: center;
+    gap: 8px; /* Espacio entre icono y texto */
+}
+.btn i { /* Estilo para iconos dentro de botones */
+    font-size: 1.1em;
+}
+
+.btn-primary {
+    background-color: #8a82d5; /* Morado */
+    color: white;
+}
+.btn-primary:hover {
+    background-color: #7068b8;
+}
+.btn-primary:active {
+    transform: scale(0.98);
+}
+/* Deshabilitado */
+.btn:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+
+/* Botones de icono cabecera */
+.btn-icon {
+    background: none;
+    border: none;
+    font-size: 1.6em;
+    color: #667; /* Gris oscuro */
+    cursor: pointer;
+    padding: 5px;
+    transition: color 0.2s ease;
+}
+.btn-icon:hover {
+    color: #8a82d5; /* Morado al pasar ratón */
+}
+
+/* --- Responsive --- */
+
+/* Pantallas más pequeñas (ej: móviles) */
+@media (max-width: 640px) {
+    .profile-header h1 {
+        font-size: 1.5em;
+    }
+    .app-branding {
+        flex-grow: 1; /* Permite que ocupe espacio */
+    }
+    .header-logo {
+        height: 35px;
+    }
+    .profile-container {
+        padding: 20px;
+    }
+    .profile-main-info {
+        flex-direction: column; /* Apila avatar y campos */
+        align-items: center; /* Centra el avatar */
+        gap: 20px;
+    }
+    .avatar-section {
+        width: 100%; /* Ocupa todo el ancho */
+        margin-bottom: 15px;
+    }
+    .info-fields {
+        width: 100%; /* Ocupa todo el ancho */
+    }
+    .profile-title {
+        font-size: 1.4em;
+        margin-bottom: 25px;
+    }
+    .input-group input[type="text"],
+    .input-group input[type="email"],
+    .input-group input[type="tel"],
+    .password-display {
+        padding: 12px 15px;
+        font-size: 0.95em;
+    }
+    .btn {
+        font-size: 0.95em;
+        padding: 10px 25px;
+    }
+}
+
+/* Definimos la animación */
+@keyframes fadeInSlideUp {
+    from {
+        opacity: 0;
+        transform: translateY(15px); /* Empieza ligeramente abajo */
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Aplicamos la animación al contenedor del perfil */
+.profile-container {
+    /* ... tus estilos existentes ... */
+    background-color: #ffffff;
+    /*background: linear-gradient(to bottom, #ffffff, #F9FAFF);^*/
+    padding: 30px 40px;
+    border-radius: 25px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    box-sizing: border-box;
+
+    /* Añade la animación */
+    animation: fadeInSlideUp 0.6s ease-out forwards;
+    opacity: 0; /* Empieza invisible para que el fade-in funcione */
+}
