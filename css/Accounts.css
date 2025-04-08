@@ -1,0 +1,330 @@
+/* accounts.css */
+/* Importar fuente si no es global */
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800&display=swap');
+
+body {
+    font-family: 'Nunito', sans-serif;
+    background-color: #f0f4f8; /* Azul cielo muy claro o #a0d2eb */
+    margin: 0;
+    padding: 0;
+    color: #333;
+}
+
+.page-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+/* --- Cabecera de Página --- */
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    padding: 0 5px;
+    flex-wrap: nowrap;
+    gap: 15px;
+}
+
+.header-title-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-grow: 1;
+    justify-content: center; /* Centrado */
+}
+.header-title-group h1 {
+    margin: 0;
+    font-size: 1.8em;
+    font-weight: 800;
+    color: #334;
+    white-space: nowrap; /* Evita que el título se rompa */
+}
+
+.header-avatar-small {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #fff;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    background-color: #e0e0e0; /* Placeholder bg */
+}
+
+/* --- Botones Generales --- */
+.btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 0.95em;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    color: white;
+    white-space: nowrap; /* Evita que el texto del botón se rompa */
+}
+.btn i { font-size: 1.1em; }
+.btn:hover { transform: scale(1.03); } /* Más sutil */
+.btn:active { transform: scale(0.98); }
+.btn:disabled { background-color: #cccccc !important; cursor: not-allowed; opacity: 0.7; transform: none !important; }
+
+.btn-primary { background-color: #8a82d5; color: white; }
+.btn-primary:hover { background-color: #7068b8; }
+.btn-secondary { background-color: #6c757d; color: white; }
+.btn-secondary:hover { background-color: #5a6268; }
+
+.btn-icon {
+    background: none;
+    border: none;
+    font-size: 1.6em;
+    color: #667;
+    cursor: pointer;
+    padding: 5px;
+    transition: color 0.2s ease, transform 0.15s ease;
+}
+.btn-icon:hover { color: #8a82d5; transform: scale(1.1); }
+.btn-icon:active { transform: scale(0.95); }
+
+.btn-add { font-size: 1em; }
+
+/* --- Resumen Saldo Total --- */
+.total-balance-summary {
+    text-align: center;
+    margin-bottom: 35px;
+    padding: 15px;
+    background-color: #e8efff; /* Fondo azul muy claro */
+    border-radius: 15px;
+    font-size: 1.3em;
+    font-weight: 700;
+    color: #4a5568; /* Gris azulado oscuro */
+}
+.total-balance-summary span {
+    font-weight: 800;
+    color: #6b46c1; /* Morado más oscuro */
+    margin-left: 8px;
+    display: inline-block; /* Evita saltos de línea raros */
+}
+.total-balance-summary small {
+    display: block;
+    font-size: 0.7em;
+    font-weight: 400;
+    color: #718096; /* Gris azulado */
+    margin-top: 3px;
+}
+
+/* --- Grid Lista de Cuentas --- */
+.account-list-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 25px;
+}
+
+/* --- Tarjeta de Cuenta --- */
+.account-card {
+    background-color: #ffffff;
+    border-radius: 20px;
+    padding: 20px;
+    box-shadow: 0 6px 15px rgba(140, 150, 170, 0.1); /* Sombra más suave */
+    display: flex;
+    flex-direction: column;
+    border-left: 6px solid #cccccc; /* Borde por defecto */
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.3s ease;
+    position: relative; /* Para acciones */
+}
+.account-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 12px 22px rgba(140, 150, 170, 0.15);
+    border-left-color: #8a82d5;
+}
+
+/* Colores de borde según tipo */
+.account-card[data-type="corriente"] { border-left-color: #4299e1; } /* Azul medio */
+.account-card[data-type="ahorro"] { border-left-color: #48bb78; } /* Verde */
+.account-card[data-type="tarjeta_credito"] { border-left-color: #f56565; } /* Rojo/Naranja */
+.account-card[data-type="efectivo"] { border-left-color: #a0aec0; } /* Gris */
+.account-card[data-type="inversion"] { border-left-color: #9f7aea; } /* Morado más vivo */
+.account-card[data-type="otro"] { border-left-color: #718096; } /* Gris azulado */
+
+.card-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #edf2f7; /* Separador más sutil */
+}
+
+.account-icon {
+    font-size: 1.6em;
+    color: #8a82d5; /* Morado por defecto */
+    width: 30px;
+    text-align: center;
+    flex-shrink: 0;
+}
+/* Colores específicos de icono */
+.account-card[data-type="corriente"] .account-icon { color: #4299e1; }
+.account-card[data-type="ahorro"] .account-icon { color: #48bb78; }
+.account-card[data-type="tarjeta_credito"] .account-icon { color: #f56565; }
+.account-card[data-type="efectivo"] .account-icon { color: #a0aec0; }
+.account-card[data-type="inversion"] .account-icon { color: #9f7aea; }
+.account-card[data-type="otro"] .account-icon { color: #718096; }
+
+.account-name {
+    margin: 0;
+    font-size: 1.15em;
+    font-weight: 700;
+    color: #2d3748; /* Gris muy oscuro */
+    flex-grow: 1;
+    word-break: break-word;
+}
+
+.card-body {
+    flex-grow: 1;
+    text-align: right; /* Alinear saldo a la derecha */
+    margin: 10px 0 15px 0;
+}
+
+.account-balance {
+    font-size: 1.9em; /* Ligeramente más pequeño */
+    font-weight: 800;
+    color: #1a202c; /* Casi negro */
+    margin: 0 0 2px 0;
+    line-height: 1.2;
+}
+
+.account-type {
+    font-size: 0.85em;
+    color: #718096; /* Gris azulado */
+    margin: 0;
+    text-transform: capitalize; /* Poner primera letra mayúscula */
+}
+
+.card-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px; /* Menos espacio */
+    padding-top: 10px;
+    border-top: 1px solid #edf2f7; /* Separador sutil */
+}
+
+.card-actions .btn-icon {
+    font-size: 1.0em; /* Iconos más pequeños */
+    padding: 4px;
+    color: #a0aec0; /* Grises */
+}
+.card-actions .btn-icon:hover { color: #8a82d5; } /* Morado al pasar */
+.card-actions .btn-delete:hover { color: #f56565; } /* Rojo al pasar */
+
+
+/* --- Estado Vacío --- */
+.empty-list-message {
+    text-align: center;
+    margin-top: 40px;
+    padding: 40px 20px;
+    color: #718096;
+    background-color: #fff;
+    border-radius: 20px;
+    box-shadow: 0 6px 15px rgba(140, 150, 170, 0.07);
+}
+.empty-mascot {
+    max-width: 80px;
+    margin-bottom: 15px;
+    opacity: 0.7;
+}
+.empty-list-message p {
+    margin: 8px 0;
+    line-height: 1.6;
+    font-size: 1.05em;
+}
+.empty-list-message .btn {
+    margin-top: 25px;
+}
+
+/* --- Modal --- */
+/* ... (Mismos estilos de modal que antes, asegúrate de que .input-group, label, input, select, .modal-actions, .error-message estén definidos si no heredan de un CSS global) ... */
+.modal-overlay {
+    /* ... (Estilos anteriores para posición, fondo, transición) ... */
+     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+     background-color: rgba(0, 0, 0, 0.6); display: flex; justify-content: center;
+     align-items: center; z-index: 1000; opacity: 0; transition: opacity 0.3s ease;
+     padding: 15px; box-sizing: border-box; pointer-events: none; /* Oculto por defecto */
+}
+.modal-overlay.active { opacity: 1; pointer-events: auto; /* Visible */ }
+
+.modal-content {
+    /* ... (Estilos anteriores para fondo, padding, radios, sombra, ancho) ... */
+    background-color: #ffffff; padding: 30px 40px; border-radius: 20px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2); width: 100%; max-width: 500px;
+    box-sizing: border-box; transform: scale(0.95); transition: transform 0.3s ease;
+}
+.modal-overlay.active .modal-content { transform: scale(1); }
+.modal-content h2 { text-align: center; margin-top: 0; margin-bottom: 25px; color: #8a82d5; font-weight: 800; }
+.modal-content .input-group label { display: block; margin-bottom: 8px; color: #555; font-weight: 700; font-size: 0.9em; }
+.modal-content .input-group input[type="text"],
+.modal-content .input-group input[type="number"],
+.modal-content .input-group select { width: 100%; padding: 12px 15px; border: 1px solid #ccc; border-radius: 15px; font-size: 1em; box-sizing: border-box; margin-top: 5px; }
+.modal-content .input-group input:focus,
+.modal-content .input-group select:focus { border-color: #8a82d5; box-shadow: 0 0 0 2px rgba(138, 130, 213, 0.2); outline: none; }
+.modal-content .input-group select { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%238a82d5' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 15px center; background-size: 16px 12px; padding-right: 40px; }
+.modal-content .input-group small { font-size: 0.8em; color: #777; display: block; margin-top: 4px; }
+.modal-actions { margin-top: 30px; display: flex; justify-content: flex-end; gap: 15px; }
+.error-message { color: #dc3545; font-size: 0.9em; margin-top: 10px; text-align: center; }
+
+
+/* --- Botón Scroll to Top --- */
+.scroll-top-btn {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    background-color: #8a82d5;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    font-size: 1.5em;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    z-index: 999;
+    transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.2s ease;
+    opacity: 0;
+    visibility: hidden; /* Inicialmente oculto */
+}
+.scroll-top-btn.visible {
+    opacity: 1;
+    visibility: visible;
+}
+.scroll-top-btn:hover {
+    background-color: #7068b8;
+    transform: scale(1.1);
+}
+
+/* --- Responsive General --- */
+@media (max-width: 992px) {
+    .account-list-grid {
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 20px;
+    }
+    .page-container { padding: 15px; }
+}
+
+@media (max-width: 600px) {
+    .account-list-grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+    .account-balance { font-size: 1.8em; }
+     .modal-content { padding: 20px; }
+    .modal-actions { flex-direction: column-reverse; gap: 10px; }
+    .modal-actions .btn { width: 100%; box-sizing: border-box;}
+    .scroll-top-btn { width: 45px; height: 45px; font-size: 1.3em; bottom: 20px; right: 20px; }
+}

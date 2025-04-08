@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FinAi - Mis Cuentas</title>
+    <link rel="stylesheet" href="/css/Accounts.css">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="page-container">
+        <div class="page-header accounts-header">
+             <button id="backButton" class="btn-icon" aria-label="Volver"><i class="fas fa-arrow-left"></i></button>
+             <div class="header-title-group">
+                 <img id="userAvatarSmall" src="https://finai.es/images/avatar_predeterminado.png" alt="Avatar" class="header-avatar-small">
+                 <h1>Mis Cuentas</h1>
+             </div>
+            <button id="addAccountBtn" class="btn btn-primary btn-add">
+                <i class="fas fa-plus"></i> Añadir Cuenta
+            </button>
+        </div>
+
+        <div class="total-balance-summary">
+            Saldo Total (aprox.): <span id="totalBalanceAmount">Calculando...</span>
+            <small>(Excluye tarjetas de crédito)</small>
+        </div>
+
+        <div id="accountList" class="account-list-grid">
+            <p style="text-align: center; color: #666; grid-column: 1 / -1;">Cargando cuentas...</p>
+            </div>
+
+         <div id="noAccountsMessage" class="empty-list-message" style="display: none;">
+             <img src="https://finai.es/images/monstruo_pixar.png" alt="Mascota FinAi" class="empty-mascot">
+            <p>¡Parece que aún no tienes cuentas!</p>
+            <p>Añade tu primera cuenta para empezar a gestionar tus finanzas.</p>
+            <button id="addAccountFromEmptyBtn" class="btn btn-primary">
+                 <i class="fas fa-plus"></i> Añadir Mi Primera Cuenta
+            </button>
+        </div>
+
+    </div> <div id="accountModal" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <h2 id="modalTitle">Añadir Nueva Cuenta</h2>
+            <form id="accountForm">
+                <input type="hidden" id="accountId" name="accountId">
+
+                <div class="input-group">
+                    <label for="accountName">Nombre de la Cuenta</label>
+                    <input type="text" id="accountName" name="accountName" required placeholder="Ej: Cuenta Nómina, Tarjeta Principal...">
+                </div>
+                <div class="input-group">
+                    <label for="accountBank">Banco / Institución (Opcional)</label>
+                    <input type="text" id="accountBank" name="accountBank" placeholder="Ej: BBVA, CaixaBank, PayPal, Binance...">
+                </div>
+                <div class="input-group">
+                    <label for="accountType">Tipo de Cuenta</label>
+                    <select id="accountType" name="accountType" required>
+                        <option value="" disabled selected>Selecciona un tipo...</option>
+                        <option value="corriente">Cuenta Corriente</option>
+                        <option value="ahorro">Cuenta de Ahorro</option>
+                        <option value="inversion">Cuenta de Ahorro Colchón</option>
+                        <option value="inversion">Cuenta de Viajes</option>
+                        <option value="inversion">Cuenta de Inversión</option>
+                        <option value="tarjeta_credito">Tarjeta de Crédito</option>
+                        <option value="efectivo">Efectivo</option>
+                        <option value="otro">Otro</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label for="accountBalance">Saldo Inicial</label>
+                    <input type="number" id="accountBalance" name="accountBalance" required step="0.01" value="0.00" placeholder="0.00">
+                    <small>Introduce el saldo actual al crear la cuenta.</small>
+                </div>
+
+                <div class="input-group">
+                    <label for="accountCurrency">Moneda (Código ISO 3)</label>
+                    <input type="text" id="accountCurrency" name="accountCurrency" required value="EUR" maxlength="3" placeholder="EUR">
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" id="cancelButton" class="btn btn-secondary">Cancelar</button>
+                    <button type="submit" id="saveButton" class="btn btn-primary">Guardar Cuenta</button>
+                </div>
+                 <p id="modalError" class="error-message" style="display: none;"></p>
+            </form>
+        </div>
+    </div>
+
+     <button id="scrollTopBtn" class="scroll-top-btn" title="Volver arriba" style="display: none;">
+         <i class="fas fa-arrow-up"></i>
+     </button>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/Js/supabase-init.js"></script>
+    <script src="/Js/auth-listener.js"></script>
+    <script src="/Js/Accounts.js"></script> </body>
+</html>
