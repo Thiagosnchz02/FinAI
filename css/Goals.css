@@ -1,0 +1,262 @@
+/* goals.css */
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800&display=swap');
+
+/* --- Estilos Generales (Reutilizar) --- */
+body { font-family: 'Nunito', sans-serif; background-color: #f0f4f8; margin: 0; padding: 0; color: #333; }
+.page-container { max-width: 1200px; margin: 0 auto; padding: 20px; box-sizing: border-box; }
+/* ... (Estilos .page-header, .header-title-group, .header-avatar-small, .btn, .btn-primary, .btn-secondary, .btn-icon, .btn-add como antes) ... */
+.page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; padding: 0 5px; flex-wrap: nowrap; gap: 15px; }
+.header-title-group { display: flex; align-items: center; gap: 12px; flex-grow: 1; justify-content: center; }
+.header-title-group h1 { margin: 0; font-size: 1.8em; font-weight: 800; color: #334; white-space: nowrap; }
+.header-avatar-small { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.1); background-color: #e0e0e0; }
+.btn { padding: 10px 20px; border: none; border-radius: 50px; cursor: pointer; font-weight: 700; font-size: 0.95em; transition: background-color 0.2s ease, transform 0.1s ease; display: inline-flex; align-items: center; gap: 8px; text-decoration: none; color: white; white-space: nowrap; }
+.btn i { font-size: 1.1em; } .btn:hover { transform: scale(1.03); } .btn:active { transform: scale(0.98); } .btn:disabled { background-color: #cccccc !important; cursor: not-allowed; opacity: 0.7; transform: none !important; }
+.btn-primary { background-color: #8a82d5; color: white; } .btn-primary:hover { background-color: #7068b8; } .btn-secondary { background-color: #6c757d; color: white; } .btn-secondary:hover { background-color: #5a6268; }
+.btn-icon { background: none; border: none; font-size: 1.5em; color: #667; cursor: pointer; padding: 5px; transition: color 0.2s ease, transform 0.15s ease; } .btn-icon:hover { color: #8a82d5; transform: scale(1.1); } .btn-icon:active { transform: scale(0.95); }
+.empty-list-message { text-align: center; margin-top: 40px; padding: 30px; color: #718096;}
+
+/* --- Grid Lista de Metas --- */
+.goal-list-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 25px; /* Espacio entre tarjetas */
+}
+
+/* --- Tarjeta de Meta --- */
+.goal-card {
+    background-color: #ffffff;
+    border-radius: 20px;
+    padding: 25px;
+    box-shadow: 0 6px 15px rgba(140, 150, 170, 0.07);
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    position: relative; /* Para acciones */
+}
+.goal-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(140, 150, 170, 0.12);
+}
+
+.goal-card .card-header {
+    display: flex;
+    align-items: flex-start; /* Alinear icono arriba con texto */
+    gap: 15px;
+    margin-bottom: 15px;
+}
+.goal-card .goal-icon {
+    font-size: 2.5em; /* Icono más grande */
+    color: #8a82d5; /* Morado por defecto */
+    line-height: 1; /* Ajustar línea para icono */
+    flex-shrink: 0;
+}
+.goal-card .header-text {
+    flex-grow: 1;
+}
+.goal-card .goal-name {
+    margin: 0 0 4px 0;
+    font-size: 1.3em;
+    font-weight: 800;
+    color: #2d3748;
+}
+.goal-card .goal-target-date {
+    font-size: 0.85em;
+    color: #718096;
+    margin: 0;
+}
+
+
+.goal-card .card-body {
+    flex-grow: 1;
+    margin-bottom: 15px;
+}
+
+.goal-amounts {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 15px;
+    font-size: 0.9em;
+    flex-wrap: wrap; /* Para móvil */
+    gap: 10px;
+}
+.amount-pair {
+    display: flex;
+    flex-direction: column;
+}
+.amount-pair .label {
+    color: #718096;
+    font-size: 0.9em;
+    margin-bottom: 2px;
+}
+.amount-pair .amount {
+    font-weight: 700;
+    font-size: 1.1em;
+}
+.amount-pair .target { color: #4a5568; }
+.amount-pair .current { color: #38a169; } /* Verde para lo ahorrado */
+
+/* Barra de Progreso */
+.progress-bar-container {
+    width: 100%; height: 10px; background-color: #e2e8f0;
+    border-radius: 5px; overflow: hidden; position: relative; /* Para porcentaje */
+}
+.progress-bar {
+    height: 100%; width: 0%; background-color: #48bb78; border-radius: 5px;
+    transition: width 0.5s ease-out;
+}
+/* Color si está casi completa */
+.progress-bar.near-complete { background-color: #ecc94b; }
+/* Color si está completa o superada */
+.progress-bar.complete { background-color: #8a82d5; } /* Morado al completar? */
+
+.progress-percentage {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.75em;
+    font-weight: 600;
+    color: rgba(0,0,0,0.5);
+}
+/* Texto blanco si la barra es oscura y está avanzada */
+.progress-percentage {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.75em;
+    font-weight: 600;
+    color: rgba(0,0,0,0.5); /* Color por defecto (oscuro semitransparente) */
+    transition: color 0.3s ease; /* Transición suave del color */
+}
+
+/* Cambiar color del texto a claro cuando la barra de fondo sea oscura */
+.progress-bar.near-complete + .progress-percentage, /* Si la barra tiene clase 'near-complete' */
+.progress-bar.complete + .progress-percentage /* Si la barra tiene clase 'complete' */
+{
+    color: rgba(255, 255, 255, 0.9); /* Blanco semitransparente */
+}
+
+
+.amount-remaining {
+    text-align: center;
+    margin-top: 10px;
+    font-weight: 700;
+    font-size: 0.9em;
+}
+.remaining.positive { color: #718096; } /* Gris si falta */
+.remaining.negative, /* Debería ser 0 o positivo, pero por si acaso */
+.remaining.complete { color: #38a169; font-weight: bold;} /* Verde si completado */
+
+
+.goal-card .card-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    padding-top: 15px;
+    border-top: 1px solid #edf2f7;
+}
+.goal-card .card-actions .btn-icon {
+    font-size: 1.1em; color: #a0aec0; padding: 5px;
+}
+.goal-card .card-actions .btn-add-savings { color: #38a169; /* Verde */ }
+.goal-card .card-actions .btn-edit:hover { color: #8a82d5; }
+.goal-card .card-actions .btn-delete:hover { color: #f56565; }
+.goal-card .card-actions .btn-add-savings:hover { color: #2f855a; }
+
+/* --- Modales --- */
+/* ... (Estilos .modal-overlay, .modal-content, .modal-actions, .error-message como antes) ... */
+.modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.6); display: flex; justify-content: center; align-items: center; z-index: 1000; opacity: 0; transition: opacity 0.3s ease; padding: 15px; box-sizing: border-box; pointer-events: none; }
+.modal-overlay.active { opacity: 1; pointer-events: auto; }
+.modal-content { background-color: #ffffff; padding: 30px 40px; border-radius: 20px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2); width: 100%; max-width: 500px; box-sizing: border-box; transform: scale(0.95); transition: transform 0.3s ease; }
+.modal-overlay.active .modal-content { transform: scale(1); }
+.modal-content h2 { text-align: center; margin-top: 0; margin-bottom: 25px; color: #8a82d5; font-weight: 800; }
+/* Estilos Inputs Modal */
+.modal-content .input-group label { display: block; margin-bottom: 8px; color: #555; font-weight: 700; font-size: 0.9em; }
+.modal-content .input-group input[type="text"], .modal-content .input-group input[type="number"], .modal-content .input-group input[type="date"], .modal-content .input-group select, .modal-content .input-group textarea { width: 100%; padding: 10px 15px; border: 1px solid #ccc; border-radius: 10px; font-size: 1em; box-sizing: border-box; margin-top: 5px; }
+.modal-content .input-group input:focus, .modal-content .input-group select:focus, .modal-content .input-group textarea:focus { border-color: #8a82d5; box-shadow: 0 0 0 2px rgba(138, 130, 213, 0.2); outline: none; }
+.modal-content .input-group select {
+    /* Estilos básicos (heredados o definidos aquí): */
+    width: 100%;
+    padding: 10px 15px;
+    border: 1px solid #ccc;
+    border-radius: 10px; /* Redondeado */
+    font-size: 1em;
+    box-sizing: border-box;
+    margin-top: 5px;
+    font-family: 'Nunito', sans-serif; /* Asegurar fuente */
+    color: #333;
+    background-color: #fff; /* Fondo blanco */
+
+    /* --- Estilos para la Flecha Personalizada --- */
+    cursor: pointer;
+    appearance: none; /* Ocultar flecha por defecto del navegador */
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    /* Flecha SVG (morada) como imagen de fondo */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%238a82d5' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 15px center; /* Posición de la flecha */
+    background-size: 16px 12px; /* Tamaño de la flecha */
+    padding-right: 40px; /* Espacio extra a la derecha para que el texto no se monte sobre la flecha */
+    /* --- Fin Flecha Personalizada --- */
+}
+
+/* Estilo al enfocar el select */
+.modal-content .input-group select:focus {
+    border-color: #8a82d5;
+    box-shadow: 0 0 0 2px rgba(138, 130, 213, 0.2);
+    outline: none;
+}
+.modal-content .input-group small { font-size: 0.8em; color: #777; display: block; margin-top: 4px; }
+.modal-content .input-group small a { color: #8a82d5; }
+.modal-actions { margin-top: 30px; display: flex; justify-content: flex-end; gap: 15px; }
+.error-message { color: #dc3545; font-size: 0.9em; margin-top: 10px; text-align: center; }
+
+/* Modal Pequeño para Añadir Ahorro */
+.modal-overlay.small .modal-content { max-width: 380px; }
+#addSavingsForm p { margin: 10px 0 20px 0; text-align: center; color: #555;}
+#addSavingsForm strong { color: #8a82d5; }
+
+/* --- Scroll Top Button --- */
+.scroll-top-btn {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    background-color: #8a82d5;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    font-size: 1.5em;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    z-index: 999;
+    transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.2s ease;
+    opacity: 0;
+    visibility: hidden; /* Inicialmente oculto */
+}
+.scroll-top-btn.visible {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* --- Responsive --- */
+@media (max-width: 992px) {
+    .goal-list-grid { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; }
+}
+@media (max-width: 600px) {
+    .page-header h1 { font-size: 1.5em; }
+    .goal-list-grid { grid-template-columns: 1fr; gap: 15px; }
+    .goal-card { padding: 20px; }
+    .goal-card .card-header { gap: 10px; }
+    .goal-card .goal-icon { font-size: 2em; }
+    .goal-card .goal-name { font-size: 1.1em; }
+    .goal-amounts { font-size: 0.85em;}
+    .amount-pair .amount { font-size: 1em; }
+    /* ... (Ajustes modal, scrolltop) ... */
+}
