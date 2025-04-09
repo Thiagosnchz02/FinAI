@@ -1,0 +1,195 @@
+/* fixed-expenses.css */
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800&display=swap');
+
+/* --- Estilos Generales (Similar a otras páginas) --- */
+body { font-family: 'Nunito', sans-serif; background-color: #f0f4f8; margin: 0; padding: 0; color: #333; }
+.page-container { max-width: 1200px; margin: 0 auto; padding: 20px; box-sizing: border-box; }
+.page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding: 0 5px; flex-wrap: nowrap; gap: 15px; }
+.header-title-group { display: flex; align-items: center; gap: 12px; flex-grow: 1; justify-content: center; }
+.header-title-group h1 { margin: 0; font-size: 1.8em; font-weight: 800; color: #334; white-space: nowrap; }
+.header-avatar-small { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.1); background-color: #e0e0e0; }
+.btn { padding: 10px 20px; border: none; border-radius: 50px; cursor: pointer; font-weight: 700; font-size: 0.95em; transition: background-color 0.2s ease, transform 0.1s ease; display: inline-flex; align-items: center; gap: 8px; text-decoration: none; color: white; white-space: nowrap; }
+.btn i { font-size: 1.1em; } .btn:hover { transform: scale(1.03); } .btn:active { transform: scale(0.98); } .btn:disabled { background-color: #cccccc !important; cursor: not-allowed; opacity: 0.7; transform: none !important; }
+.btn-primary { background-color: #8a82d5; color: white; } .btn-primary:hover { background-color: #7068b8; } .btn-secondary { background-color: #6c757d; color: white; } .btn-secondary:hover { background-color: #5a6268; }
+.btn-icon { background: none; border: none; font-size: 1.5em; color: #667; cursor: pointer; padding: 5px; transition: color 0.2s ease, transform 0.15s ease; } .btn-icon:hover { color: #8a82d5; transform: scale(1.1); } .btn-icon:active { transform: scale(0.95); }
+.btn-add { font-size: 1em; }
+.empty-list-message { text-align: center; margin-top: 40px; padding: 30px; color: #718096;}
+
+/* --- Resumen Total --- */
+.total-summary {
+    text-align: center;
+    margin-bottom: 25px;
+    padding: 15px;
+    background-color: #e6fffa; /* Un verde pastel suave */
+    border: 1px solid #b2f5ea;
+    border-radius: 15px;
+    font-size: 1.3em;
+    font-weight: 700;
+    color: #234e52; /* Verde oscuro */
+}
+.total-summary span { font-weight: 800; color: #2c7a7b; margin-left: 8px; }
+
+/* --- Selector de Vista --- */
+.view-toggle {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 25px;
+    gap: 10px;
+}
+.btn-view {
+    padding: 8px 18px;
+    border: 1px solid #ccc;
+    background-color: #f8f9fa;
+    color: #666;
+    border-radius: 50px;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 0.9em;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.btn-view:hover {
+    background-color: #e9ecef;
+    border-color: #bbb;
+}
+.btn-view.active {
+    background-color: #8a82d5; /* Morado */
+    color: white;
+    border-color: #8a82d5;
+    box-shadow: 0 2px 5px rgba(138, 130, 213, 0.3);
+}
+
+/* --- Contenedor Tabla --- */
+.table-container { background-color: #ffffff; border-radius: 15px; box-shadow: 0 6px 15px rgba(140, 150, 170, 0.07); overflow-x: auto; padding: 10px 0; }
+.data-table { width: 100%; border-collapse: collapse; font-size: 0.95em; }
+.data-table th, .data-table td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #e8e8e8; white-space: nowrap; }
+.data-table thead th { background-color: #f8f9fa; font-weight: 700; color: #555; position: sticky; top: 0; }
+.data-table tbody tr:hover { background-color: #f9f9fc; }
+/* Alineación columnas específicas */
+.data-table th:nth-child(2), .data-table td:nth-child(2), /* Importe */
+.data-table th:last-child, .data-table td:last-child /* Acciones */
+{ text-align: right; }
+.data-table td:nth-child(6), /* Activo */
+.data-table td:nth-child(7) /* Recordatorio */
+{ text-align: center; }
+
+/* Estilos tabla heredados de transactions.css (reducido) */
+.data-table td .btn-icon { font-size: 1.1em; color: #aaa; padding: 2px 4px; }
+.data-table td .btn-icon:hover { color: #8a82d5; }
+.data-table td .btn-delete:hover { color: #e74c3c; }
+.data-table td .trans-cat { display: flex; align-items: center; gap: 8px; }
+.data-table td .trans-cat i { font-size: 1.2em; width: 20px; text-align: center; opacity: 0.7; }
+.data-table .amount-col { font-weight: 700; color: #dc3545; } /* Gasto fijo por defecto rojo */
+
+/* Toggle Switches (para Activo/Recordatorio) - CSS Básico */
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 40px; /* Ancho */
+    height: 22px; /* Alto */
+}
+.toggle-switch input { display:none; } /* Ocultar checkbox */
+.toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
+    border-radius: 22px; /* Alto */
+}
+.toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 16px; /* Tamaño círculo */
+    width: 16px;
+    left: 3px; /* Posición inicial */
+    bottom: 3px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+input:checked + .toggle-slider { background-color: #4CAF50; } /* Color verde al activar */
+input:checked + .toggle-slider:before { transform: translateX(18px); } /* Mover círculo (ancho - tamaño círculo - 2*margen_izq) */
+
+/* --- Vista Calendario --- */
+.calendar-container {
+    background-color: #ffffff;
+    padding: 20px;
+    border-radius: 15px;
+    box-shadow: 0 6px 15px rgba(140, 150, 170, 0.07);
+    /* Aquí irían estilos para sobreescribir la librería de calendario si es necesario */
+    /* Ejemplo para FullCalendar */
+    /* --fc-border-color: #e0e0e0;
+       --fc-today-bg-color: #e8efff;
+       .fc-daygrid-event { border-radius: 4px; padding: 2px 4px; font-size: 0.8em; } */
+}
+
+/* --- Modal Gastos Fijos (Reutiliza estilos de otros modales) --- */
+/* ... (Estilos .modal-overlay, .modal-content, .modal-actions, .error-message similares) ... */
+.modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.6); display: flex; justify-content: center; align-items: center; z-index: 1000; opacity: 0; transition: opacity 0.3s ease; padding: 15px; box-sizing: border-box; pointer-events: none; }
+.modal-overlay.active { opacity: 1; pointer-events: auto; }
+.modal-content { background-color: #ffffff; padding: 30px 40px; border-radius: 20px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2); width: 100%; max-width: 500px; box-sizing: border-box; transform: scale(0.95); transition: transform 0.3s ease; }
+.modal-overlay.active .modal-content { transform: scale(1); }
+.modal-content h2 { text-align: center; margin-top: 0; margin-bottom: 25px; color: #8a82d5; font-weight: 800; }
+/* Estilos Inputs Modal */
+.modal-content .input-group label { display: block; margin-bottom: 8px; color: #555; font-weight: 700; font-size: 0.9em; }
+.modal-content .input-group input[type="text"],
+.modal-content .input-group input[type="number"],
+.modal-content .input-group input[type="date"],
+.modal-content .input-group select { width: 100%; padding: 10px 15px; border: 1px solid #ccc; border-radius: 10px; font-size: 1em; box-sizing: border-box; margin-top: 5px; }
+.modal-content .input-group input:focus,
+.modal-content .input-group select:focus { border-color: #8a82d5; box-shadow: 0 0 0 2px rgba(138, 130, 213, 0.2); outline: none; }
+.modal-content .input-group select { /* ... Estilos select con flecha ... */ cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%238a82d5' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 15px center; background-size: 16px 12px; padding-right: 40px; }
+.modal-content .input-group small { font-size: 0.8em; color: #777; display: block; margin-top: 4px; }
+.modal-actions { margin-top: 30px; display: flex; justify-content: flex-end; gap: 15px; }
+.error-message { color: #dc3545; font-size: 0.9em; margin-top: 10px; text-align: center; }
+/* Estilo para grupos de checkbox */
+.checkbox-group { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+.checkbox-group input[type="checkbox"] { width: auto; margin: 0; cursor: pointer;}
+.checkbox-group label { margin: 0; font-weight: normal; cursor: pointer; }
+
+
+/* --- Scroll Top Button --- */
+.scroll-top-btn {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    background-color: #8a82d5;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    font-size: 1.5em;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    z-index: 999;
+    transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.2s ease;
+    opacity: 0;
+    visibility: hidden; /* Inicialmente oculto */
+}
+.scroll-top-btn.visible {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* --- Responsive --- */
+@media (max-width: 768px) {
+    .data-table { font-size: 0.9em; }
+    .data-table th, .data-table td { padding: 8px 8px; white-space: normal; }
+     /* Ocultar columnas menos importantes */
+     .data-table th:nth-child(4), .data-table td:nth-child(4), /* Cuenta */
+     .data-table th:nth-child(6), .data-table td:nth-child(6), /* Activo */
+     .data-table th:nth-child(7), .data-table td:nth-child(7)  /* Recordatorio */
+     { display: none; }
+}
+@media (max-width: 600px) {
+    .page-header h1 { font-size: 1.5em; }
+    .total-summary { font-size: 1.1em; }
+    /* ... (Ajustes modal, scrolltop, etc.) ... */
+}

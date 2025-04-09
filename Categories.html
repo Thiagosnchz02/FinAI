@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FinAi - Mis Categorías</title>
+    <link rel="stylesheet" href="/css/Categories.css">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    </head>
+<body>
+    <div class="page-container">
+        <div class="page-header categories-header">
+            <button id="backButton" class="btn-icon" aria-label="Volver"><i class="fas fa-arrow-left"></i></button>
+            <div class="header-title-group">
+                <img id="userAvatarSmall" src="https://finai.es/images/avatar_predeterminado.png" alt="Avatar" class="header-avatar-small">
+                <h1>Mis Categorías</h1>
+            </div>
+           <button id="addCategoryBtn" class="btn btn-primary btn-add">
+               <i class="fas fa-plus"></i> Añadir Categoría
+           </button>
+       </div>
+
+        <div id="categoryList" class="category-list">
+            </div>
+            <div id="noCustomCategoriesMessage" class="empty-list-message" style="display: none;">
+                <img src="https://finai.es/images/monstruo_pixar.png" alt="Mascota FinAi" class="empty-mascot">
+                <p>¡Parece que aún no tienes categorías!</p>
+                <p>Añade tu primera categoría para empezar a gestionar tus finanzas.</p>
+                <button id="addCategoryFromEmptyBtn" class="btn btn-primary">
+                     <i class="fas fa-plus"></i> Añadir Mi Primera Categoría
+                </button>
+            </div>
+         <p id="loadingMessage" style="text-align: center; color: #666;">Cargando categorías...</p>
+
+    </div> <div id="categoryModal" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <h2 id="modalTitleCategory">Añadir Nueva Categoría</h2>
+            <form id="categoryForm">
+                <input type="hidden" id="categoryId" name="categoryId">
+                <input type="hidden" id="isDefaultCategory" name="isDefaultCategory" value="false">
+
+                <div class="input-group">
+                    <label for="categoryName">Nombre de la Categoría</label>
+                    <input type="text" id="categoryName" name="categoryName" required placeholder="Ej: Supermercado, Nómina, Ocio...">
+                </div>
+
+                <div class="input-group">
+                    <label>Tipo</label>
+                    <div class="radio-group">
+                        <label>
+                            <input type="radio" name="categoryType" value="gasto" checked> Gasto
+                        </label>
+                        <label>
+                            <input type="radio" name="categoryType" value="ingreso"> Ingreso
+                        </label>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label for="categoryIcon">Icono (Clase Font Awesome)</label>
+                    <input type="text" id="categoryIcon" name="categoryIcon" placeholder="Ej: fas fa-shopping-cart, fas fa-car">
+                    <small>Busca iconos en <a href="https://fontawesome.com/search?m=free&s=solid" target="_blank" rel="noopener noreferrer">Font Awesome (Solid)</a> y pega la clase aquí.</small>
+                </div>
+
+                 <div class="input-group">
+                    <label for="categoryColor">Color de Fondo</label>
+                    <input type="color" id="categoryColor" name="categoryColor" value="#e0e0e0"> </div>
+
+                <div class="modal-actions">
+                    <button type="button" id="cancelCategoryButton" class="btn btn-secondary">Cancelar</button>
+                    <button type="submit" id="saveCategoryButton" class="btn btn-primary">Guardar Categoría</button>
+                </div>
+                 <p id="modalCategoryError" class="error-message" style="display: none;"></p>
+            </form>
+        </div>
+    </div>
+
+     <button id="scrollTopBtn" class="scroll-top-btn" title="Volver arriba" style="display: none;">
+         <i class="fas fa-arrow-up"></i>
+     </button>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/Js/supabase-init.js"></script> 
+    <script src="/Js/auth-listener.js"></script> 
+    <script src="/Js/Categories.js"></script> </body>
+</html>

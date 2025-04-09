@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FinAi - Gastos Fijos</title>
+    <link rel="stylesheet" href="/css/Fixed_expenses.css"> 
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+</head>
+<body>
+    <div class="page-container">
+        <div class="page-header fixed-expenses-header">
+            <button id="backButton" class="btn-icon" aria-label="Volver"><i class="fas fa-arrow-left"></i></button>
+            <div class="header-title-group">
+                <img id="userAvatarSmall" src="https://finai.es/images/avatar_predeterminado.png" alt="Avatar" class="header-avatar-small"> <h1>Gastos Fijos</h1>
+            </div>
+            <button id="addExpenseBtn" class="btn btn-primary btn-add">
+                <i class="fas fa-plus"></i> Añadir Gasto
+            </button>
+        </div>
+
+        <div class="total-summary">
+            Total Fijo Este Mes: <span id="monthlyTotalAmount">Calculando...</span>
+        </div>
+
+        <div class="view-toggle">
+            <button id="listViewBtn" class="btn-view active" aria-label="Vista de Lista"><i class="fas fa-list"></i> Lista</button>
+            <button id="calendarViewBtn" class="btn-view" aria-label="Vista de Calendario"><i class="fas fa-calendar-alt"></i> Calendario</button>
+        </div>
+
+        <div id="listViewContainer">
+            <div class="table-container">
+                <table id="fixedExpensesTable" class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Descripción</th>
+                            <th>Importe</th>
+                            <th>Categoría</th>
+                            <th>Frecuencia</th>
+                            <th>Próximo Vencimiento</th>
+                            <th>Activo</th>
+                            <th>Recordatorio</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="fixedExpensesTableBody">
+                        </tbody>
+                     <tfoot>
+                        <tr>
+                            <td colspan="8" style="text-align: center;" id="tableLoadingMessage">Cargando gastos fijos...</td>
+                        </tr>
+                     </tfoot>
+                </table>
+            </div>
+            <p id="noExpensesMessage" class="empty-list-message" style="display: none;">No has programado ningún gasto fijo todavía.</p>
+        </div>
+
+        <div id="calendarViewContainer" style="display: none;">
+            <div id="calendar" class="calendar-container"></div>
+        </div>
+
+    </div> <div id="expenseModal" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <h2 id="modalTitleExpense">Añadir Gasto Fijo</h2>
+            <form id="expenseForm">
+                <input type="hidden" id="expenseId" name="expenseId">
+
+                <div class="input-group">
+                    <label for="expenseDescription">Descripción</label>
+                    <input type="text" id="expenseDescription" name="expenseDescription" required placeholder="Ej: Alquiler, Netflix...">
+                </div>
+
+                 <div class="input-group">
+                    <label for="expenseAmount">Importe (€)</label>
+                    <input type="number" id="expenseAmount" name="expenseAmount" required step="0.01" placeholder="0.00">
+                </div>
+
+                <div class="input-group">
+                    <label for="expenseCategory">Categoría</label>
+                    <select id="expenseCategory" name="expenseCategory" required>
+                        <option value="" disabled selected>Selecciona categoría...</option>
+                        </select>
+                </div>
+
+                <div class="input-group">
+                    <label for="expenseAccount">Cuenta de Cargo (Opcional)</label>
+                    <select id="expenseAccount" name="expenseAccount">
+                         <option value="">(Ninguna específica)</option>
+                        </select>
+                </div>
+
+                 <div class="input-group">
+                    <label for="expenseFrequency">Frecuencia</label>
+                    <select id="expenseFrequency" name="expenseFrequency" required>
+                         <option value="" disabled selected>Selecciona frecuencia...</option>
+                         <option value="mensual">Mensual</option>
+                         <option value="anual">Anual</option>
+                         <option value="trimestral">Trimestral</option>
+                         <option value="semestral">Semestral</option>
+                         <option value="bimestral">Bimestral</option>
+                         <option value="semanal">Semanal</option>
+                         <option value="quincenal">Quincenal</option>
+                         <option value="unico">Una sola vez</option> </select>
+                </div>
+
+                 <div class="input-group">
+                    <label for="expenseNextDueDate">Próxima Fecha de Vencimiento/Pago</label>
+                    <input type="date" id="expenseNextDueDate" name="expenseNextDueDate" required>
+                </div>
+
+                 <div class="input-group checkbox-group">
+                     <input type="checkbox" id="expenseNotification" name="expenseNotification" checked>
+                     <label for="expenseNotification">Activar Recordatorio</label>
+                 </div>
+                  <div class="input-group checkbox-group">
+                     <input type="checkbox" id="expenseActive" name="expenseActive" checked>
+                     <label for="expenseActive">Gasto Activo</label>
+                 </div>
+
+                <div class="modal-actions">
+                    <button type="button" id="cancelExpenseButton" class="btn btn-secondary">Cancelar</button>
+                    <button type="submit" id="saveExpenseButton" class="btn btn-primary">Guardar Gasto Fijo</button>
+                </div>
+                <p id="modalExpenseError" class="error-message" style="display: none;"></p>
+            </form>
+        </div>
+    </div>
+
+     <button id="scrollTopBtn" class="scroll-top-btn" title="Volver arriba" style="display: none;"> <i class="fas fa-arrow-up"></i> </button>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/Js/supabase-init.js"></script> 
+    <script src="/Js/auth-listener.js"></script> 
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js'></script>
+    <script src="/Js/Fixed_expenses.js"></script> 
+</body>
+</html>

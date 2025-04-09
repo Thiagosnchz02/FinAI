@@ -1,0 +1,229 @@
+/* categories.css */
+/* Importar fuente si no es global */
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800&display=swap');
+
+/* ... (Estilos base de body, page-container, page-header, botones generales como en accounts.css si no son globales) ... */
+body {font-family: 'Nunito', sans-serif; background-color: #E6F0FF; margin: 0; padding: 0; color: #333;}
+.page-container { max-width: 1200px; margin: 0 auto; padding: 20px; box-sizing: border-box;}
+.page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; padding: 0 5px; flex-wrap: nowrap; gap: 15px;}
+.page-header h1 { margin: 0; font-size: 1.8em; font-weight: 800; color: #334; flex-grow: 1; text-align: center;}
+/* ... (Estilos btn, btn-primary, btn-secondary, btn-icon como en accounts.css) ... */
+.btn { padding: 10px 20px; border: none; border-radius: 50px; cursor: pointer; font-weight: 700; font-size: 0.95em; transition: background-color 0.2s ease, transform 0.1s ease; display: inline-flex; align-items: center; gap: 8px; text-decoration: none; color: white;}
+.btn i { font-size: 1.1em; } .btn:hover { transform: scale(1.03); } .btn:active { transform: scale(0.98); } .btn:disabled { background-color: #cccccc !important; cursor: not-allowed; opacity: 0.7; transform: none !important; }
+.btn-primary { background-color: #8a82d5; color: white; } .btn-primary:hover { background-color: #7068b8; } .btn-secondary { background-color: #6c757d; color: white; } .btn-secondary:hover { background-color: #5a6268; }
+.btn-icon { background: none; border: none; font-size: 1.5em; color: #667; cursor: pointer; padding: 5px; transition: color 0.2s ease, transform 0.15s ease; } .btn-icon:hover { color: #8a82d5; transform: scale(1.1); } .btn-icon:active { transform: scale(0.95); }
+
+/* --- Lista de Categorías --- */
+.category-list {
+    display: flex;
+    flex-wrap: wrap; /* Para que caigan a la siguiente línea */
+    gap: 15px; /* Espacio entre categorías */
+    margin-top: 20px;
+}
+
+/* En categories.css */
+.category-section-header {
+    width: 100%; /* Ocupa toda la línea */
+    font-size: 1.1em;
+    font-weight: 700;
+    color: #667; /* Un gris oscuro */
+    margin-top: 25px; /* Espacio antes del encabezado */
+    margin-bottom: 10px;
+    padding-bottom: 5px;
+    border-bottom: 1px solid #e0e0e0; /* Línea separadora sutil */
+    flex-basis: 100%; /* Asegura que ocupe toda la fila en flexbox */
+}
+.category-section-header:first-of-type {
+    margin-top: 10px; /* Menos espacio para el primer encabezado */
+}
+
+/* Opcional: Diferenciar visualmente defaults */
+.category-item[data-default="true"] {
+    /* background-color: #f5f5f5; */ /* Un gris ligeramente diferente? */
+    /* opacity: 0.9; */ /* Un poco transparente? */
+    border-left-style: dashed; /* Borde izquierdo discontinuo? */
+}
+
+.category-item {
+    display: flex;
+    align-items: center;
+    padding: 12px 20px;
+    border-radius: 50px; /* Píldoras redondeadas */
+    background-color: #e0e0e0; /* Color de fondo por defecto */
+    color: #333; /* Color de texto por defecto, puede necesitar ajuste según fondo */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    min-width: 150px; /* Ancho mínimo */
+    flex-grow: 1; /* Ocupa espacio */
+    position: relative; /* Para badges o indicadores */
+}
+.category-item:hover {
+    transform: scale(1.03);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08);
+}
+
+.category-icon {
+    font-size: 1.3em; /* Tamaño icono */
+    margin-right: 12px;
+    width: 25px; /* Ancho fijo para alinear */
+    text-align: center;
+    opacity: 0.8;
+}
+
+.category-name {
+    font-weight: 700;
+    font-size: 1em;
+    flex-grow: 1; /* Ocupa el espacio restante */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis; /* Puntos suspensivos si el nombre es largo */
+}
+
+.category-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: 15px; /* Espacio respecto al nombre */
+}
+
+.category-type-indicator {
+    font-size: 0.75em;
+    font-weight: 600;
+    opacity: 0.7;
+    margin-right: 5px;
+    /* Color podría cambiar según tipo */
+}
+.category-item[data-type="ingreso"] .category-type-indicator { color: #2a8a4a; } /* Verde */
+.category-item[data-type="gasto"] .category-type-indicator { color: #c53030; } /* Rojo */
+
+.category-actions .btn-icon {
+    font-size: 0.9em; /* Iconos de acción más pequeños */
+    padding: 3px;
+    color: inherit; /* Hereda color de texto (ajustar si el fondo es oscuro) */
+    opacity: 0.6;
+}
+.category-actions .btn-icon:hover {
+    opacity: 1;
+    transform: scale(1.1);
+    color: inherit; /* Mantiene color heredado */
+}
+
+/* Ocultar botones para categorías por defecto */
+.category-item[data-default="true"] .btn-edit,
+.category-item[data-default="true"] .btn-delete {
+    display: none; /* O visibility: hidden; */
+    /* O podrías dejarlos visibles pero con estilo 'disabled' */
+    /* cursor: not-allowed; opacity: 0.3; */
+}
+
+.default-badge { /* Si quieres un texto "Default" explícito */
+    position: absolute;
+    top: 5px;
+    right: 10px;
+    font-size: 0.6em;
+    background-color: rgba(0,0,0,0.1);
+    color: inherit;
+    opacity: 0.7;
+    padding: 1px 4px;
+    border-radius: 3px;
+}
+
+.header-title-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-grow: 1;
+    justify-content: center; /* Centrado */
+}
+
+/* --- Estado Vacío (reutilizable de accounts.css si quieres) --- */
+.empty-list-message {
+    text-align: center;
+    margin-top: 40px;
+    padding: 40px 20px;
+    color: #718096;
+    background-color: #fff;
+    border-radius: 20px;
+    box-shadow: 0 6px 15px rgba(140, 150, 170, 0.07);
+}
+.empty-mascot {
+    max-width: 80px;
+    margin-bottom: 15px;
+    opacity: 0.7;
+}
+
+.header-avatar-small {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #fff;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    background-color: #e0e0e0; /* Placeholder bg */
+}
+
+/* --- Modal de Categorías --- */
+/* ... (Estilos .modal-overlay, .modal-content, .modal-actions, .error-message similares a accounts.css) ... */
+.modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.6); display: flex; justify-content: center; align-items: center; z-index: 1000; opacity: 0; transition: opacity 0.3s ease; padding: 15px; box-sizing: border-box; pointer-events: none; }
+.modal-overlay.active { opacity: 1; pointer-events: auto; }
+.modal-content { background-color: #ffffff; padding: 30px 40px; border-radius: 20px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2); width: 100%; max-width: 450px; box-sizing: border-box; transform: scale(0.95); transition: transform 0.3s ease; }
+.modal-overlay.active .modal-content { transform: scale(1); }
+.modal-content h2 { text-align: center; margin-top: 0; margin-bottom: 25px; color: #8a82d5; font-weight: 800; }
+.modal-content .input-group label { display: block; margin-bottom: 8px; color: #555; font-weight: 700; font-size: 0.9em; }
+.modal-content .input-group input[type="text"],
+.modal-content .input-group input[type="color"],
+.modal-content .input-group select { width: 100%; padding: 10px 15px; border: 1px solid #ccc; border-radius: 10px; font-size: 1em; box-sizing: border-box; margin-top: 5px; }
+.modal-content .input-group input[type="color"] { height: 45px; padding: 5px; cursor: pointer; } /* Estilo especial para input color */
+.modal-content .input-group input:focus,
+.modal-content .input-group select:focus { border-color: #8a82d5; box-shadow: 0 0 0 2px rgba(138, 130, 213, 0.2); outline: none; }
+.modal-content .input-group small { font-size: 0.8em; color: #777; display: block; margin-top: 4px; }
+.modal-content .input-group small a { color: #8a82d5; }
+.modal-content .radio-group { display: flex; gap: 20px; margin-top: 10px; }
+.modal-content .radio-group label { font-weight: normal; display: flex; align-items: center; gap: 5px; cursor: pointer; }
+.modal-actions { margin-top: 30px; display: flex; justify-content: flex-end; gap: 15px; }
+.error-message { color: #dc3545; font-size: 0.9em; margin-top: 10px; text-align: center; }
+
+
+/* --- Botón Scroll to Top --- */
+.scroll-top-btn {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    background-color: #8a82d5;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    font-size: 1.5em;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    z-index: 999;
+    transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.2s ease;
+    opacity: 0;
+    visibility: hidden; /* Inicialmente oculto */
+}
+.scroll-top-btn.visible {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* --- Responsive --- */
+@media (max-width: 768px) {
+    .category-item { min-width: 200px; padding: 10px 15px;}
+    .category-icon { font-size: 1.1em; margin-right: 8px;}
+    .category-name { font-size: 0.95em;}
+    .category-actions { margin-left: 10px; gap: 5px;}
+    .category-actions .btn-icon { font-size: 0.8em;}
+}
+
+@media (max-width: 600px) {
+    .page-header h1 { font-size: 1.5em; }
+    .page-container { padding: 15px; }
+    .category-list { gap: 10px; }
+    .modal-content { padding: 20px; }
+    /* ... (ajustes modal y scrolltop como en accounts.css) ... */
+}
