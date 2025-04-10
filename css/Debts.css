@@ -1,0 +1,167 @@
+/* Debts.css */
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800&display=swap');
+
+/* --- Estilos Generales --- */
+body {
+    font-family: 'Nunito', sans-serif;
+    background-color: #a0d2eb; /* Fondo azul cielo */
+    margin: 0;
+    padding: 0;
+    color: #333;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    padding-top: 20px;
+    padding-bottom: 20px;
+}
+.page-container {
+    width: 100%;
+    max-width: 900px; /* Ancho para la lista de deudas */
+    margin: 0 auto;
+    padding: 25px 30px;
+    background-color: #ffffff;
+    border-radius: 25px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    box-sizing: border-box;
+}
+
+/* --- Cabecera (Reutilizar/Adaptar) --- */
+.page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; padding: 0 5px; flex-wrap: nowrap; gap: 15px; }
+.header-title-group { display: flex; align-items: center; gap: 12px; flex-grow: 1; justify-content: center; }
+.header-title-group h1 { margin: 0; font-size: 1.8em; font-weight: 800; color: #334; }
+.header-avatar-small { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.1); background-color: #e0e0e0; }
+
+/* --- Botones (Reutilizar/Adaptar) --- */
+.btn { padding: 10px 20px; border: none; border-radius: 50px; cursor: pointer; font-weight: 700; font-size: 0.95em; transition: background-color 0.2s ease, transform 0.1s ease; display: inline-flex; align-items: center; gap: 8px; text-decoration: none; color: white; }
+.btn i { font-size: 1.1em; } .btn:hover { transform: scale(1.03); } .btn:active { transform: scale(0.98); } .btn:disabled { background-color: #cccccc !important; cursor: not-allowed; opacity: 0.7; transform: none !important; }
+.btn-primary { background-color: #8a82d5; color: white; } .btn-primary:hover { background-color: #7068b8; } .btn-secondary { background-color: #6c757d; color: white; } .btn-secondary:hover { background-color: #5a6268; }
+.btn-icon { background: none; border: none; font-size: 1.5em; color: #667; cursor: pointer; padding: 5px; transition: color 0.2s ease, transform 0.15s ease; } .btn-icon:hover { color: #8a82d5; transform: scale(1.1); } .btn-icon:active { transform: scale(0.95); }
+
+/* --- Mensaje Vacío (Reutilizar/Adaptar) --- */
+.empty-list-message { text-align: center; margin-top: 40px; padding: 40px 20px; color: #718096; background-color: #fff; border-radius: 20px; box-shadow: 0 6px 15px rgba(140, 150, 170, 0.07); }
+.empty-mascot { max-width: 80px; margin-bottom: 15px; opacity: 0.7; }
+.empty-list-message p { margin: 8px 0; line-height: 1.6; font-size: 1.05em; }
+.empty-list-message .btn { margin-top: 25px; }
+
+/* --- Grid Lista de Deudas --- */
+.debt-list-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    margin-top: 20px; /* Espacio después de la cabecera */
+}
+
+/* --- Tarjeta de Deuda --- */
+.debt-card {
+    background-color: #ffffff;
+    border-radius: 25px;
+    padding: 20px 25px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    position: relative;
+}
+.debt-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 25px rgba(0, 0, 0, 0.15);
+}
+
+.debt-icon-status { flex-shrink: 0; text-align: center; }
+.debt-icon-bg { width: 80px; height: 80px; border-radius: 20px; display: flex; justify-content: center; align-items: center; margin-bottom: 8px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05); }
+.debt-icon-bg i { font-size: 2.5em; color: #ffffff; }
+.debt-card[data-status="pagada"] .debt-icon-bg { background-color: #81C784; } /* Verde */
+.debt-card[data-status="pendiente"] .debt-icon-bg { background-color: #FFB74D; } /* Naranja */
+.debt-card[data-status="parcial"] .debt-icon-bg { background-color: #64B5F6; } /* Azul claro */
+
+.debt-status-badge { display: inline-block; padding: 4px 10px; border-radius: 50px; font-size: 0.8em; font-weight: 700; color: #fff; }
+.status-paid { background-color: #4CAF50; }
+.status-pending { background-color: #FFA000; }
+.status-partial { background-color: #1976D2; }
+
+.debt-info { flex-grow: 1; display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px 15px; align-items: center; }
+.debt-creditor { grid-column: 1 / 3; margin: 0 0 5px 0; font-size: 1.3em; font-weight: 800; color: #2d3748; }
+.debt-description { grid-column: 1 / 3; margin: 0 0 10px 0; font-size: 0.9em; color: #718096; }
+.info-item { line-height: 1.3; }
+.info-label { display: block; font-size: 0.8em; color: #a0aec0; margin-bottom: 2px; }
+.info-value { font-weight: 700; font-size: 1.05em; color: #4a5568; }
+.info-value.balance { color: #e53e3e; } /* Rojo pendiente por defecto */
+.info-value.status-text { font-weight: 700; font-size: 1em; }
+.debt-card[data-status="pagada"] .info-value.balance { color: #38a169; /* Verde pagada */ text-decoration: line-through; }
+
+/* Estilos Botones Acción Tarjeta */
+.debt-actions { display: flex; flex-direction: column; gap: 10px; align-items: center; }
+.debt-actions .btn-icon { background-color: #f0f0f0; color: #555; border-radius: 50%; width: 40px; height: 40px; display: flex; justify-content: center; align-items: center; font-size: 1.1em; box-shadow: 0 2px 5px rgba(0,0,0,0.1); transition: background-color 0.2s ease, color 0.2s ease, transform 0.1s ease; }
+.debt-actions .btn-icon:hover { transform: scale(1.1); }
+.debt-actions .btn-edit { background-color: #e3dffc; color: #8a82d5; } /* Fondo morado claro */
+.debt-actions .btn-delete { background-color: #ffe0b2; color: #e65100; } /* Fondo naranja claro */
+.debt-actions .btn-add-payment { background-color: #e8f5e9; color: #388e3c; } /* Fondo verde claro */
+.debt-actions .btn-add-payment:hover { background-color: #c8e6c9; color: #2e7d32; }
+.debt-actions .btn-edit:hover { background-color: #d1c4e9; color: #5e35b1; }
+.debt-actions .btn-delete:hover { background-color: #ffcc80; color: #a15700; }
+
+/* --- Sección Resumen Inferior --- */
+.summary-footer { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-top: 30px; padding-top: 20px; border-top: 1px solid #d0d8e8; }
+.summary-box { background-color: #fff; border-radius: 20px; padding: 15px 20px; text-align: center; box-shadow: 0 5px 10px rgba(0, 0, 0, 0.07); }
+.summary-box.blue { background-color: #e3f2fd; border-left: 5px solid #64b5f6; }
+.summary-box.green { background-color: #e8f5e9; border-left: 5px solid #81c784; }
+.summary-box.purple { background-color: #ede7f6; border-left: 5px solid #9575cd; }
+.summary-label { display: block; font-size: 0.85em; color: #718096; margin-bottom: 5px; }
+.summary-box strong { font-size: 1.4em; font-weight: 800; color: #2d3748; display: block; }
+.summary-box small { font-size: 0.75em; color: #a0aec0; display: block; margin-top: 2px; }
+
+/* --- Modal General (Reutilizar) --- */
+.modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.6); display: flex; justify-content: center; align-items: center; z-index: 1000; opacity: 0; transition: opacity 0.3s ease; padding: 15px; box-sizing: border-box; pointer-events: none; }
+.modal-overlay.active { opacity: 1; pointer-events: auto; }
+.modal-content { background-color: #ffffff; padding: 30px 40px; border-radius: 20px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2); width: 100%; max-width: 550px; box-sizing: border-box; transform: scale(0.95); transition: transform 0.3s ease; }
+.modal-overlay.active .modal-content { transform: scale(1); }
+.modal-content h2 { text-align: center; margin-top: 0; margin-bottom: 25px; color: #8a82d5; font-weight: 800; }
+.modal-content .input-group { margin-bottom: 18px; }
+.modal-content .input-group label { display: block; margin-bottom: 6px; color: #555; font-weight: 700; font-size: 0.9em; }
+.modal-content .input-group input[type="text"],
+.modal-content .input-group input[type="number"],
+.modal-content .input-group input[type="date"],
+.modal-content .input-group select,
+.modal-content .input-group textarea { width: 100%; padding: 10px 15px; border: 1px solid #ccc; border-radius: 10px; font-size: 1em; box-sizing: border-box; margin-top: 5px; }
+.modal-content .input-group input:focus,
+.modal-content .input-group select:focus,
+.modal-content .input-group textarea:focus { border-color: #8a82d5; box-shadow: 0 0 0 2px rgba(138, 130, 213, 0.2); outline: none; }
+.modal-content .input-group select { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%238a82d5' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 15px center; background-size: 16px 12px; padding-right: 40px; }
+.modal-content .input-group textarea { resize: vertical; min-height: 60px; }
+.modal-content .input-group small { font-size: 0.8em; color: #777; display: block; margin-top: 4px; }
+.modal-actions { margin-top: 30px; display: flex; justify-content: flex-end; gap: 15px; }
+.error-message { color: #dc3545; font-size: 0.9em; margin-top: 10px; text-align: center; }
+
+/* Modal Pequeño para Pago */
+.modal-overlay.small .modal-content { max-width: 420px; }
+#addPaymentForm p { margin-bottom: 15px; text-align: center; color: #555; font-size: 0.95em; line-height: 1.4;}
+#addPaymentForm strong { color: #333; font-weight: 700; }
+
+/* --- Scroll Top Button (Reutilizar) --- */
+.scroll-top-btn { position: fixed; bottom: 30px; right: 30px; background-color: #8a82d5; color: white; border: none; border-radius: 50%; width: 50px; height: 50px; font-size: 1.5em; cursor: pointer; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); z-index: 999; transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.2s ease; opacity: 0; visibility: hidden; }
+.scroll-top-btn.visible { opacity: 1; visibility: visible; }
+.scroll-top-btn:hover { background-color: #7068b8; transform: scale(1.1); }
+
+/* --- Responsive --- */
+@media (max-width: 768px) {
+    .page-container { max-width: 95%; }
+    .debt-card { flex-direction: column; align-items: stretch; gap: 15px; padding: 15px; }
+    .debt-icon-status { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+    .debt-icon-bg { width: 60px; height: 60px; margin-bottom: 0; }
+    .debt-icon-bg i { font-size: 2em; }
+    .debt-info { grid-template-columns: 1fr; gap: 10px; }
+    .debt-creditor, .debt-description { grid-column: 1 / 2; }
+    .debt-actions { flex-direction: row; justify-content: flex-end; margin-top: 10px; padding-top: 10px; border-top: 1px solid #eee;}
+    .debt-actions .btn-add-payment { order: 0; }
+    .debt-actions .btn-icon { width: 35px; height: 35px; font-size: 1em; }
+    .summary-footer { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 600px) {
+    body { padding-top: 0; padding-bottom: 0; }
+    .page-container { max-width: 100%; border-radius: 0; padding: 15px; min-height: 100vh;}
+    .page-header h1 { font-size: 1.5em; }
+    .modal-content { padding: 20px; }
+    .summary-box strong { font-size: 1.2em; }
+}

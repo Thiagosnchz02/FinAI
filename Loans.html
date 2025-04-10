@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FinAi - Mis Préstamos</title>
+    <link rel="stylesheet" href="/css/Loans.css"> 
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="page-container">
+        <div class="page-header loans-header">
+            <button id="backButton" class="btn-icon" aria-label="Volver"><i class="fas fa-arrow-left"></i></button>
+            <div class="header-title-group">
+                <img id="userAvatarSmall" src="https://finai.es/images/avatar_predeterminado.png" alt="Avatar" class="header-avatar-small">
+                <h1>Mis Préstamos</h1>
+            </div>
+            <button id="addLoanBtn" class="btn btn-primary btn-add">
+                <i class="fas fa-plus"></i> Añadir Préstamo
+            </button>
+        </div>
+         <div id="loanList" class="loan-list">
+            </div>
+
+        <p id="loadingLoansMessage" style="text-align: center; padding: 20px; color: #666;">Cargando préstamos...</p>
+        <div id="noLoansMessage" class="empty-list-message" style="display: none;">
+            <img src="https://finai.es/images/monstruo_pixar.png" alt="Mascota FinAi Pensando" class="empty-mascot"> <p>No has registrado ningún préstamo a terceros.</p>
+            <button id="addLoanFromEmptyBtn" class="btn btn-primary">
+                 <i class="fas fa-plus"></i> Registrar Mi Primer Préstamo
+            </button>
+        </div>
+
+        <div id="summary-footer" class="summary-footer" style="display: none;">
+            <div class="summary-box blue"> <span class="summary-label">Total por cobrar</span>
+                <strong id="totalOwedToUser">€0.00</strong>
+            </div>
+            <div class="summary-box purple"> <span class="summary-label">Total prestado</span>
+                <strong id="totalLoanedActive">€0.00</strong>
+                <small>(Préstamos Activos)</small>
+            </div>
+            <div class="summary-box orange"> <span class="summary-label">Próximo vencimiento</span>
+                <strong id="nextDueDateLoan">--/--/----</strong>
+            </div>
+        </div>
+
+    </div> <div id="loanModal" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <h2 id="modalTitleLoan">Añadir Nuevo Préstamo</h2>
+            <form id="loanForm">
+                <input type="hidden" id="loanId" name="loanId">
+
+                <div class="input-group">
+                    <label for="loanDebtor">Deudor (Persona/Entidad)</label>
+                    <input type="text" id="loanDebtor" name="loanDebtor" required placeholder="Ej: Lucía, Papá, Empresa X...">
+                </div>
+
+                <div class="input-group">
+                    <label for="loanDescription">Descripción (Opcional)</label>
+                    <input type="text" id="loanDescription" name="loanDescription" placeholder="Ej: Reparación coche, Depósito alquiler...">
+                </div>
+
+                <div class="input-group">
+                    <label for="loanInitialAmount">Importe Inicial Prestado (€)</label>
+                    <input type="number" id="loanInitialAmount" name="loanInitialAmount" required step="0.01" placeholder="0.00" min="0.01">
+                </div>
+
+                <div class="input-group">
+                    <label for="loanCurrentBalance">Saldo Pendiente por Cobrar (€)</label>
+                    <input type="number" id="loanCurrentBalance" name="loanCurrentBalance" required step="0.01" placeholder="0.00" min="0">
+                    <small>Lo que te deben actualmente.</small>
+                </div>
+
+                <div class="input-group">
+                    <label for="loanInterestRate">Tasa de Interés Anual (%) (Opcional)</label>
+                    <input type="number" id="loanInterestRate" name="loanInterestRate" step="0.01" placeholder="0.00" min="0">
+                </div>
+
+                <div class="input-group">
+                    <label for="loanDueDate">Fecha Vencimiento (Opcional)</label>
+                    <input type="date" id="loanDueDate" name="loanDueDate">
+                </div>
+
+                 <div class="input-group">
+                    <label for="loanStatus">Estado</label>
+                    <select id="loanStatus" name="loanStatus" required>
+                        <option value="pendiente">Pendiente</option>
+                        <option value="parcial">Parcialmente Cobrado</option>
+                        <option value="cobrado">Cobrado</option>
+                    </select>
+                </div>
+
+                 <div class="input-group checkbox-group"> <input type="checkbox" id="loanReminderEnabled" name="loanReminderEnabled">
+                     <label for="loanReminderEnabled">Activar Recordatorio</label>
+                 </div>
+
+                 <div class="input-group">
+                    <label for="loanNotes">Notas (Opcional)</label>
+                    <textarea id="loanNotes" name="loanNotes" rows="2"></textarea>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" id="cancelLoanButton" class="btn btn-secondary">Cancelar</button>
+                    <button type="submit" id="saveLoanButton" class="btn btn-primary">Guardar Préstamo</button>
+                </div>
+                <p id="modalLoanError" class="error-message" style="display: none;"></p>
+            </form>
+        </div>
+    </div>
+
+     <div id="addCollectionModal" class="modal-overlay small" style="display: none;">
+        <div class="modal-content">
+            <h2 id="modalTitleCollection">Registrar Cobro</h2>
+            <form id="addCollectionForm">
+                <input type="hidden" id="collectionLoanId" name="collectionLoanId">
+                <p>Registrar cobro del préstamo a: <strong id="collectionLoanDebtor"></strong></p>
+                <p>Pendiente por cobrar: <strong id="collectionCurrentBalance"></strong></p>
+
+                <div class="input-group">
+                    <label for="collectionAmount">Importe Cobrado (€)</label>
+                    <input type="number" id="collectionAmount" name="collectionAmount" required step="0.01" placeholder="0.00" min="0.01">
+                </div>
+
+                <div class="input-group">
+                    <label for="collectionDate">Fecha del Cobro</label>
+                    <input type="date" id="collectionDate" name="collectionDate" required>
+                </div>
+
+                <div class="input-group">
+                    <label for="collectionAccount">Cuenta Destino (Donde recibiste el dinero)</label>
+                    <select id="collectionAccount" name="collectionAccount" required>
+                        <option value="" disabled selected>Selecciona cuenta...</option>
+                        </select>
+                </div>
+
+                 <div class="input-group">
+                    <label for="collectionNotes">Notas del Cobro (Opcional)</label>
+                    <textarea id="collectionNotes" name="collectionNotes" rows="2"></textarea>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" id="cancelCollectionButton" class="btn btn-secondary">Cancelar</button>
+                    <button type="submit" id="saveCollectionButton" class="btn btn-primary">Registrar Cobro</button>
+                </div>
+                <p id="modalCollectionError" class="error-message" style="display: none;"></p>
+            </form>
+        </div>
+    </div>
+
+
+    <button id="scrollTopBtn" class="scroll-top-btn" title="Volver arriba" style="display: none;">
+         <i class="fas fa-arrow-up"></i>
+     </button>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/Js/supabase-init.js"></script>
+    <script src="/Js/auth-listener.js"></script>
+    <script src="/Js/Loans.js"></script> </body>
+</html>

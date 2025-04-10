@@ -2,8 +2,33 @@
 @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800&display=swap');
 
 /* --- Estilos Generales (Similar a otras páginas) --- */
-body { font-family: 'Nunito', sans-serif; background-color: #f0f4f8; margin: 0; padding: 0; color: #333; }
-.page-container { max-width: 1200px; margin: 0 auto; padding: 20px; box-sizing: border-box; }
+body {
+    font-family: 'Nunito', sans-serif;
+    /* Asegúrate que este es el color de fondo que quieres */
+    background-color: #a0d2eb;
+    margin: 0;
+    padding: 0; /* El padding irá en el page-container */
+    color: #333;
+    /* Opcional: Añadir un min-height para que el fondo se vea bien si hay poco contenido */
+    min-height: 100vh;
+    display: flex; /* Ayuda a centrar el page-container si es necesario */
+    justify-content: center; /* Centra horizontalmente el page-container */
+    /* align-items: center; */ /* Descomentar si quieres centrar verticalmente TODO */
+    padding-top: 20px; /* Añadir algo de padding arriba si no usas align-items */
+    padding-bottom: 20px;
+}
+.page-container {
+    /* Este será el contenedor blanco principal */
+    width: 100%; /* Ocupa el ancho disponible */
+    max-width: 900px; /* O el ancho máximo que prefieras para esta página */
+    margin: 0 auto; /* Centrado horizontal automático */
+    padding: 25px 30px; /* Espaciado interno */
+    background-color: #ffffff;
+    border-radius: 25px; /* Bordes redondeados */
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1); /* Sombra */
+    box-sizing: border-box;
+    /* Añade aquí otros estilos si quieres que sean comunes a todos los contenedores */
+}
 .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding: 0 5px; flex-wrap: nowrap; gap: 15px; }
 .header-title-group { display: flex; align-items: center; gap: 12px; flex-grow: 1; justify-content: center; }
 .header-title-group h1 { margin: 0; font-size: 1.8em; font-weight: 800; color: #334; white-space: nowrap; }

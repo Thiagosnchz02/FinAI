@@ -48,7 +48,7 @@ resetForm.addEventListener('submit', async (event) => {
         // Si el usuario no está autenticado (lo normal en una página de reset
         // a la que se llega desde un email), necesitarás haber gestionado
         // el token/sesión del evento PASSWORD_RECOVERY.
-        const { data, error } = await _supabase.auth.updateUser({
+        const { data, error } = await supabase.auth.updateUser({
             password: newPassword
         });
 
