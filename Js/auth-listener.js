@@ -1,118 +1,111 @@
-// auth-listener.js (Intento 2 - Más agresivo)
-// Este script debe cargarse DESPUÉS de supabase-init.js
-
-console.log('DEBUG: auth-listener.js - Cargado (v2)');
+// auth-listener.js (v7 - Corrected SIGNED_IN Logic)
+console.log('DEBUG: auth-listener.js - Cargado (v7)');
 
 if (typeof supabase !== 'undefined' && supabase !== null) {
     console.log('auth-listener.js: Supabase client encontrado. Adjuntando listener.');
-
     let initialAuthCheckDone = false;
 
     supabase.auth.onAuthStateChange(async (event, session) => {
         const currentPath = window.location.pathname;
-        console.log('DEBUG (auth-listener v2): Path:', currentPath);
-        console.log('DEBUG (auth-listener v2): Event:', event);
-        console.log('DEBUG (auth-listener v2): Session:', session);
         const user = session?.user;
 
-        // --- Constantes de Páginas ---
+        // Log inicial
+        console.log(`\n--- Auth State Change (v7) ---`);
+        console.log(`  Path: [${currentPath}]`);
+        console.log(`  Event: ${event}`);
+        console.log(`  User: ${user ? user.id : 'null'}`);
+        console.log(`  Session: ${session ? '[Exists]' : 'null'}`);
+        console.log(`----------------------------`);
+
+        // Nombres de páginas
         const loginPageName = '/Login.html';
-        const dashboardPageName = '/Dashboard.html'; // ¡Verifica que este nombre/ruta sea correcto!
+        const dashboardPageName = '/Dashboard.html';
         const resetPasswordPageName = '/Reset_password.html';
         const forgotPasswordPageName = '/Reset_password_email.html';
+        // No necesitamos listar todas las páginas protegidas aquí
 
-        // --- CONDICIÓN DE SALIDA TEMPRANA ---
-        // Si estamos en la página de reset, NO HACER NADA MÁS en este listener.
-        if (currentPath.endsWith(resetPasswordPageName)) {
-            console.log('DEBUG (auth-listener v2): En Reset Password Page. DETENIENDO listener aquí.');
-             // Disparamos authReady aquí también si no se ha hecho,
-             // para que Reset_password.js sepa que puede intentar usar supabase.
-             if (!initialAuthCheckDone) {
-                 initialAuthCheckDone = true;
-                 console.log('DEBUG (auth-listener v2): Initial check on Reset Page. Triggering authReady.');
-                 document.dispatchEvent(new CustomEvent('authReady', { detail: { session, user } }));
-             }
-            return; // Salida temprana crucial
-        }
-
-        // --- Disparar 'authReady' (si no se hizo ya y no estamos en reset) ---
+        // Disparar 'authReady' una sola vez
         if (!initialAuthCheckDone) {
-            initialAuthCheckDone = true;
-            console.log('DEBUG (auth-listener v2): Initial auth state determined (not reset page). Triggering authReady.');
-            document.dispatchEvent(new CustomEvent('authReady', { detail: { session, user } }));
+             initialAuthCheckDone = true;
+             console.log('DEBUG (v7): Triggering authReady.');
+             document.dispatchEvent(new CustomEvent('authReady', { detail: { session, user } }));
         }
-        // ------------------------------------------------------------------------
 
+        // --- Salida Temprana para Reset Page ---
+        if (currentPath.endsWith(resetPasswordPageName)) {
+            console.log('DEBUG (v7): En Reset Password Page. DETENIENDO listener.');
+            return;
+        }
 
-        // --- MANEJO DE EVENTOS ESPECÍFICOS (Fuera de Reset Page) ---
+        // --- MANEJO DE EVENTOS ESPECÍFICOS ---
 
-        // Evento PASSWORD_RECOVERY (Solo redirige SI NO estamos ya en la pág de reset)
+        // Evento: Recuperación de contraseña (lleva a la página de reset si no estás ahí)
         if (event === 'PASSWORD_RECOVERY') {
-            console.log("DEBUG (auth-listener v2): Evento PASSWORD_RECOVERY (pero NO deberíamos estar aquí si estamos en Reset Page).");
-            // La condición de salida temprana debería haber actuado, pero por si acaso:
-            if (!currentPath.endsWith(resetPasswordPageName)) { // Doble check
-                console.log('DEBUG (auth-listener v2): Redirigiendo desde RECOVERY a:', resetPasswordPageName);
+            console.log("DEBUG (v7): Evento PASSWORD_RECOVERY.");
+            if (!currentPath.endsWith(resetPasswordPageName)) {
+                console.log('DEBUG (v7): Redirigiendo desde RECOVERY a:', resetPasswordPageName);
                 window.location.replace(resetPasswordPageName);
             }
-            return; // Detener aquí para este evento
-        }
-
-        // Evento SIGNED_IN
-        if (event === 'SIGNED_IN') {
-            console.log("DEBUG (auth-listener v2): Evento SIGNED_IN.");
-            if (!currentPath.endsWith(dashboardPageName)) {
-                console.log(`DEBUG (auth-listener v2): Redirigiendo desde SIGNED_IN a dashboard (${dashboardPageName}).`);
-                window.location.replace(dashboardPageName);
-            } else {
-                 console.log('DEBUG (auth-listener v2): Ya en dashboard, no redirigir.');
-            }
             return; // Detener aquí
         }
 
-        // Evento SIGNED_OUT
+        // Evento: Cierre de sesión (SIEMPRE lleva a login si no estás ahí)
         if (event === 'SIGNED_OUT') {
-            console.log("DEBUG (auth-listener v2): Evento SIGNED_OUT.");
+            console.log("DEBUG (v7): Evento SIGNED_OUT.");
             if (!currentPath.endsWith(loginPageName)) {
-                console.log(`DEBUG (auth-listener v2): Redirigiendo desde SIGNED_OUT a login (${loginPageName}).`);
+                console.log(`DEBUG (v7): SIGNED_OUT - Redirigiendo a login (${loginPageName}).`);
                 window.location.replace(loginPageName);
             } else {
-                console.log('DEBUG (auth-listener v2): Ya en login, no redirigir.');
+                console.log('DEBUG (v7): SIGNED_OUT - Ya en login, no redirigir.');
             }
             return; // Detener aquí
         }
 
-        // --- LÓGICA GENERAL (Solo si NO estamos en Reset Page y NO hubo evento específico) ---
-        console.log("DEBUG (auth-listener v2): Ejecutando Lógica General.");
-
-        if (user) { // Usuario logueado
-            console.log("DEBUG (auth-listener v2): Usuario detectado en Lógica General.");
-             if (currentPath.endsWith(loginPageName) || currentPath.endsWith(forgotPasswordPageName)) {
-                console.log(`DEBUG (auth-listener v2): Logueado en página pública (${currentPath}). Redirigiendo a dashboard.`);
+        // Evento: Inicio de sesión (Solo redirige a Dashboard SI estás en Login)
+        if (event === 'SIGNED_IN') {
+            console.log("DEBUG (v7): Evento SIGNED_IN detectado.");
+            if (currentPath.endsWith(loginPageName)) {
+                // Si SIGNED_IN ocurre mientras estás en la página de Login
+                console.log(`DEBUG (v7): SIGNED_IN ocurrió en Login Page. Redirigiendo a Dashboard.`);
                 window.location.replace(dashboardPageName);
             } else {
-                // Si el usuario está logueado y en una página que no es Login ni Forgot Password (y tampoco Reset Password por la salida temprana),
-                // asumimos que está en una página correcta (Dashboard, Cuentas, etc.)
-                console.log(`DEBUG (auth-listener v2): Logueado en página (${currentPath}). No se redirige.`);
+                // Si SIGNED_IN ocurre en cualquier otra página (Dashboard, Settings, Profile...), no hagas nada.
+                console.log(`DEBUG (v7): SIGNED_IN ocurrió en [${currentPath}]. No se requiere redirección desde aquí.`);
+            }
+            return; // Detener aquí después de manejar SIGNED_IN
+        }
+
+        // --- LÓGICA GENERAL (Para INITIAL_SESSION o eventos desconocidos) ---
+        console.log("DEBUG (v7): Ejecutando Lógica General (probablemente INITIAL_SESSION).");
+        console.log(`DEBUG (v7): General Logic Check - User: ${!!user}, Path: [${currentPath}]`);
+
+        if (user) { // Usuario logueado (y no fue un evento específico manejado arriba)
+            console.log("DEBUG (v7): User is LOGGED IN (Initial Session?).");
+             // ¿Está en una página pública donde NO debería estar? (Login/Forgot)
+             if (currentPath.endsWith(loginPageName) || currentPath.endsWith(forgotPasswordPageName)) {
+                console.log(`DEBUG (v7): Logged in on Public Auth Page (${currentPath}). REDIRECTING to Dashboard.`);
+                window.location.replace(dashboardPageName);
+            } else {
+                 // Está en una página protegida (Dashboard, Settings, Profile, etc.) o en Reset. ¡Todo OK!
+                 console.log(`DEBUG (v7): Logged in on Page [${currentPath}]. Acceso permitido.`);
             }
         } else { // Usuario NO logueado
-            console.log("DEBUG (auth-listener v2): Usuario NO logueado en Lógica General.");
-            // Definir páginas públicas (Reset Password ya está excluida por la salida temprana)
-            const publicPageNames = [loginPageName, forgotPasswordPageName];
-            // Permitir también la raíz o index.html como públicas
-            let isPublic = publicPageNames.some(pageName => currentPath.endsWith(pageName)) || currentPath === '/' || currentPath.endsWith('/index.html');
+             console.log("DEBUG (v7): User is LOGGED OUT (Initial Session?).");
+             // ¿Está en una página pública permitida?
+             const publicPageNames = [loginPageName, forgotPasswordPageName, resetPasswordPageName];
+             let isPublic = publicPageNames.some(pageName => currentPath.endsWith(pageName)) || currentPath === '/' || currentPath.endsWith('/index.html');
 
-            if (!isPublic) {
-                console.warn(`DEBUG (auth-listener v2): NO logueado en ruta protegida (${currentPath}). Redirigiendo a login...`);
-                // Descomenta la siguiente línea cuando quieras activar la protección de rutas para todas las demás páginas
-                // window.location.replace(loginPageName);
-            } else {
-                 console.log(`DEBUG (auth-listener v2): NO logueado en página pública (${currentPath}). No se redirige.`);
-            }
+             if (!isPublic) {
+                 // NO está en pública y NO está logueado -> A Login!
+                 console.warn(`DEBUG (v7): Logged out on PROTECTED Page (${currentPath}). REDIRECTING to Login.`);
+                  window.location.replace(loginPageName); // Redirección de protección ACTIVADA
+             } else {
+                  console.log(`DEBUG (v7): Logged out on PUBLIC Page (${currentPath}). No redirect needed.`);
+             }
         }
+        console.log("DEBUG (v7): End of listener execution.");
     });
 
 } else {
-    console.error("auth-listener.js (v2): Supabase client no está definido.");
-    // Considera añadir un mensaje de error visible para el usuario
-    // document.body.innerHTML = '<p style="color: red; text-align: center; padding-top: 50px;">Error crítico: La aplicación no pudo inicializarse correctamente.</p>';
+    console.error("auth-listener.js (v7): Supabase client no está definido.");
 }

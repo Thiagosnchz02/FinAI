@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FinAi - Configuración</title>
+    <link rel="stylesheet" href="/css/Settings.css"> 
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="page-container">
+        <div class="page-header settings-header">
+            <button id="backButton" class="btn-icon" aria-label="Volver"><i class="fas fa-arrow-left"></i></button>
+            <div class="header-title-group">
+                <img id="userAvatarSmall" src="https://finai.es/images/avatar_predeterminado.png" alt="Avatar" class="header-avatar-small">
+                <h1>Configuración</h1>
+            </div>
+            <div style="width: 40px;"></div> </div>
+
+        <div class="settings-grid">
+
+            <div class="settings-card" id="generalCard">
+                <h2><i class="fas fa-cog icon-prefix"></i> General</h2>
+                <div class="setting-item">
+                    <span><i class="fas fa-euro-sign icon-inline"></i> Moneda Principal</span>
+                    <span class="setting-value" id="mainCurrency">EUR (Predet.)</span>
+                </div>
+                 <div class="setting-item clickable" id="defaultViewSetting">
+                    <span><i class="fas fa-eye icon-inline"></i> Vista Inicial</span>
+                    <span class="setting-value-editable" id="defaultViewValueEl">Dashboard <i class="fas fa-chevron-right"></i></span>
+                </div>
+                <button class="btn btn-secondary btn-full-width" id="exportDataBtn"><i class="fas fa-download"></i> Exportar Datos</button>
+                <button class="btn btn-secondary btn-full-width" id="importDataBtn"><i class="fas fa-upload"></i> Importar Datos</button>
+                <button class="btn btn-danger btn-full-width" id="deleteAccountBtn"><i class="fas fa-trash-alt"></i> Eliminar Cuenta</button>
+            </div>
+
+            <div class="settings-card" id="appearanceCard">
+                <h2><i class="fas fa-paint-brush icon-prefix"></i> Apariencia</h2>
+                <div class="setting-item">
+                    <span><i class="fas fa-palette icon-inline"></i> Tema</span>
+                    <div class="theme-selector" id="themeSelector">
+                        <button class="theme-option" data-theme="light" title="Claro"><i class="fas fa-sun"></i></button>
+                        <button class="theme-option" data-theme="dark" title="Oscuro"><i class="fas fa-moon"></i></button>
+                        <button class="theme-option" data-theme="system" title="Sistema"><i class="fas fa-desktop"></i></button>
+                    </div>
+                </div>
+                <div class="setting-item clickable" id="languageSetting">
+                     <span><i class="fas fa-language icon-inline"></i> Idioma</span>
+                     <span class="setting-value-editable" id="languageValue">Español <i class="fas fa-chevron-right"></i></span>
+                </div>
+            </div>
+
+            <div class="settings-card" id="securityCard">
+                 <h2><i class="fas fa-shield-alt icon-prefix"></i> Seguridad</h2>
+                 <button class="btn btn-secondary btn-full-width" id="changePasswordBtn"><i class="fas fa-lock"></i> Cambiar Contraseña</button>
+                 <div class="setting-item">
+                    <span><i class="fas fa-key icon-inline"></i> Autenticación 2 Pasos</span>
+                    <label class="toggle-switch">
+                         <input type="checkbox" id="twoFactorToggle">
+                         <span class="toggle-slider"></span>
+                     </label>
+                 </div>
+                 <small class="setting-note">Activar 2FA requiere configuración adicional.</small>
+            </div>
+
+            <div class="settings-card" id="notificationsCard">
+                 <h2><i class="fas fa-bell icon-prefix"></i> Notificaciones</h2>
+                 <div class="setting-item">
+                    <span><i class="fas fa-calendar-alt icon-inline"></i> Recordatorio Gasto Fijo</span>
+                    <label class="toggle-switch">
+                         <input type="checkbox" id="notifyFixedExpenseToggle" data-pref="fixed_expense">
+                         <span class="toggle-slider"></span>
+                     </label>
+                 </div>
+                  <div class="setting-item">
+                    <span><i class="fas fa-chart-pie icon-inline"></i> Alerta Presupuesto</span>
+                    <label class="toggle-switch">
+                         <input type="checkbox" id="notifyBudgetAlertToggle" data-pref="budget_alert">
+                         <span class="toggle-slider"></span>
+                     </label>
+                 </div>
+                  <div class="setting-item">
+                    <span><i class="fas fa-bullseye icon-inline"></i> Meta Ahorro Alcanzada</span>
+                    <label class="toggle-switch">
+                         <input type="checkbox" id="notifyGoalReachedToggle" data-pref="goal_reached">
+                         <span class="toggle-slider"></span>
+                     </label>
+                 </div>
+            </div>
+
+            <div class="settings-card" id="accountCard">
+                <h2><i class="fas fa-user-circle icon-prefix"></i> Cuenta</h2>
+                <button class="btn btn-secondary btn-full-width" id="editProfileBtn"><i class="fas fa-user-edit"></i> Editar Perfil</button>
+                <button class="btn btn-secondary btn-full-width" id="manageCategoriesBtn"><i class="fas fa-tags"></i> Gestionar Categorías</button>
+                <button class="btn btn-secondary btn-full-width" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</button>
+            </div>
+
+             <div class="settings-card" id="helpCard">
+                <h2><i class="fas fa-question-circle icon-prefix"></i> Ayuda</h2>
+                 <a href="#" class="setting-link" id="helpLink"><i class="fas fa-life-ring icon-inline"></i> Centro de Ayuda / FAQ</a>
+                 <a href="#" class="setting-link" id="privacyLink"><i class="fas fa-user-secret icon-inline"></i> Política de Privacidad</a>
+                 <a href="#" class="setting-link" id="termsLink"><i class="fas fa-file-contract icon-inline"></i> Términos de Servicio</a>
+            </div>
+
+        </div> <div class="app-version" id="appVersion">
+            FinAi v1.0.0
+        </div>
+
+    </div> 
+    <div id="selectionModal" class="modal-overlay small" style="display: none;">
+        <div class="modal-content">
+            <h2 id="selectionModalTitle">Seleccionar Opción</h2>
+            <form id="selectionForm">
+                <input type="hidden" id="selectionSettingKey" name="selectionSettingKey">
+
+                <div id="selectionOptionsContainer" class="selection-options">
+                    <p>Cargando opciones...</p>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" id="cancelSelectionButton" class="btn btn-secondary">Cancelar</button>
+                    <button type="submit" id="saveSelectionButton" class="btn btn-primary">Guardar Selección</button>
+                </div>
+                <p id="modalSelectionError" class="error-message" style="display: none;"></p>
+            </form>
+        </div>
+    </div>
+    <div id="setup2faModal" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <h2 id="modalTitle2fa">Configurar Autenticación de Dos Pasos</h2>
+            <p class="modal-instructions">
+                Escanea el siguiente código QR con tu aplicación de autenticación (Google Authenticator, Authy, etc.).
+                Si no puedes escanear, puedes introducir manualmente la clave secreta.
+            </p>
+
+            <div class="mfa-setup-details">
+                <div id="qrCodeContainer" class="qr-code-container">
+                    <p>Cargando QR...</p>
+                </div>
+                <div class="secret-key-container">
+                    <label for="secretCodeDisplay">Clave Secreta (Manual):</label>
+                    <input type="text" id="secretCodeDisplay" readonly>
+                    <button type="button" id="copySecretBtn" class="btn-icon-small" title="Copiar Secreto"><i class="fas fa-copy"></i></button>
+                </div>
+            </div>
+
+            <p class="modal-instructions">
+                Luego, introduce el código de 6 dígitos generado por tu aplicación para verificar y completar la activación.
+            </p>
+
+            <form id="verify2faForm">
+                <input type="hidden" id="mfaFactorId"> <div class="input-group">
+                    <label for="verificationCodeInput">Código de Verificación (6 dígitos)</label>
+                    <input type="text" id="verificationCodeInput" name="verificationCodeInput" required
+                           inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code"
+                           placeholder="123456">
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" id="cancel2faButton" class="btn btn-secondary">Cancelar</button>
+                    <button type="submit" id="verify2faButton" class="btn btn-primary">Verificar y Activar</button>
+                </div>
+                <p id="modal2faError" class="error-message" style="display: none;"></p>
+            </form>
+        </div>
+    </div>
+    <div id="deleteAccountModal" class="modal-overlay small" style="display: none;">
+        <div class="modal-content danger-modal"> <h2 id="modalTitleDelete"><i class="fas fa-exclamation-triangle"></i> Eliminar Cuenta Permanentemente</h2>
+            <p class="modal-instructions danger-text">
+                ¡Atención! Esta acción es irreversible. Se borrarán **todos** tus datos financieros,
+                cuentas, transacciones, presupuestos, metas y perfil asociados a
+                <strong><span id="deleteUserEmail">tu email</span></strong>.
+            </p>
+            <p class="modal-instructions">
+                Para confirmar, por favor introduce tu contraseña actual.
+            </p>
+
+            <form id="deleteConfirmForm">
+                <div class="input-group">
+                    <label for="deleteConfirmPassword">Tu Contraseña Actual</label>
+                    <input type="password" id="deleteConfirmPassword" name="deleteConfirmPassword" required autocomplete="current-password">
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" id="cancelDeleteButton" class="btn btn-secondary">Cancelar</button>
+                    <button type="submit" id="confirmDeleteButton" class="btn btn-danger">Eliminar Mi Cuenta</button> </div>
+                <p id="modalDeleteError" class="error-message" style="display: none;"></p>
+            </form>
+        </div>
+    </div>
+    <button id="scrollTopBtn" class="scroll-top-btn" title="Volver arriba" style="display: none;">
+         <i class="fas fa-arrow-up"></i>
+     </button>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/Js/supabase-init.js"></script>
+    <script src="/Js/auth-listener.js"></script>
+    <script src="/Js/Settings.js"></script> </body>
+</html>

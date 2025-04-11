@@ -1,0 +1,136 @@
+/* Trips.css */
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800&display=swap');
+
+/* --- Estilos Generales y Contenedor --- */
+body { font-family: 'Nunito', sans-serif; background-color: #a0d2eb; margin: 0; padding: 0; color: #333; min-height: 100vh; display: flex; justify-content: center; padding-top: 20px; padding-bottom: 20px; }
+.page-container { width: 100%; max-width: 950px; margin: 0 auto; padding: 25px 30px; background-color: #ffffff; border-radius: 25px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1); box-sizing: border-box; }
+
+/* --- Cabecera --- */
+.page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding: 0 5px; flex-wrap: nowrap; gap: 15px; }
+.header-title-group { display: flex; align-items: center; gap: 12px; flex-grow: 1; justify-content: center; }
+.header-title-group h1 { margin: 0; font-size: 1.8em; font-weight: 800; color: #334; }
+.header-avatar-small { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.1); background-color: #e0e0e0; }
+
+/* --- Botones --- */
+.btn { padding: 10px 20px; border: none; border-radius: 50px; cursor: pointer; font-weight: 700; font-size: 0.95em; transition: background-color 0.2s ease, transform 0.1s ease; display: inline-flex; align-items: center; gap: 8px; text-decoration: none; color: white; }
+.btn i { font-size: 1.1em; } .btn:hover { transform: scale(1.03); } .btn:active { transform: scale(0.98); } .btn:disabled { background-color: #cccccc !important; cursor: not-allowed; opacity: 0.7; transform: none !important; }
+.btn-primary { background-color: #8a82d5; color: white; } .btn-primary:hover { background-color: #7068b8; } .btn-secondary { background-color: #6c757d; color: white; } .btn-secondary:hover { background-color: #5a6268; }
+.btn-icon { background: none; border: none; font-size: 1.5em; color: #667; cursor: pointer; padding: 5px; transition: color 0.2s ease, transform 0.15s ease; } .btn-icon:hover { color: #8a82d5; transform: scale(1.1); } .btn-icon:active { transform: scale(0.95); }
+.btn-add { font-size: 1em; }
+.btn-sm { padding: 6px 14px; font-size: 0.85em; } /* Botón más pequeño */
+.full-width-btn { width: 100%; justify-content: center; margin-bottom: 25px; font-size: 1em; padding: 12px 20px; }
+.orange-btn { background-color: #FFA726; } .orange-btn:hover { background-color: #FB8C00; }
+
+/* --- Vistas Dinámicas --- */
+.view { display: none; /* Ocultas por defecto */ animation: fadeIn 0.5s ease-out; }
+.view.active { display: block; /* Visible si tiene clase active */ }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+/* --- Estilos Vista Lista de Viajes --- */
+.trip-list { display: flex; flex-direction: column; gap: 20px; }
+.trip-card { background-color: #f8f9fa; /* Fondo tarjeta ligeramente gris */ border-radius: 20px; padding: 15px 20px; box-shadow: 0 6px 15px rgba(140, 150, 170, 0.08); display: flex; align-items: center; gap: 20px; transition: transform 0.2s ease, box-shadow 0.2s ease; border: 1px solid #e2e8f0; }
+.trip-card:hover { transform: translateY(-4px); box-shadow: 0 10px 20px rgba(140, 150, 170, 0.12); }
+
+.trip-icon-container { flex-shrink: 0; width: 70px; height: 70px; border-radius: 18px; background-color: #d1c4e9; /* Morado claro por defecto */ display: flex; justify-content: center; align-items: center; }
+.trip-icon-container i { font-size: 2.2em; color: #673ab7; } /* Morado oscuro */
+
+.trip-info { flex-grow: 1; display: grid; grid-template-columns: 1fr; gap: 4px; } /* Info en una columna */
+.trip-name { font-size: 1.25em; font-weight: 800; color: #334; margin: 0; }
+.trip-destination { font-size: 0.9em; color: #718096; margin-bottom: 5px; }
+.trip-dates { font-size: 0.8em; color: #a0aec0; margin-bottom: 8px; }
+.trip-budget-saved { display: flex; justify-content: space-between; font-size: 0.85em; color: #4a5568; gap: 15px; margin-bottom: 8px; }
+.trip-budget-saved span strong { font-weight: 700; }
+
+.trip-progress-bar-container { width: 100%; height: 8px; background-color: #e2e8f0; border-radius: 4px; overflow: hidden; margin-top: 5px; }
+.trip-progress-bar { height: 100%; width: 0%; background-color: #ffcc80; /* Naranja claro */ border-radius: 4px; transition: width 0.5s ease-out; }
+
+.trip-actions { display: flex; gap: 8px; align-items: center; }
+.trip-actions .btn-icon { background-color: #e3f2fd; color: #1e88e5; /* Azul */ border-radius: 10px; width: 36px; height: 36px; display: flex; justify-content: center; align-items: center; font-size: 1em; box-shadow: 0 1px 3px rgba(0,0,0,0.1); transition: background-color 0.2s ease, transform 0.1s ease; padding: 0;}
+.trip-actions .btn-icon:hover { transform: scale(1.1); }
+.trip-actions .btn-view-expenses { background-color: #e3f2fd; color: #1e88e5;}
+.trip-actions .btn-edit-trip { background-color: #fff9c4; color: #f57f17;}
+.trip-actions .btn-delete-trip { background-color: #ffcdd2; color: #c62828;}
+
+/* --- Estilos Vista Detalle Viaje --- */
+.trip-detail-header { background-color: #e8efff; padding: 20px; border-radius: 15px; margin-bottom: 25px; text-align: center; }
+.trip-detail-header h2 { margin: 0 0 5px 0; font-size: 1.6em; color: #4a5568; font-weight: 800; }
+.trip-detail-header p { margin: 0 0 15px 0; color: #718096; font-size: 0.95em; }
+.detail-summary { display: flex; justify-content: center; gap: 25px; flex-wrap: wrap; font-size: 0.9em; }
+.detail-summary div { color: #4a5568; }
+.detail-summary span { color: #718096; margin-right: 5px; }
+.detail-summary strong { font-weight: 800; color: #2d3748; font-size: 1.1em; }
+#detailTripRemaining.negative { color: #e53e3e; } #detailTripRemaining.positive { color: #38a169; }
+
+.detail-actions-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+
+/* Tabla de Gastos */
+#tripExpensesTableWrapper { overflow-x: auto; }
+.expenses-table { width: 100%; border-collapse: collapse; font-size: 0.95em; background-color: #fff; border-radius: 15px; overflow: hidden; /* Para bordes redondeados */ box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+.expenses-table th, .expenses-table td { padding: 10px 12px; text-align: left; border-bottom: 1px solid #edf2f7; }
+.expenses-table thead th { background-color: #f8f9fa; font-weight: 700; color: #555; font-size: 0.9em; text-transform: uppercase; }
+.expenses-table tbody tr:hover { background-color: #f9f9fc; }
+.expenses-table .amount-col { text-align: right; font-weight: 700; color: #e53e3e; } /* Gastos en rojo */
+.expenses-table .actions-col { text-align: right; }
+.expenses-table .actions-col .btn-icon { font-size: 0.9em; color: #a0aec0; padding: 3px; margin-left: 5px; }
+.expenses-table .actions-col .btn-icon:hover { color: #8a82d5; }
+.expenses-table .actions-col .btn-delete-expense:hover { color: #f56565; }
+
+.small-empty { font-size: 0.9em; padding: 20px; background: none; box-shadow: none; margin-top: 10px; }
+
+
+/* --- Resumen Footer Lista --- */
+.summary-footer { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-top: 30px; padding-top: 20px; border-top: 1px solid #d0d8e8; }
+.summary-box { background-color: #fff; border-radius: 20px; padding: 15px 20px; text-align: center; box-shadow: 0 5px 10px rgba(0, 0, 0, 0.07); }
+/* Colores Viajes */
+.summary-box.blue { background-color: #e3f2fd; border-left: 5px solid #64b5f6; }
+.summary-box.purple { background-color: #ede7f6; border-left: 5px solid #9575cd; }
+.summary-box.orange { background-color: #fff3e0; border-left: 5px solid #ffb74d; }
+.summary-label { display: block; font-size: 0.85em; color: #718096; margin-bottom: 5px; }
+.summary-box strong { font-size: 1.4em; font-weight: 800; color: #2d3748; display: block; }
+.summary-box small { font-size: 0.75em; color: #a0aec0; display: block; margin-top: 2px; }
+
+/* --- Modales (Reutilizar/Adaptar) --- */
+.modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.6); display: flex; justify-content: center; align-items: center; z-index: 1000; opacity: 0; transition: opacity 0.3s ease; padding: 15px; box-sizing: border-box; pointer-events: none; }
+.modal-overlay.active { opacity: 1; pointer-events: auto; }
+.modal-content { background-color: #ffffff; padding: 30px 40px; border-radius: 20px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2); width: 100%; max-width: 500px; box-sizing: border-box; transform: scale(0.95); transition: transform 0.3s ease; }
+.modal-overlay.active .modal-content { transform: scale(1); }
+.modal-content h2 { text-align: center; margin-top: 0; margin-bottom: 25px; color: #8a82d5; font-weight: 800; }
+.modal-content .input-group { margin-bottom: 18px; }
+.modal-content .input-group label { display: block; margin-bottom: 6px; color: #555; font-weight: 700; font-size: 0.9em; }
+.modal-content .input-group input[type="text"],
+.modal-content .input-group input[type="number"],
+.modal-content .input-group input[type="date"],
+.modal-content .input-group select,
+.modal-content .input-group textarea { width: 100%; padding: 10px 15px; border: 1px solid #ccc; border-radius: 10px; font-size: 1em; box-sizing: border-box; margin-top: 5px; }
+.modal-content .input-group input:focus,
+.modal-content .input-group select:focus,
+.modal-content .input-group textarea:focus { border-color: #8a82d5; box-shadow: 0 0 0 2px rgba(138, 130, 213, 0.2); outline: none; }
+.modal-content .input-group textarea { resize: vertical; min-height: 60px; }
+.modal-content .input-group small { font-size: 0.8em; color: #777; display: block; margin-top: 4px; }
+.modal-actions { margin-top: 30px; display: flex; justify-content: flex-end; gap: 15px; }
+.error-message { color: #dc3545; font-size: 0.9em; margin-top: 10px; text-align: center; }
+
+/* --- Scroll Top Button (Reutilizar) --- */
+.scroll-top-btn { position: fixed; bottom: 30px; right: 30px; background-color: #FFA726; /* Naranja */ color: white; border: none; border-radius: 50%; width: 50px; height: 50px; font-size: 1.5em; cursor: pointer; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); z-index: 999; transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.2s ease; opacity: 0; visibility: hidden; }
+.scroll-top-btn.visible { opacity: 1; visibility: visible; }
+.scroll-top-btn:hover { background-color: #FB8C00; transform: scale(1.1); }
+
+/* --- Responsive --- */
+@media (max-width: 768px) {
+    .page-container { max-width: 95%; }
+    .trip-card { flex-direction: column; align-items: stretch; text-align: center; }
+    .trip-icon-container { margin: 0 auto 10px auto; }
+    .trip-actions { justify-content: center; margin-top: 15px; padding-top: 10px; border-top: 1px solid #eee;}
+    .summary-footer { grid-template-columns: 1fr; }
+    .expenses-table th, .expenses-table td { padding: 8px; font-size: 0.9em;}
+    /* Ocultar columnas menos importantes en tabla de gastos */
+    .expenses-table th:nth-child(3), .expenses-table td:nth-child(3) { display: none; } /* Ocultar categoría? */
+}
+@media (max-width: 600px) {
+    body { padding-top: 0; padding-bottom: 0; }
+    .page-container { max-width: 100%; border-radius: 0; padding: 15px; min-height: 100vh;}
+    .page-header h1 { font-size: 1.5em; }
+    .modal-content { padding: 20px; }
+    .summary-box strong { font-size: 1.2em; }
+    .detail-actions-header { flex-direction: column; gap: 10px; align-items: stretch; }
+}

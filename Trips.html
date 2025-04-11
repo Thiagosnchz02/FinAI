@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FinAi - Mis Viajes</title>
+    <link rel="stylesheet" href="/css/Trips.css"> <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="page-container">
+        <div class="page-header trips-header">
+            <button id="backButton" class="btn-icon" aria-label="Volver"><i class="fas fa-arrow-left"></i></button>
+            <div class="header-title-group">
+                <img id="userAvatarSmall" src="https://finai.es/images/avatar_predeterminado.png" alt="Avatar" class="header-avatar-small">
+                <h1>Mis Viajes</h1>
+            </div>
+             </div>
+
+        <div id="tripsListView" class="view active">
+            <button id="addTripBtn" class="btn btn-primary btn-add orange-btn full-width-btn">
+                <i class="fas fa-plus"></i> Añadir Viaje
+            </button>
+
+            <div id="tripListContainer" class="trip-list">
+                <p id="loadingTripsMessage" style="text-align: center; padding: 20px; color: #666;">Cargando viajes...</p>
+            </div>
+
+             <div id="noTripsMessage" class="empty-list-message" style="display: none;">
+                 <img src="https://finai.es/images/monstruo_viajero_pixar.png" alt="Mascota FinAi Viajera" class="empty-mascot">
+                 <p>¡A planificar la próxima aventura!</p>
+                 <p>Registra tu primer viaje para llevar un control de presupuesto y gastos.</p>
+                <button id="addTripFromEmptyBtn" class="btn btn-primary orange-btn"> <i class="fas fa-plus"></i> Registrar Mi Primer Viaje
+                </button>
+            </div>
+
+             <div id="summary-footer-list" class="summary-footer" style="display: none;">
+                <div class="summary-box blue">
+                    <span class="summary-label">Próximo Viaje</span>
+                    <strong id="nextTripDate">--/--/----</strong>
+                </div>
+                <div class="summary-box purple">
+                    <span class="summary-label">Presup. Total</span>
+                    <strong id="totalBudgetedTrips">€0.00</strong>
+                     <small>(Viajes Futuros/Activos)</small>
+                </div>
+                <div class="summary-box orange">
+                    <span class="summary-label">Ahorrado Viajes</span>
+                    <strong id="totalSavedForTrips">€0.00</strong>
+                </div>
+            </div>
+        </div><div id="tripDetailView" class="view" style="display: none;">
+
+            <div id="tripDetailHeader" class="trip-detail-header">
+                <h2 id="detailTripName">Nombre del Viaje</h2>
+                <p id="detailTripDates">DD/MM/AAAA - DD/MM/AAAA</p>
+                <div class="detail-summary">
+                    <div><span>Presupuesto:</span> <strong id="detailTripBudget">€0.00</strong></div>
+                    <div><span>Gastado:</span> <strong id="detailTripSpent">€0.00</strong></div>
+                    <div><span>Restante:</span> <strong id="detailTripRemaining" class="positive">€0.00</strong></div>
+                </div>
+            </div>
+
+             <div class="detail-actions-header">
+                 <button id="backToListBtn" class="btn btn-secondary btn-sm">
+                     <i class="fas fa-arrow-left"></i> Volver a Viajes
+                 </button>
+                 <button id="addTripExpenseBtn" class="btn btn-primary btn-add btn-sm">
+                     <i class="fas fa-plus"></i> Añadir Gasto
+                 </button>
+             </div>
+
+
+            <div id="tripExpensesListContainer">
+                 <p id="loadingTripExpensesMessage" style="text-align: center; padding: 20px; color: #666;">Cargando gastos...</p>
+                 <div id="tripExpensesTableWrapper" style="display: none;">
+                     <table class="expenses-table">
+                         <thead>
+                             <tr>
+                                 <th>Fecha</th>
+                                 <th>Descripción</th>
+                                 <th>Categoría</th>
+                                 <th class="amount-col">Importe</th>
+                                 <th>Acciones</th>
+                             </tr>
+                         </thead>
+                         <tbody id="tripExpensesTableBody">
+                             </tbody>
+                     </table>
+                 </div>
+                <p id="noTripExpensesMessage" class="empty-list-message small-empty" style="display: none;">Aún no has registrado gastos para este viaje.</p>
+            </div>
+
+        </div> </div> <div id="tripModal" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <h2 id="modalTitleTrip">Añadir Nuevo Viaje</h2>
+            <form id="tripForm">
+                <input type="hidden" id="tripId" name="tripId">
+                <div class="input-group"> <label for="tripName">Nombre del Viaje</label> <input type="text" id="tripName" name="tripName" required placeholder="Ej: Verano 2025 Italia"> </div>
+                <div class="input-group"> <label for="tripDestination">Destino (Opcional)</label> <input type="text" id="tripDestination" name="tripDestination" placeholder="Ej: Italia, París"> </div>
+                <div class="input-group"> <label for="tripStartDate">Fecha Inicio</label> <input type="date" id="tripStartDate" name="tripStartDate"> </div>
+                <div class="input-group"> <label for="tripEndDate">Fecha Fin</label> <input type="date" id="tripEndDate" name="tripEndDate"> </div>
+                <div class="input-group"> <label for="tripBudget">Presupuesto Estimado (€)</label> <input type="number" id="tripBudget" name="tripBudget" step="0.01" placeholder="0.00" min="0"> </div>
+                <div class="input-group"> <label for="tripSavedAmount">Ahorrado Específico (€)</label> <input type="number" id="tripSavedAmount" name="tripSavedAmount" step="0.01" value="0.00" placeholder="0.00" min="0"> <small>Dinero que ya tienes apartado para este viaje.</small> </div>
+                <div class="input-group"> <label for="tripNotes">Notas (Opcional)</label> <textarea id="tripNotes" name="tripNotes" rows="2"></textarea> </div>
+                <div class="modal-actions"> <button type="button" id="cancelTripButton" class="btn btn-secondary">Cancelar</button> <button type="submit" id="saveTripButton" class="btn btn-primary">Guardar Viaje</button> </div>
+                <p id="modalTripError" class="error-message" style="display: none;"></p>
+            </form>
+        </div>
+    </div>
+
+     <div id="tripExpenseModal" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <h2 id="modalTitleTripExpense">Añadir Gasto del Viaje</h2>
+            <form id="tripExpenseForm">
+                <input type="hidden" id="tripExpenseId" name="tripExpenseId">
+                <input type="hidden" id="expenseTripId" name="expenseTripId"> <div class="input-group"> <label for="tripExpenseDescription">Descripción del Gasto</label> <input type="text" id="tripExpenseDescription" name="tripExpenseDescription" required placeholder="Ej: Vuelo, Hotel Noche 1, Comida Museo..."> </div>
+                <div class="input-group"> <label for="tripExpenseAmount">Importe (€)</label> <input type="number" id="tripExpenseAmount" name="tripExpenseAmount" required step="0.01" placeholder="0.00" min="0.01"> </div>
+                <div class="input-group"> <label for="tripExpenseDate">Fecha del Gasto</label> <input type="date" id="tripExpenseDate" name="tripExpenseDate" required> </div>
+                <div class="input-group"> <label for="tripExpenseCategory">Categoría (Texto)</label> <input type="text" id="tripExpenseCategory" name="tripExpenseCategory" placeholder="Ej: Transporte, Alojamiento, Comida, Ocio..."> </div>
+                <div class="input-group"> <label for="tripExpenseNotes">Notas (Opcional)</label> <textarea id="tripExpenseNotes" name="tripExpenseNotes" rows="2"></textarea> </div>
+                <div class="modal-actions"> <button type="button" id="cancelTripExpenseButton" class="btn btn-secondary">Cancelar</button> <button type="submit" id="saveTripExpenseButton" class="btn btn-primary">Guardar Gasto</button> </div>
+                <p id="modalTripExpenseError" class="error-message" style="display: none;"></p>
+            </form>
+        </div>
+    </div>
+
+
+    <button id="scrollTopBtn" class="scroll-top-btn" title="Volver arriba" style="display: none;">
+         <i class="fas fa-arrow-up"></i>
+     </button>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/Js/supabase-init.js"></script>
+    <script src="/Js/auth-listener.js"></script>
+    <script src="/Js/Trips.js"></script> </body>
+</html>

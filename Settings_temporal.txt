@@ -1,0 +1,202 @@
+// Settings.js (Esqueleto Inicial - Carga de Datos)
+// ASEGÚRATE que supabase-init.js y auth-listener.js se cargaron antes
+
+console.log('DEBUG: Settings.js - Cargado');
+
+if (typeof supabase === 'undefined' || supabase === null) {
+    console.error('Settings.js: ¡Error Crítico! Cliente Supabase no inicializado.');
+    alert("Error crítico al cargar la configuración.");
+    document.body.style.opacity = '0.5';
+    document.body.style.pointerEvents = 'none';
+} else {
+    console.log('Settings.js: Cliente Supabase encontrado.');
+
+    // --- Selección de Elementos DOM (Asegúrate que todos existen en Settings.html) ---
+    const backButton = document.getElementById('backButton');
+    const userAvatarSmall = document.getElementById('userAvatarSmall');
+    const mainCurrencyEl = document.getElementById('mainCurrency');
+    const defaultViewSetting = document.getElementById('defaultViewSetting');
+    const defaultViewValueEl = document.getElementById('defaultViewValue');
+    const exportDataBtn = document.getElementById('exportDataBtn');
+    const importDataBtn = document.getElementById('importDataBtn');
+    const deleteAccountBtn = document.getElementById('deleteAccountBtn');
+    const themeSelector = document.getElementById('themeSelector');
+    const languageSetting = document.getElementById('languageSetting');
+    const languageValueEl = document.getElementById('languageValue');
+    const changePasswordBtn = document.getElementById('changePasswordBtn');
+    const twoFactorToggle = document.getElementById('twoFactorToggle');
+    const notifyFixedExpenseToggle = document.getElementById('notifyFixedExpenseToggle');
+    const notifyBudgetAlertToggle = document.getElementById('notifyBudgetAlertToggle');
+    const notifyGoalReachedToggle = document.getElementById('notifyGoalReachedToggle');
+    const editProfileBtn = document.getElementById('editProfileBtn');
+    const manageCategoriesBtn = document.getElementById('manageCategoriesBtn');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const helpLink = document.getElementById('helpLink');
+    const privacyLink = document.getElementById('privacyLink');
+    const termsLink = document.getElementById('termsLink');
+    const appVersionEl = document.getElementById('appVersion');
+    const scrollTopBtn = document.getElementById('scrollTopBtn');
+    const pageContainer = document.querySelector('.page-container');
+    const allToggles = document.querySelectorAll('.toggle-switch input[type="checkbox"]');
+    const allButtons = document.querySelectorAll('.settings-grid button, .theme-option, #backButton, #editProfileBtn, #manageCategoriesBtn, #logoutBtn');
+
+
+    // --- Variables de Estado ---
+    let currentUserId = null;
+    let currentUser = null;
+    let userSettings = { // Valores por defecto iniciales
+        theme: 'system', language: 'es', doble_factor_enabled: false,
+        default_view: 'Dashboard', notify_fixed_expense: true,
+        notify_budget_alert: true, notify_goal_reached: true,
+        // Añade aquí más claves si tienes más columnas en 'profiles'
+    };
+    let isLoading = false;
+
+    // --- Constantes ---
+    const defaultAvatarPath = 'https://finai.es/images/avatar_predeterminado.png';
+
+    // --- Funciones ---
+
+    /** Muestra/Oculta un estado de carga visual */
+    function setLoadingState(loading) {
+        isLoading = loading;
+        if (pageContainer) pageContainer.style.opacity = loading ? '0.5' : '1';
+        allToggles.forEach(toggle => toggle.disabled = loading);
+        allButtons.forEach(button => button.disabled = loading);
+        console.log(`Loading state: ${loading ? 'ON' : 'OFF'}`);
+    }
+
+    /** Aplica el tema (clase al body) y actualiza botones del selector */
+     function applyTheme(selectedTheme) {
+        document.body.classList.remove('light-mode', 'dark-mode');
+        console.log("Aplicando tema seleccionado:", selectedTheme);
+        let effectiveTheme = selectedTheme;
+
+        if (selectedTheme === 'system') {
+             if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                 effectiveTheme = 'dark';
+             } else {
+                 effectiveTheme = 'light';
+             }
+             console.log(`Tema Sistema detectado como: ${effectiveTheme}`);
+        }
+
+        if (effectiveTheme === 'dark') {
+             document.body.classList.add('dark-mode');
+        } else {
+             document.body.classList.add('light-mode');
+        }
+
+        if (themeSelector) {
+            themeSelector.querySelectorAll('.theme-option').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.theme === selectedTheme);
+            });
+        }
+    }
+
+    /** Carga las configuraciones del perfil del usuario desde Supabase */
+    async function loadUserSettings() {
+        if (!currentUserId) { console.error("Settings.js: No user ID."); return; }
+        console.log("Cargando configuraciones para user:", currentUserId);
+        setLoadingState(true);
+
+        try {
+            const { data: profile, error } = await supabase
+                .from('profiles')
+                // ASEGÚRATE que estas columnas existen en tu tabla 'profiles'
+                .select('theme, language, doble_factor_enabled, default_view, notify_fixed_expense, notify_budget_alert, notify_goal_reached, avatar_url')
+                .eq('id', currentUserId)
+                .single();
+
+            if (error && error.code !== 'PGRST116') throw error;
+
+            if (profile) {
+                console.log("Perfil encontrado:", profile);
+                userSettings.theme = profile.theme ?? 'system';
+                userSettings.language = profile.language ?? 'es';
+                userSettings.doble_factor_enabled = profile.doble_factor_enabled ?? false;
+                userSettings.default_view = profile.default_view ?? 'Dashboard';
+                // IMPORTANTE: Asegúrate que estas columnas booleanas existen o ajusta
+                userSettings.notify_fixed_expense = profile.notify_fixed_expense ?? true;
+                userSettings.notify_budget_alert = profile.notify_budget_alert ?? true;
+                userSettings.notify_goal_reached = profile.notify_goal_reached ?? true;
+
+                if(userAvatarSmall) userAvatarSmall.src = profile.avatar_url || defaultAvatarPath;
+            } else {
+                console.log("Perfil no encontrado, usando defaults en UI.");
+                if(userAvatarSmall) userAvatarSmall.src = defaultAvatarPath;
+            }
+            updateUISettings();
+        } catch (error) {
+            console.error("Error cargando configuración:", error);
+            alert(`Error al cargar la configuración: ${error.message}`);
+            updateUISettings(); // Mostrar defaults si falla
+        } finally {
+            setLoadingState(false);
+        }
+    }
+
+    /** Actualiza los controles de la UI con los valores del estado `userSettings` */
+    function updateUISettings() {
+        if (!document.body.contains(pageContainer)) return;
+        console.log("Actualizando UI con settings:", userSettings);
+        try {
+            applyTheme(userSettings.theme); // Aplica tema y actualiza botones
+
+            if(languageValueEl) { languageValueEl.textContent = userSettings.language === 'en' ? 'English ' : 'Español '; languageValueEl.insertAdjacentHTML('beforeend', '<i class="fas fa-chevron-right"></i>'); }
+            if(twoFactorToggle) twoFactorToggle.checked = userSettings.doble_factor_enabled;
+            if(notifyFixedExpenseToggle) notifyFixedExpenseToggle.checked = userSettings.notify_fixed_expense;
+            if(notifyBudgetAlertToggle) notifyBudgetAlertToggle.checked = userSettings.notify_budget_alert;
+            if(notifyGoalReachedToggle) notifyGoalReachedToggle.checked = userSettings.notify_goal_reached;
+            if(defaultViewValueEl) { defaultViewValueEl.textContent = userSettings.default_view || 'Dashboard'; defaultViewValueEl.insertAdjacentHTML('beforeend', ' <i class="fas fa-chevron-right"></i>'); }
+            if(mainCurrencyEl) mainCurrencyEl.textContent = 'EUR (Predet.)';
+            if(appVersionEl) appVersionEl.textContent = 'FinAi v1.0.0'; // Considera hacerlo dinámico
+        } catch (error) { console.error("Error actualizando UI:", error); }
+    }
+
+    /** Guarda una preferencia específica en la tabla profiles (Placeholder) */
+    async function updateUserSetting(settingKey, settingValue) {
+        // Esta función se completará en el siguiente paso
+        console.warn(`GUARDADO PENDIENTE (Paso 2): ${settingKey} = ${settingValue}`);
+         // Simulación optimista para UI:
+         userSettings[settingKey] = settingValue;
+         return Promise.resolve(); // Simular éxito
+    }
+
+    /** Maneja el borrado de cuenta (con múltiples confirmaciones - Placeholder) */
+    async function handleDeleteAccount() {
+        // Esta función se completará más adelante (Paso 7)
+         if (!currentUserId || !currentUser) return;
+         const confirm1 = prompt(`¡ACCIÓN IRREVERSIBLE!\nEsto eliminará PERMANENTEMENTE tu cuenta y TODOS tus datos.\n\nEscribe tu email (${currentUser?.email}) para confirmar:`);
+         if (confirm1 !== currentUser?.email) { alert("Cancelado."); return; }
+         const confirm2 = prompt(`SEGUNDA CONFIRMACIÓN:\nEscribe "ELIMINAR" para proceder:`);
+         if (confirm2 !== "ELIMINAR") { alert("Cancelado."); return; }
+         alert("Eliminación pendiente de implementación final en backend.");
+         console.warn("Intento de eliminación de cuenta:", currentUserId);
+     }
+
+    // --- Asignación de Event Listeners ---
+    document.addEventListener('authReady', (e) => {
+        console.log('Settings.js: Received authReady event.');
+        currentUser = e.detail.user;
+        currentUserId = currentUser?.id;
+        if(currentUserId) { loadUserSettings(); }
+        else { console.warn("Settings.js: No user."); if(pageContainer) pageContainer.innerHTML = '<p style="color:orange; text-align:center;">Debes iniciar sesión.</p>'; }
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+        console.log("Settings.js: DOM fully loaded.");
+        // Listener para botón Volver
+        if (backButton) backButton.addEventListener('click', () => { window.location.href = '/Dashboard.html'; });
+        // Listener para Scroll-to-top
+        if (scrollTopBtn) { window.addEventListener('scroll', () => { scrollTopBtn.classList.toggle('visible', window.scrollY > 300); }); scrollTopBtn.addEventListener('click', () => { window.scrollTo({ top: 0, behavior: 'smooth' }); }); }
+
+        // --- LISTENERS PARA FUNCIONALIDAD (Se añadirán en pasos siguientes) ---
+        // if (themeSelector) { themeSelector.addEventListener('click', ...); }
+        // if (logoutBtn) { logoutBtn.addEventListener('click', ...); }
+        // if (twoFactorToggle) { twoFactorToggle.addEventListener('change', ...); }
+        // etc.
+
+    }); // Fin DOMContentLoaded
+
+} // Fin check Supabase
