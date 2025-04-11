@@ -423,7 +423,7 @@ if (typeof supabase === 'undefined' || supabase === null) {
             confirmDeleteButton.textContent = 'Eliminando...';
 
             // 2. Llamar a la Edge Function (Placeholder)
-            const functionName = 'delete-user-account';
+            const functionName = 'delete_user_account';
             const { data, error: functionError } = await supabase.functions.invoke(functionName, {
                 method: 'POST',
             });

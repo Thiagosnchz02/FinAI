@@ -1,0 +1,138 @@
+PLANTILLA user-function-template.ts ->  Para funciones que usan el cliente estándar (autenticación por token)
+
+// user-function-template.ts
+
+import { createClient, SupabaseClient } from "supabase";
+import { corsHeaders } from "../shared/cors.ts";
+
+console.log(`Function [function-name] started...`);
+
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
+  }
+
+  let supabaseClient: SupabaseClient | null = null;
+
+  try {
+    // 1. Crear cliente estándar
+    supabaseClient = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+      { global: { headers: { Authorization: req.headers.get("Authorization")! } } }
+    );
+
+    // 2. Obtener usuario autenticado
+    const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
+    if (userError || !user) throw new Error("Usuario no autenticado.");
+
+    // 3. Obtener y validar body
+    let body = null;
+    try {
+      body = await req.json();
+    } catch (_e) {
+      throw new Error("Falta body o no es JSON.");
+    }
+
+    // 4. Lógica principal
+    console.log("User ID:", user.id);
+    console.log("Body recibido:", body);
+
+    // 5. Respuesta OK
+    return new Response(JSON.stringify({ success: true }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 200,
+    });
+
+  } catch (error) {
+    console.error("Error en [function-name]:", error);
+
+    let status = 500;
+    let message = "Error interno.";
+
+    if (error instanceof Error) {
+      message = error.message;
+
+      if (typeof error === "object" && error !== null && "status" in error) {
+        status = (error as { status: number }).status;
+      }
+
+      if (message.includes("no autenticado")) status = 401;
+      if (message.includes("Falta") || message.includes("proporcionada")) status = 400;
+    }
+
+    return new Response(JSON.stringify({ error: message }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status,
+    });
+  }
+});
+
+PLANTILLA admin-function-template.ts -> 🔑 Para funciones que usan la CUSTOM_SERVICE_ROLE_KEY (acciones de administrador)
+
+// admin-function-template.ts
+
+import { createClient, SupabaseClient } from "supabase";
+import { corsHeaders } from "../shared/cors.ts";
+
+console.log(`Function [admin-function-name] started...`);
+
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
+  }
+
+  try {
+    // 1. Obtener la clave de Service Role
+    const serviceRoleKey = Deno.env.get("CUSTOM_SERVICE_ROLE_KEY");
+    if (!serviceRoleKey) throw new Error("Falta la Service Role Key en la configuración.");
+
+    // 2. Crear cliente admin
+    const supabaseAdmin: SupabaseClient = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      serviceRoleKey
+    );
+
+    // 3. Obtener y validar body
+    let body = null;
+    try {
+      body = await req.json();
+    } catch (_e) {
+      throw new Error("Falta body o no es JSON.");
+    }
+
+    // 4. Validar datos y lógica
+    const { userId } = body;
+    if (!userId) throw new Error("Falta el userId en el body.");
+
+    // 👉 TODO: Reemplaza esto con la lógica real
+    console.log(`Realizando acción admin para el usuario: ${userId}`);
+
+    // 5. Respuesta OK
+    return new Response(JSON.stringify({ success: true, message: "Acción completada." }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 200,
+    });
+
+  } catch (error) {
+    console.error("Error en [admin-function-name]:", error);
+
+    let status = 500;
+    let message = "Error interno.";
+
+    if (error instanceof Error) {
+      message = error.message;
+
+      if (typeof error === "object" && error !== null && "status" in error) {
+        status = (error as { status: number }).status;
+      }
+
+      if (message.includes("Falta")) status = 400;
+    }
+
+    return new Response(JSON.stringify({ error: message }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status,
+    });
+  }
+});
