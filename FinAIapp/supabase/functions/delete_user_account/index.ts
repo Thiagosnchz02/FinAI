@@ -1,6 +1,7 @@
 // supabase/functions/delete-user-account/index.ts
 
-import { createClient, SupabaseClient } from "supabase";
+import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2?dts";
+
 
 // Importa desde la carpeta compartida (la ruta es relativa a este archivo index.ts)
 import { corsHeaders } from '../shared/cors.ts'

@@ -1,6 +1,7 @@
 // supabase/functions/verify-password/index.ts
 
-import { createClient, SupabaseClient } from "supabase";
+import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2?dts";
+
 
 // Importa desde la carpeta compartida
 import { corsHeaders } from '../shared/cors.ts'
