@@ -1,0 +1,23 @@
+Mi Opinión y Sugerencia de Ajuste Menor:
+
+Tu orden es bueno, pero te sugiero un pequeño ajuste para ir de lo más sencillo y autocontenido a lo más complejo que depende de otras partes (como Edge Functions o flujos multi-paso):
+
+✅ Selectores (Idioma y Vista Inicial): Implementar la selección (con un modal/dropdown simple) y el guardado. (Empezamos aquí).
+✅ Página "Cambiar Contraseña": Crear ChangePassword.html y ChangePassword.js. Es una funcionalidad frontend completa y estándar.
+✅ Toggle 2FA (Guardado + Inicio Flujo): Ya guarda el estado. Podemos añadir la llamada inicial desde el JS para empezar el proceso de activación de Supabase MFA (ej: supabase.auth.mfa.enroll()), pero el resto del flujo (mostrar QR, verificar código) lo dejamos para después.
+✅ Botón Eliminar Cuenta (Llamada Segura): Añadir en el JS la llamada a una futura Edge Function (supabase.functions.invoke('delete-user-account')) después de las confirmaciones. La creación de la Edge Function en sí se hace después.
+⬜️ Backend/Edge Functions: Crear las funciones necesarias para Eliminar Cuenta, Exportar/Importar, Notificaciones.
+⬜️ Completar Flujo 2FA: Desarrollar la interfaz y lógica para mostrar QR, verificar códigos, etc.
+⬜️ Internacionalización (i18n): Aplicar el idioma guardado a toda la app.
+⬜️ Aplicar Vista Inicial: Modificar auth-listener.js para usar esta preferencia.
+⬜️ Tema Global: Aplicar CSS de modo oscuro a todas las páginas.
+Básicamente, propongo hacer la Página de Cambiar Contraseña (tu punto 6) antes de meternos a fondo con el flujo de 2FA o la lógica segura de eliminación (tus puntos 2 y 3), ya que la página de cambio de contraseña es más directa de implementar ahora mismo. Para 2FA y Eliminar, podemos preparar la llamada desde el frontend y dejar la parte compleja (Supabase MFA API, Edge Functions) para un bloque de trabajo posterior.
+
+
+
+
+PS C:\Users\Thiagosnchz\Documents\SANTI\Projectos\FinAI\FinAIapp> supabase functions deploy delete-user-account --no-verify-jwt
+Selected project: exwdzrnguktrpmwgvioo
+Bundling Function: delete-user-account
+failed to inspect docker image: error during connect: in the default daemon configuration on Windows, the docker client must be run with elevated privileges to connect: Get "http://%2F%2F.%2Fpipe%2Fdocker_engine/v1.48/images/public.ecr.aws/supabase/edge-runtime:v1.67.4/json": open //./pipe/docker_engine: El sistema no puede encontrar el archivo especificado.
+Docker Desktop is a prerequisite for local development. Follow the official docs to install: https://docs.docker.com/desktop

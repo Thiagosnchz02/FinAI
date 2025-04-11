@@ -1,6 +1,7 @@
 // supabase/functions/verify-password/index.ts
 
-import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { createClient, SupabaseClient } from "supabase";
+
 // Importa desde la carpeta compartida
 import { corsHeaders } from '../shared/cors.ts'
 
@@ -45,10 +46,24 @@ Deno.serve(async (req) => {
     })
 
   } catch (error) {
-    console.error('Error en verify-password:', error)
-     const status = (error instanceof Error && 'status' in error) ? (error as any).status : (error.message.includes('no autenticado') ? 401 : (error.message.includes('Falta') || error.message.includes('proporcionada') ? 400 : 500));
-    return new Response(JSON.stringify({ error: error.message || 'Error interno.' }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: status || 500,
-    })
+    console.error('Error en verify-password:', error);
+
+    let status = 500;
+    let message = 'Error interno.';
+
+    if (error instanceof Error) {
+      message = error.message;
+
+      if (error.message.includes('no autenticado')) {
+        status = 401;
+      } else if (error.message.includes('Falta') || error.message.includes('proporcionada')) {
+        status = 400;
+      }
+    }
+
+    return new Response(JSON.stringify({ error: message }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status,
+    });
   }
 })

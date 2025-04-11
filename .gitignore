@@ -9,8 +9,8 @@ Thumbs.db
 # node_modules/
 
 # Ignorar archivos de entorno con claves (si los usaras)
-# .env
-# *.env
+#.env
+*.env
 # .env.*
 
 # Ignorar otros archivos temporales o de caché

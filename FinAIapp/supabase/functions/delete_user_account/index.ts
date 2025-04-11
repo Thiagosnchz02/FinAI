@@ -1,8 +1,9 @@
 // supabase/functions/delete-user-account/index.ts
 
-import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { createClient, SupabaseClient } from "supabase";
+
 // Importa desde la carpeta compartida (la ruta es relativa a este archivo index.ts)
-import { corsHeaders } from '../_shared/cors.ts'
+import { corsHeaders } from '../shared/cors.ts'
 
 console.log(`Function delete-user-account started...`)
 
@@ -29,7 +30,7 @@ Deno.serve(async (req) => {
     console.log(`Attempting to delete user ID: ${userIdToDelete}`)
 
     // 3. Crear cliente ADMIN con Service Role Key (Configurada como Secret)
-    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+    const serviceRoleKey = Deno.env.get('CUSTOM_SERVICE_ROLE_KEY')
     if (!serviceRoleKey) throw new Error('Falta la Service Role Key en la configuración de la función.')
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -48,10 +49,22 @@ Deno.serve(async (req) => {
     })
 
   } catch (error) {
-    console.error('Error en delete-user-account:', error)
-    const status = (error instanceof Error && 'status' in error) ? (error as any).status : 500;
-    return new Response(JSON.stringify({ error: error.message || 'Error interno.' }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: status || 500,
-    })
+    console.error('Error en delete-user-account:', error);
+
+    let status = 500;
+    let message = 'Error interno.';
+
+    if (error instanceof Error) {
+      message = error.message;
+
+      if ('status' in error) {
+        status = (error as any).status;
+      }
+    }
+
+    return new Response(JSON.stringify({ error: message }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status,
+    });
   }
 })

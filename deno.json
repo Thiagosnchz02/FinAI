@@ -1,0 +1,15 @@
+{
+  "importMap": "./import_map.json",
+  "tasks": {
+    "dev": "deno run --watch main.ts"
+  },
+  "compilerOptions": {
+    "jsx": "react",
+    "strictNullChecks": true,
+    "strictFunctionTypes": true
+  },
+  "unstable": [
+    "sloppy-imports"
+  ]
+  
+}
