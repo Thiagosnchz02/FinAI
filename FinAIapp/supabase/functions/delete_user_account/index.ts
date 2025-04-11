@@ -57,9 +57,10 @@ Deno.serve(async (req) => {
     if (error instanceof Error) {
       message = error.message;
 
-      if ('status' in error) {
-        status = (error as any).status;
+      if (typeof error === "object" && error !== null && "status" in error) {
+        status = (error as { status: number }).status;
       }
+      
     }
 
     return new Response(JSON.stringify({ error: message }), {

@@ -28,7 +28,7 @@ Deno.serve(async (req) => {
 
     // 3. Obtener contraseña del body
     let providedPassword = null;
-    try { const body = await req.json(); providedPassword = body.password; } catch (e) { throw new Error('Falta body o no es JSON.'); }
+    try { const body = await req.json(); providedPassword = body.password; } catch (_e) { throw new Error('Falta body o no es JSON.'); }
     if (!providedPassword) throw new Error('Contraseña no proporcionada.');
 
     // 4. Verificar contraseña
