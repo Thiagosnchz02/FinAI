@@ -388,18 +388,8 @@ if (typeof supabase === 'undefined' || supabase === null) {
                     if (data && data.status === 'empty') {
                         console.log("Generación completada, no había datos.");
     
-                        // #############################################################
-                        // !!! ERROR OCURRE AQUÍ: openInfoModal no está definida !!!
-                        //
-                        // ACCIÓN NECESARIA:
-                        // 1. Verifica dónde está definida la función `openInfoModal`.
-                        // 2. Asegúrate de que esté en `Reports.js` o que sea
-                        //    importada correctamente si está en otro archivo.
-                        // 3. Revisa si se renombró o movió al "implementar workspace".
-                        //
                         openInfoModal('Informe Vacío', data.message || "No se encontraron datos con los filtros seleccionados.");
-                        // #############################################################
-    
+                        
                     } else {
                         console.warn("Respuesta JSON inesperada:", data);
                         throw new Error("Se recibió una respuesta JSON inesperada de la función.");
@@ -562,7 +552,7 @@ if (typeof supabase === 'undefined' || supabase === null) {
 
         if (infoModalCloseBtn) {
             infoModalCloseBtn.addEventListener('click', closeInfoModal);
-       }
+        }
 
         // Listeners para el Modal de Selección Genérico
         if (cancelSelectionButton) { cancelSelectionButton.addEventListener('click', closeSelectionModal); console.log("DEBUG: Listener añadido a #cancelSelectionButton"); }

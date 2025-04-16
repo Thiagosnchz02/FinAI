@@ -4,126 +4,196 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FinAi - Dashboard</title>
-    <link rel="stylesheet" href="./css/Dashboard.css">
+    <link rel="stylesheet" href="/css/Dashboard.css"> 
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-</head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
+    </head>
 <body>
     <div class="dashboard-container">
         <aside class="sidebar">
             <div class="sidebar-logo">
-                </div>
+                <img src="https://finai.es/images/Logo_robot_FinAI_sf_small.png" alt="FinAi Logo Small">
+            </div>
             <nav class="sidebar-nav">
-                <button class="nav-button active" id="btnProfile">
-                    <i class="fas fa-user"></i>
-                    <span>Perfil</span>
+                <button class="nav-button active" id="navDashboard" data-page="/Dashboard.html" title="Dashboard">
+                    <i class="fas fa-home"></i> <span>Dashboard</span>
                 </button>
-                <button class="nav-button" id="btnIncome">
-                    <i class="fas fa-plus"></i>
-                    <span>Income</span>
+                <button class="nav-button" id="navAccounts" data-page="/Accounts.html" title="Cuentas">
+                    <i class="fas fa-wallet"></i> <span>Cuentas</span>
                 </button>
-                <button class="nav-button" id="btnExpense">
-                    <i class="fas fa-minus"></i> <span>Expense</span>
+                <button class="nav-button" id="navCategories" data-page="/Categories.html" title="Categorías">
+                    <i class="fas fa-tags"></i> <span>Categorías</span>
                 </button>
-                 <button class="nav-button" id="btnTravel">
-                    <i class="fas fa-car"></i>
-                    <span>Travel</span>
+                <button class="nav-button" id="navTransactions" data-page="/Transactions.html" title="Transacciones">
+                    <i class="fas fa-exchange-alt"></i> <span>Transacciones</span>
                 </button>
-            </nav>
+                <button class="nav-button" id="navBudgets" data-page="/Budgets.html" title="Presupuestos">
+                    <i class="fas fa-chart-pie"></i> <span>Presupuestos</span>
+                </button>
+                <button class="nav-button" id="navGoals" data-page="/Goals.html" title="Metas">
+                    <i class="fas fa-bullseye"></i> <span>Metas</span>
+                </button>
+                <button class="nav-button" id="navInvestments" data-page="/Investments.html" title="Inversiones">
+                    <i class="fas fa-chart-line"></i> <span>Inversiones</span>
+                </button>
+                <button class="nav-button" id="navReports" data-page="/Reports.html" title="Informes">
+                    <i class="fas fa-file-alt"></i> <span>Informes</span>
+                </button>
+                 <button class="nav-button" id="navEvaluations" data-page="/Evaluaciones.html" title="Evaluación">
+                    <i class="fas fa-balance-scale"></i> <span>Evaluación</span>
+                </button>
+                <button class="nav-button" id="navSettings" data-page="/Settings.html" title="Configuración">
+                    <i class="fas fa-cog"></i> <span>Configuración</span>
+                </button>
+                </nav>
+            <button class="nav-button logout-button" id="btnLogoutSidebar" title="Cerrar Sesión">
+                <i class="fas fa-sign-out-alt"></i> <span>Salir</span>
+            </button>
         </aside>
 
         <main class="main-content">
             <header class="main-header">
-                <div class="header-title">
-                    <span class="app-name">FinAi</span>
-                    <span class="page-title">Dashboard</span>
+                <div class="header-left">
+                    <button class="btn-icon hamburger-btn" id="hamburgerBtn" aria-label="Abrir menú"><i class="fas fa-bars"></i></button>
+                    <div class="header-title">
+                        <span id="pageTitle">Dashboard</span>
+                    </div>
                 </div>
-                <button class="minimize-button" aria-label="Minimize">
-                    <i class="fas fa-window-minimize"></i>
-                </button>
-                <button id="logoutButton">Cerrar Sesión</button>
+                <div class="header-right">
+                    <button class="btn-icon notification-btn" id="notificationBell" aria-label="Notificaciones">
+                        <i class="fas fa-bell"></i>
+                        <span class="notification-badge" id="notificationBadge" style="display: none;"></span>
+                    </button>
+                    <button class="btn-icon profile-btn" id="profileBtnHeader" aria-label="Mi Perfil">
+                        <img id="userAvatarHeader" src="https://finai.es/images/avatar_predeterminado.png" alt="Avatar" class="header-avatar-small">
+                    </button>
+                    </div>
             </header>
+            <div id="notificationPanel" class="notification-panel">
+                <div class="notification-panel-header">
+                    <h4>Notificaciones</h4>
+                    <button id="markAllReadBtn" class="btn-link-small" title="Marcar todas como leídas">Marcar todas leídas</button>
+                </div>
+                <div id="notificationList" class="notification-list">
+                    <p class="panel-loading">Cargando...</p>
+                    </div>
+            </div>
 
-            <section class="dashboard-grid">
+            <section id="dashboardGrid" class="dashboard-grid">
+
                 <div class="panel summary-panel">
-                    <h3>Monthly Summary</h3>
-                    <p class="summary-amount">$5,200</p>
+                    <h3 id="greeting">¡Hola!</h3>
+                    <p class="summary-amount" id="totalBalance">Calculando...</p>
+                    <div class="sparkline-placeholder"></div>
                 </div>
 
-                <div class="panel category-expenses-panel">
-                    <h3>Expenses by Category</h3>
-                    <div class="chart-container">
-                        <div class="donut-chart expenses-chart"></div>
-                        <ul class="chart-legend">
-                            <li><span class="legend-color food"></span> Food</li>
-                            <li><span class="legend-color shopping"></span> Shopping</li>
-                            <li><span class="legend-color housing"></span> Housing</li>
-                            <li><span class="legend-color transport"></span> Transport</li>
-                        </ul>
-                    </div>
-                </div>
+                 <div class="panel budget-summary-panel">
+                    <h3>Presupuestos Este Mes <a href="/Budgets.html" class="panel-link"><i class="fas fa-arrow-right"></i></a></h3>
+                    <div id="budgetSummaryList">
+                        <p class="panel-loading">Cargando presupuestos...</p>
+                        </div>
+                 </div>
 
-                <div class="panel allocation-panel">
-                    <h3>Capital Allocation</h3>
-                     <div class="chart-container">
-                         <div class="donut-chart allocation-chart"></div>
+                 <div class="panel upcoming-payments-panel">
+                      <h3>Próximos Pagos <a href="/Fixed_expenses.html" class="panel-link"><i class="fas fa-arrow-right"></i></a></h3>
+                      <div id="upcomingPaymentsList">
+                          <p class="panel-loading">Cargando pagos...</p>
+                          </div>
+                 </div>
+
+                 <div class="panel goals-progress-panel">
+                     <h3>Progreso de Metas <a href="/Goals.html" class="panel-link"><i class="fas fa-arrow-right"></i></a></h3>
+                     <div id="goalsProgressList">
+                         <p class="panel-loading">Cargando metas...</p>
                          </div>
-                </div>
+                 </div>
 
-                <div class="panel calendar-panel">
-                    <div class="calendar-header">
-                        <h3>Calendar</h3>
-                        <span>April</span>
-                    </div>
-                    <div class="calendar-grid">
-                        <div class="day-header">S</div>
-                        <div class="day-header">M</div>
-                        <div class="day-header">T</div>
-                        <div class="day-header">W</div>
-                        <div class="day-header">T</div>
-                        <div class="day-header">F</div>
-                        <div class="day-header">S</div>
-                        <div class="day empty"></div> <div class="day">1</div>
-                        <div class="day">2</div>
-                        <div class="day">3</div>
-                        <div class="day">4</div>
-                        <div class="day current-day">5</div> <div class="day">6</div>
-                        <div class="day">7</div>
-                        <div class="day">8</div>
-                        <div class="day">9</div>
-                        <div class="day">10</div>
-                        <div class="day">11</div>
-                        <div class="day">12</div>
-                        <div class="day">13</div>
-                        <div class="day">14</div>
-                        <div class="day">15</div>
-                        <div class="day">16</div>
-                        <div class="day">17</div>
-                        <div class="day">18</div>
-                        <div class="day">19</div>
-                        <div class="day">20</div>
-                        <div class="day">21</div>
-                        <div class="day">22</div>
-                        <div class="day">23</div>
-                        <div class="day">24</div>
-                        <div class="day event"><i class="fas fa-shopping-bag"></i> 25</div>
-                        <div class="day">26</div>
-                        <div class="day event"><i class="fas fa-home"></i> 27</div>
-                        <div class="day">28</div>
-                        <div class="day">29</div>
-                        <div class="day">30</div>
-                         <div class="day empty"></div>
-                         <div class="day empty"></div>
-                         <div class="day empty"></div>
-                         <div class="day empty"></div>
-                    </div>
-                </div>
+                 <div class="panel recent-activity-panel">
+                      <h3>Actividad Reciente <a href="/Transactions.html" class="panel-link"><i class="fas fa-arrow-right"></i></a></h3>
+                       <div id="recentActivityList">
+                           <p class="panel-loading">Cargando actividad...</p>
+                           </div>
+                 </div>
+
+                 <div class="panel quick-actions-panel">
+                     <h3>Acciones Rápidas</h3>
+                     <div class="quick-actions-buttons">
+                         <button id="quickAddExpenseBtn" class="btn btn-action red-btn"><i class="fas fa-minus"></i> Gasto</button>
+                         <button id="quickAddIncomeBtn" class="btn btn-action green-btn"><i class="fas fa-plus"></i> Ingreso</button>
+                         </div>
+                 </div>
+
             </section>
         </main>
     </div>
+
+    <div id="transactionModal" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <h2 id="modalTitleTransaction">Añadir Transacción</h2>
+            <form id="transactionForm">
+                <input type="hidden" id="transactionId" name="transactionId">
+
+                <div class="input-group">
+                    <label>Tipo de Transacción</label>
+                    <div class="radio-group type-toggle">
+                        <label class="type-button expense-btn active">
+                            <input type="radio" name="transactionType" value="gasto" checked> Gasto
+                        </label>
+                        <label class="type-button income-btn">
+                            <input type="radio" name="transactionType" value="ingreso"> Ingreso
+                        </label>
+                        </div>
+                </div>
+
+                <div class="input-group">
+                    <label for="transactionAmount">Importe</label>
+                    <input type="number" id="transactionAmount" name="transactionAmount" required step="0.01" placeholder="0.00">
+                </div>
+
+                <div class="input-group">
+                    <label for="transactionDate">Fecha</label>
+                    <input type="date" id="transactionDate" name="transactionDate" required>
+                </div>
+
+                <div class="input-group">
+                    <label for="transactionDescription">Descripción</label>
+                    <input type="text" id="transactionDescription" name="transactionDescription" required placeholder="Ej: Café, Nómina Enero...">
+                </div>
+
+                 <div class="input-group">
+                    <label for="transactionAccount">Cuenta</label>
+                    <select id="transactionAccount" name="transactionAccount" required>
+                        <option value="" disabled selected>Selecciona una cuenta...</option>
+                        </select>
+                </div>
+
+                 <div class="input-group">
+                     <label for="transactionCategory">Categoría</label>
+                     <select id="transactionCategory" name="transactionCategory">
+                         <option value="">(Sin categoría)</option>
+                         </select>
+                 </div>
+
+                 <div class="input-group">
+                    <label for="transactionNotes">Notas (Opcional)</label>
+                    <textarea id="transactionNotes" name="transactionNotes" rows="2"></textarea>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" id="cancelTransactionButton" class="btn btn-secondary">Cancelar</button>
+                    <button type="submit" id="saveTransactionButton" class="btn btn-primary">Guardar Transacción</button>
+                </div>
+                <p id="modalTransactionError" class="error-message" style="display: none;"></p>
+            </form>
+        </div>
+    </div>
+
+    <button id="scrollTopBtn" class="scroll-top-btn" title="Volver arriba" style="display: none;">
+         <i class="fas fa-arrow-up"></i>
+     </button>
+
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="./Js/supabase-init.js"></script>
-    <script src="./Js/auth-listener.js"></script>
-    <script src="./Js/Dashboard.js"></script>
-</body>
+    <script src="/Js/supabase-init.js"></script>
+    <script src="/Js/auth-listener.js"></script> <script src="/Js/Dashboard.js"></script> </body>
 </html>

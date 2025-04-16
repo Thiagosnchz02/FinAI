@@ -47,7 +47,7 @@ if (typeof supabase === 'undefined' || supabase === null) {
 
     // --- URL Avatar por Defecto ---
     // ¡Usa la URL pública real de tu imagen en Hostinger!
-    const defaultAvatarPath = 'https://finai.es/images/avatar-predeterminado.png';
+    const defaultAvatarPath = 'https://finai.es/images/avatar_predeterminado.png';
 
     // --- Funciones ---
 
@@ -398,7 +398,7 @@ if (typeof supabase === 'undefined' || supabase === null) {
          if (backButton) {
              backButton.addEventListener('click', () => {
                  console.log('DEBUG: Botón Volver presionado -> Dashboard');
-                 window.location.href = '/dashboard_gemini_pixar.html'; // Ruta correcta
+                 window.location.href = '/Dashboard.html'; // Ruta correcta
              });
          }
 

@@ -48,6 +48,7 @@ if (typeof supabase === 'undefined' || supabase === null) {
     let fixedExpenses = []; // Cache gastos fijos
     let calendarInstance = null;
     let currentView = 'list';
+    let categoriesLoaded = false;
 
     // --- URL Avatar por Defecto ---
     const defaultAvatarPath = 'https://finai.es/images/avatar_predeterminado.png';
@@ -111,7 +112,7 @@ if (typeof supabase === 'undefined' || supabase === null) {
         saveExpenseButton.textContent = 'Guardar Gasto Fijo';
 
         // Poblar Selects (Asegurarse que categories y accounts están cargadas)
-        populateSelect(expenseCategoryInput, categories.filter(c=>c.type === 'gasto'), 'id', 'name', 'Selecciona categoría...');
+        populateSelect(expenseCategoryInput, categories, 'id', 'name', 'Selecciona categoría...');
         populateSelect(expenseAccountInput, accounts, 'id', 'name', '(Ninguna específica)', false, ''); // Opción vacía con valor ''
 
         if (expense) { // Modo Edición
@@ -279,6 +280,7 @@ if (typeof supabase === 'undefined' || supabase === null) {
     async function loadInitialDataFixedExpenses(user) {
         if (!user) { console.log("No hay usuario"); return; }
         currentUserId = user.id;
+        categoriesLoaded = false;
         if(tableLoadingMessage) tableLoadingMessage.parentElement.style.display = 'table-footer-group';
         if(noExpensesMessage) noExpensesMessage.style.display = 'none';
         if(userAvatarSmall) userAvatarSmall.src = defaultAvatarPath;
@@ -298,11 +300,17 @@ if (typeof supabase === 'undefined' || supabase === null) {
              // Cuentas
              if (accountsRes.error) throw accountsRes.error;
              accounts = accountsRes.data || [];
-             populateSelect(expenseAccountInput, accounts, 'id', 'name', '(Ninguna específica)', false, '');
+             //populateSelect(expenseAccountInput, accounts, 'id', 'name', '(Ninguna específica)', false, '');
              // Categorías
-             if (categoriesRes.error) throw categoriesRes.error;
-             categories = categoriesRes.data || [];
-             populateSelect(expenseCategoryInput, categories, 'id', 'name', 'Selecciona categoría...');
+             if (categoriesRes.error) {
+                console.error("ERROR CARGANDO CATEGORÍAS:", categoriesRes.error);
+                categories = []; // Asegurar que esté vacío si hay error
+                categoriesLoaded = false;
+             } else {
+                categories = categoriesRes.data || [];
+                categoriesLoaded = true; // Marcar como cargadas
+                console.log(`DEBUG: Categorías de GASTO cargadas con éxito: ${categories.length}`);
+             }
              // Gastos Fijos
              if (expensesRes.error) throw expensesRes.error;
              fixedExpenses = expensesRes.data || [];
@@ -316,6 +324,12 @@ if (typeof supabase === 'undefined' || supabase === null) {
             console.error("Error cargando datos iniciales (Fixed Expenses):", error);
              if(tableLoadingMessage) tableLoadingMessage.textContent = `Error: ${error.message}`;
              if(noExpensesMessage) noExpensesMessage.style.display = 'block';
+        }finally {
+            // Ocultar mensaje de carga si no hubo error grave antes
+             const loadingElement = document.getElementById('loadingMessage'); // Asumiendo que existe o tableLoadingMessage
+             if (loadingElement && !loadingElement.textContent?.includes('Error')) {
+                 loadingElement.style.display = 'none';
+             }
         }
     }
 
@@ -447,7 +461,23 @@ if (typeof supabase === 'undefined' || supabase === null) {
     document.addEventListener('DOMContentLoaded', () => {
         console.log("FixedExpenses.js: DOM fully loaded.");
 
-        if (addExpenseBtn) addExpenseBtn.addEventListener('click', () => openExpenseModal());
+        if (addExpenseBtn) {
+            addExpenseBtn.addEventListener('click', () => {
+                console.log("DEBUG: Clic en Añadir Gasto Fijo.");
+                // --- COMPROBACIÓN ---
+                if (!categoriesLoaded || categories.length === 0) {
+                    console.warn("Intento de abrir modal pero las categorías aún no están listas o están vacías. categoriesLoaded:", categoriesLoaded, "categories.length:", categories.length);
+                    alert("Espera un momento a que carguen las categorías e inténtalo de nuevo.");
+                    // Opcional: intentar recargar datos
+                     loadInitialDataFixedExpenses({ id: currentUserId });
+                    return; // No abrir modal
+                }
+                // --------------------
+                console.log("DEBUG: Categorías listas. Llamando a openExpenseModal...");
+                openExpenseModal(); // Abrir modal vacío
+            });
+            console.log("DEBUG: Listener añadido a #addExpenseBtn");
+        } else { console.error("ERROR: Botón #addExpenseBtn NO encontrado!"); }
         if (backButton) backButton.addEventListener('click', () => { window.location.href = '/Dashboard.html'; });
         if (listViewBtn) listViewBtn.addEventListener('click', () => switchView('list'));
         if (calendarViewBtn) calendarViewBtn.addEventListener('click', () => switchView('calendar'));

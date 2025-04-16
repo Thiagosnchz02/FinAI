@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FinAi - Mis Inversiones</title>
+    <link rel="stylesheet" href="/css/Investments.css"> <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="page-container">
+        <div class="page-header investments-header">
+            <button id="backButton" class="btn-icon" aria-label="Volver"><i class="fas fa-arrow-left"></i></button>
+            <div class="header-title-group">
+                <img id="userAvatarSmall" src="https://finai.es/images/avatar_predeterminado.png" alt="Avatar" class="header-avatar-small">
+                <h1>Mis Inversiones</h1>
+            </div>
+            <button id="addInvestmentBtn" class="btn btn-primary btn-add green-btn"> <i class="fas fa-plus"></i> Añadir Inversión
+            </button>
+        </div>
+
+        <div id="investmentListContainer" class="investment-list-grid">
+            <p id="loadingInvestmentsMessage" style="text-align: center; padding: 20px; color: #666; grid-column: 1 / -1;">Cargando inversiones...</p>
+        </div>
+
+        <div id="noInvestmentsMessage" class="empty-list-message" style="display: none;">
+             <img src="https://finai.es/images/monstruo_pixar.png" alt="Mascota FinAi Estrella" class="empty-mascot">
+             <p>Aún no has registrado ninguna inversión.</p>
+             <p>¡Añade tus activos para empezar a seguir su evolución!</p>
+            <button id="addInvestmentFromEmptyBtn" class="btn btn-primary green-btn">
+                 <i class="fas fa-plus"></i> Añadir Mi Primera Inversión
+            </button>
+        </div>
+
+        <div id="investmentSummaryFooter" class="summary-footer" style="display: none;">
+             <div class="summary-box green">
+                 <span class="summary-label">Valor Total Actual</span>
+                 <strong id="totalCurrentValue">€0.00</strong>
+             </div>
+             <div class="summary-box blue"> <span class="summary-label">Ganancia/Pérdida Total</span>
+                 <strong id="totalProfitLoss" class="positive">€0.00</strong>
+             </div>
+             </div>
+
+    </div> <div id="investmentModal" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <h2 id="modalTitleInvestment">Añadir Nueva Inversión</h2>
+            <form id="investmentForm">
+                <input type="hidden" id="investmentId" name="investmentId">
+
+                <div class="input-group">
+                    <label for="investmentType">Tipo de Inversión</label>
+                    <select id="investmentType" name="investmentType" required>
+                        <option value="" disabled selected>Selecciona un tipo...</option>
+                        <option value="acciones">Acciones</option>
+                        <option value="fondo">Fondo de Inversión</option>
+                        <option value="crypto">Criptomoneda</option>
+                        <option value="inmueble">Inmueble</option>
+                        <option value="otro">Otro</option>
+                    </select>
+                </div>
+
+                <div class="input-group"> <label for="investmentName">Nombre del Activo</label> <input type="text" id="investmentName" name="investmentName" required placeholder="Ej: Acciones Apple, Bitcoin, Piso Alquilado..."> </div>
+                <div class="input-group"> <label for="investmentSymbol">Símbolo/Ticker (Opcional)</label> <input type="text" id="investmentSymbol" name="investmentSymbol" placeholder="Ej: AAPL, BTC"> </div>
+                <div class="input-group"> <label for="investmentQuantity">Cantidad / Unidades (Opcional)</label> <input type="number" id="investmentQuantity" name="investmentQuantity" step="any" placeholder="0.00" min="0"> </div>
+                <div class="input-group"> <label for="investmentPurchasePrice">Precio Compra Unitario (€) (Opcional)</label> <input type="number" id="investmentPurchasePrice" name="investmentPurchasePrice" step="any" placeholder="0.00" min="0"> </div>
+                <div class="input-group"> <label for="investmentPurchaseDate">Fecha de Compra (Opcional)</label> <input type="date" id="investmentPurchaseDate" name="investmentPurchaseDate"> </div>
+                <div class="input-group"> <label for="investmentCurrentValue">Valor Actual TOTAL (€) (Manual)</label> <input type="number" id="investmentCurrentValue" name="investmentCurrentValue" required step="any" placeholder="0.00" min="0"> <small>Introduce el valor total actual de esta inversión.</small> </div>
+                <div class="input-group"> <label for="investmentBroker">Broker / Plataforma (Opcional)</label> <input type="text" id="investmentBroker" name="investmentBroker" placeholder="Ej: MyInvestor, Binance, Propio..."> </div>
+                <div class="input-group"> <label for="investmentNotes">Notas (Opcional)</label> <textarea id="investmentNotes" name="investmentNotes" rows="2"></textarea> </div>
+
+                <div class="modal-actions">
+                    <button type="button" id="cancelInvestmentButton" class="btn btn-secondary">Cancelar</button>
+                    <button type="submit" id="saveInvestmentButton" class="btn btn-primary green-btn">Guardar Inversión</button>
+                </div>
+                <p id="modalInvestmentError" class="error-message" style="display: none;"></p>
+            </form>
+        </div>
+    </div>
+
+
+    <button id="scrollTopBtn" class="scroll-top-btn green-btn" title="Volver arriba" style="display: none;">
+         <i class="fas fa-arrow-up"></i>
+     </button>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/Js/supabase-init.js"></script>
+    <script src="/Js/auth-listener.js"></script>
+    <script src="/Js/Investments.js"></script> </body>
+</html>
