@@ -499,3 +499,46 @@ body.dark-mode .modal-instructions.danger-text {
 body.dark-mode #deleteUserEmail { color: #fff; }
 body.dark-mode #confirmDeleteButton { background-color: #f56565; color: #1A202C;}
 body.dark-mode #confirmDeleteButton:hover { background-color: #e53e3e; }
+
+.modal-content.info-modal-content {
+    max-width: 400px; /* Puede ser un poco más pequeño */
+    border-left: 5px solid #64b5f6; /* Un borde azul como indicativo */
+}
+
+#infoModalTitle {
+    color: #1e88e5; /* Azul */
+    font-size: 1.3em; /* Un poco más pequeño que otros títulos de modal */
+    display: flex;
+    align-items: center;
+    justify-content: center; /* Centrar título e icono */
+    gap: 10px;
+}
+#infoModalTitle i {
+    font-size: 0.9em; /* Icono ligeramente más pequeño */
+}
+
+#infoModalMessage {
+    text-align: center;
+    margin: 25px 0;
+    line-height: 1.6;
+    color: #333;
+    font-size: 0.95em;
+}
+
+/* Centrar el botón Aceptar */
+#infoModal .modal-actions {
+    justify-content: center;
+    margin-top: 15px; /* Menos margen superior */
+}
+
+/* --- Ajustes Modo Oscuro para Modal Info --- */
+body.dark-mode .modal-content.info-modal-content {
+    border-left-color: #90cdf4; /* Azul claro */
+    background-color: #4A5568; /* Fondo modal oscuro */
+}
+ body.dark-mode #infoModalTitle {
+    color: #90cdf4; /* Azul claro */
+ }
+ body.dark-mode #infoModalMessage {
+    color: #E2E8F0; /* Texto claro */
+ }

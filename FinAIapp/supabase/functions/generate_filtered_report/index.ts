@@ -79,14 +79,33 @@ function formatDateForCsv(dateString: string | null): string {
 Deno.serve(async (req) => {
   // Manejo CORS preflight
   if (req.method === 'OPTIONS') { return new Response('ok', { headers: corsHeaders }); }
-
+  let rawBody: string | undefined;
   try {
+    console.log("Request Method:", req.method); // Loguear método
+    console.log("Request Headers:", JSON.stringify(Object.fromEntries(req.headers.entries()), null, 2)); // Loguear cabeceras
     // Validar que sea POST
     if (req.method !== 'POST') { throw new Error('Método no permitido.'); }
 
     // 1. Parsear Body y Obtener Usuario
-    const body: ReportRequestBody = await req.json();
+    rawBody = await req.text(); // Lee el cuerpo como texto
+    console.log("Raw Request Body:", rawBody); // Loguea el cuerpo raw
+
+    // Ahora intenta parsear ese texto raw
+    if (!rawBody) {
+         throw new Error("Request body is empty."); // Lanza error si está vacío
+    }
+    const body: ReportRequestBody = JSON.parse(rawBody); // Parsea manualmente
+
+    // Validar que el body parseado no esté vacío (por si acaso rawBody fuera '{}' o similar)
+    if (!body || Object.keys(body).length === 0) {
+         throw new Error("Parsed request body is empty or invalid.");
+    }
+
+    console.log("Parsed Body:", JSON.stringify(body, null, 2)); // Loguea el cuerpo parseado con éxito
     const { reportType, filters, format } = body;
+
+    console.log("Filtros recibidos:", filters); // <-- Aquí logueamos los filtros recibidos
+    console.log("Tipo de reporte:", reportType);
 
     if (!reportType || !filters || !format) { throw new Error("Faltan parámetros en la petición."); }
     if (format !== 'csv') { throw new Error("Formato PDF no implementado todavía."); }
@@ -143,9 +162,16 @@ Deno.serve(async (req) => {
         throw new Error("Tipo de informe no soportado.");
     }
 
+    console.log("Query generada:", query.toString());
+
     // Ejecutar la query construida
+    console.log("Executing database query...");
     const { data, error: dataError } = await query;
-    if (dataError) throw dataError;
+    if (dataError) {
+        console.error("Database Query Error:", dataError); // Loguear el error específico de la DB
+        throw dataError; // Relanzar para que lo capture el catch principal
+    }
+    console.log("Database query executed successfully.");
     dataToFormat = data;
 
     // 3. Comprobar si hay datos
@@ -199,6 +225,9 @@ Deno.serve(async (req) => {
 
   } catch (error) {
     console.error('Error in generate-filtered-report function:', error);
+    if (typeof rawBody !== 'undefined') {
+        console.error("Raw body that potentially caused error:", rawBody);
+    }
     const message = error instanceof Error ? error.message : 'Error interno.';
     return new Response(JSON.stringify({ error: message }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500

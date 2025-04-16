@@ -1,0 +1,200 @@
+/* Reports.css */
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800&display=swap');
+
+/* --- Estilos Generales y Contenedor --- */
+body { font-family: 'Nunito', sans-serif; background-color: #a0d2eb; margin: 0; padding: 0; color: #333; min-height: 100vh; }
+.page-container { width: 100%; max-width: 800px; /* Ancho medio */ margin: 0 auto; padding: 25px 30px; background-color: #ffffff; border-radius: 25px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1); box-sizing: border-box; margin-top: 20px; margin-bottom: 20px;}
+
+/* --- Cabecera --- */
+.page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; padding: 0 5px; }
+.header-title-group { display: flex; align-items: center; gap: 12px; flex-grow: 1; justify-content: center; }
+.header-title-group h1 { margin: 0; font-size: 1.8em; font-weight: 800; color: #334; }
+.header-avatar-small { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.1); background-color: #e0e0e0; }
+
+/* --- Botones Generales --- */
+.btn { /* ... (copiar/reutilizar estilos .btn de Settings.css) ... */ padding: 10px 20px; border: none; border-radius: 50px; cursor: pointer; font-weight: 700; font-size: 0.95em; transition: background-color 0.2s ease, transform 0.1s ease; display: inline-flex; align-items: center; gap: 8px; text-decoration: none; color: white; }
+.btn i { font-size: 1.1em; } .btn:hover { transform: scale(1.03); } .btn:active { transform: scale(0.98); } .btn:disabled { background-color: #cccccc !important; cursor: not-allowed; opacity: 0.7; transform: none !important; }
+.btn-primary { background-color: #8a82d5; color: white; } .btn-primary:hover { background-color: #7068b8; } .btn-secondary { background-color: #6c757d; color: white; } .btn-secondary:hover { background-color: #5a6268; }
+.btn-icon { background: none; border: none; font-size: 1.5em; color: #667; cursor: pointer; padding: 5px; transition: color 0.2s ease, transform 0.15s ease; } .btn-icon:hover { color: #8a82d5; transform: scale(1.1); } .btn-icon:active { transform: scale(0.95); }
+.btn-add { font-size: 1em; }
+.btn-generate { font-size: 1.1em; padding: 12px 30px; font-weight: 800; }
+
+/* --- Contenedor Principal --- */
+.report-generator-container {
+    display: flex;
+    flex-direction: column;
+    gap: 25px; /* Espacio entre secciones/pasos */
+}
+
+/* --- Estilo Tarjeta/Paso --- */
+.settings-card.report-step { /* Reutilizar clase de Settings para estilo base */
+    background-color: #f8f9fa;
+    border-radius: 15px;
+    padding: 20px 25px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    border: 1px solid #e9ecef;
+}
+.settings-card.report-step h2 {
+    font-size: 1.1em; font-weight: 700; color: #4a5568;
+    margin: 0 0 20px 0; padding-bottom: 10px;
+    border-bottom: 1px solid #e0e0e0; display: flex; align-items: center; gap: 10px;
+}
+.step-number {
+    background-color: #8a82d5; /* Morado */
+    color: white;
+    border-radius: 50%;
+    width: 24px; height: 24px;
+    display: inline-flex; justify-content: center; align-items: center;
+    font-size: 0.8em; font-weight: bold;
+}
+
+/* --- Selector Tipo Informe --- */
+.report-type-selector { display: flex; gap: 15px; flex-wrap: wrap; }
+.report-type-option {
+    flex-grow: 1; padding: 15px; border: 2px solid #e0e0e0;
+    border-radius: 12px; background-color: #fff; cursor: pointer;
+    display: flex; align-items: center; gap: 10px; font-weight: 700;
+    transition: all 0.2s ease; color: #555; text-align: left; font-size: 0.95em;
+}
+.report-type-option i { font-size: 1.4em; color: #8a82d5; width: 30px; text-align: center;}
+.report-type-option:hover { border-color: #8a82d5; background-color: #f9f8ff; }
+.report-type-option.active { border-color: #8a82d5; background-color: #e3dffc; color: #5e35b1; box-shadow: 0 0 8px rgba(138, 130, 213, 0.3);}
+.report-type-option.active i { color: #5e35b1; }
+
+/* --- Sección Filtros --- */
+.filter-group { display: none; /* Oculto por defecto */ animation: fadeIn 0.4s; }
+.filter-group.active { display: block; /* Visible */ }
+.filter-group .input-group, .filter-group .setting-item { margin-bottom: 18px; }
+.input-group label { display: block; margin-bottom: 6px; color: #555; font-weight: 700; font-size: 0.9em; display: flex; align-items: center; gap: 6px;}
+.input-group input[type="date"], .input-group select { width: 100%; padding: 10px 15px; border: 1px solid #ccc; border-radius: 10px; font-size: 1em; box-sizing: border-box; margin-top: 5px; background-color: #fff; }
+.input-group input[type="date"] { cursor: text; }
+.input-group select { /* ... estilos select con flecha ... */ cursor: pointer; appearance: none; background-image: url("..."); background-repeat: no-repeat; background-position: right 15px center; background-size: 16px 12px; padding-right: 40px;}
+
+.date-range-filter { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+
+/* Selector Tipo Ingreso/Gasto */
+.type-selector { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 5px;}
+.type-option { padding: 8px 15px; border: 1px solid #ccc; border-radius: 50px; background-color: #fff; cursor: pointer; font-size: 0.9em; transition: all 0.2s ease; color: #555; }
+.type-option:hover { border-color: #8a82d5; background-color: #f9f8ff;}
+.type-option.active { background-color: #8a82d5; color: white; border-color: #8a82d5; }
+
+/* Filas Cuenta/Categoría (reutiliza estilo setting-item) */
+.setting-item { /* Copiar de Settings.css si no es global */ display: flex; justify-content: space-between; align-items: center; padding: 10px 5px; border-bottom: 1px solid #f1f1f1; cursor: pointer;}
+.setting-item span:first-child { font-weight: 600; color: #4a5568; font-size: 0.95em; display: flex; align-items: center; gap: 8px;}
+.setting-value-editable { font-weight: 600; color: #2b6cb0; display: flex; align-items: center; gap: 5px; }
+.setting-value-editable i { font-size: 0.8em; }
+.setting-item:hover { background-color: rgba(0, 0, 0, 0.03); }
+
+/* --- Selector Formato --- */
+.format-selector { display: flex; gap: 15px; flex-wrap: wrap; }
+.format-option { flex-grow: 1; padding: 15px; border: 2px solid #e0e0e0; border-radius: 12px; background-color: #fff; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 8px; font-weight: 700; transition: all 0.2s ease; color: #555; text-align: center; font-size: 0.95em; }
+.format-option i { font-size: 2em; margin-bottom: 5px; }
+.format-option:hover { border-color: #8a82d5; background-color: #f9f8ff; }
+.format-option.active { border-color: #4CAF50; background-color: #e8f5e9; color: #2e7d32; box-shadow: 0 0 8px rgba(76, 175, 80, 0.3); } /* Verde para CSV activo */
+.format-option.active i { color: #388e3c; }
+.format-option.disabled { cursor: not-allowed; opacity: 0.5; background-color: #f0f0f0; border-color: #e0e0e0; }
+.format-option.disabled:hover { transform: none; box-shadow: none; }
+
+/* --- Sección Acción --- */
+.action-section { margin-top: 15px; text-align: center; }
+.message { /* ... (estilos message success/error como en Settings) ... */ margin-top: 15px; padding: 10px; border-radius: 8px; font-size: 0.9em; text-align: center; display: none; }
+.message.success { background-color: #e8f5e9; color: #2e7d32; display: block; }
+.message.error { background-color: #ffcdd2; color: #c62828; display: block; }
+.message.info { background-color: #e3f2fd; color: #1e88e5; display: block; } /* Para mensajes informativos */
+
+
+/* --- Scroll Top --- */
+.scroll-top-btn { position: fixed; bottom: 30px; right: 30px; background-color: #8a82d5; color: white; border: none; border-radius: 50%; width: 50px; height: 50px; font-size: 1.5em; cursor: pointer; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); z-index: 999; transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.2s ease; opacity: 0; visibility: hidden; }
+.scroll-top-btn.visible { opacity: 1; visibility: visible; }
+.scroll-top-btn:hover { background-color: #7068b8; transform: scale(1.1); }
+
+/* --- Responsive --- */
+@media (max-width: 768px) {
+    .page-container { max-width: 95%; }
+    .settings-card.report-step { padding: 15px 20px; }
+    .report-type-selector, .format-selector { flex-direction: column; }
+    .date-range-filter { grid-template-columns: 1fr; }
+}
+@media (max-width: 600px) {
+     body { padding-top: 0; padding-bottom: 0; }
+     .page-container { max-width: 100%; border-radius: 0; padding: 15px; min-height: 100vh;}
+     .page-header h1 { font-size: 1.5em; }
+}
+.modal-overlay {
+    position: fixed; /* Se posiciona respecto a la ventana del navegador */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6); /* Fondo oscuro semitransparente */
+    display: flex; /* Usa flexbox para centrar el contenido */
+    justify-content: center;
+    align-items: center;
+    z-index: 1000; /* Asegura que esté por encima de otros contenidos */
+    opacity: 0; /* Inicialmente invisible */
+    /* Transición suave para opacidad */
+    transition: opacity 0.3s ease-in-out;
+    padding: 15px; /* Espacio por si el contenido es muy grande */
+    box-sizing: border-box;
+    pointer-events: none; /* No interactuable cuando está oculto */
+}
+
+.modal-overlay.active {
+    opacity: 1; /* Hacer visible */
+    pointer-events: auto; /* Hacer interactuable */
+}
+
+/* Estilo para el contenido del modal (ya deberías tenerlo similar) */
+.modal-content {
+    background-color: #ffffff;
+    padding: 30px 40px;
+    border-radius: 20px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    width: 100%;
+    max-width: 500px; /* Ancho máximo por defecto */
+    box-sizing: border-box;
+    /* Transición para el efecto de escala (opcional) */
+    transform: scale(0.95);
+    transition: transform 0.3s ease-in-out;
+}
+
+.modal-overlay.active .modal-content {
+    transform: scale(1); /* Escala normal cuando está activo */
+}
+
+/* Estilo para modales pequeños (como el de selección) */
+.modal-overlay.small .modal-content {
+    max-width: 420px;
+}
+/* Estilos para el contenedor de opciones dentro del modal */
+.selection-options {
+    margin: 25px 0;
+    max-height: 200px;
+    overflow-y: auto;
+    padding-right: 10px;
+}
+
+/* --- ESTA ES LA REGLA CLAVE --- */
+.selection-options label {
+    display: block; /* <<< ¡Hace que cada opción ocupe una línea! */
+    padding: 12px 15px;
+    margin-bottom: 8px; /* Espacio entre opciones */
+    border: 1px solid #e0e0e0;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+    font-weight: 600;
+}
+/* ----------------------------- */
+
+
+.selection-options label:hover {
+    background-color: #f5f5f5;
+    border-color: #ccc;
+}
+
+.selection-options input[type="radio"] {
+    margin-right: 10px;
+    accent-color: #8a82d5;
+    vertical-align: middle;
+}

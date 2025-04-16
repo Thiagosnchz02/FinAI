@@ -54,6 +54,10 @@ if (typeof supabase === 'undefined' || supabase === null) {
     const cancelDeleteButton = document.getElementById('cancelDeleteButton');
     const confirmDeleteButton = document.getElementById('confirmDeleteButton');
     const modalDeleteError = document.getElementById('modalDeleteError');
+    const infoModal = document.getElementById('infoModal');
+    const infoModalTitle = document.getElementById('infoModalTitle');
+    const infoModalMessage = document.getElementById('infoModalMessage');
+    const infoModalCloseBtn = document.getElementById('infoModalCloseBtn');
     // Seleccionar elementos que podrían deshabilitarse durante la carga/guardado
     const pageContainer = document.querySelector('.page-container');
     const allToggles = document.querySelectorAll('.toggle-switch input[type="checkbox"]');
@@ -133,6 +137,23 @@ if (typeof supabase === 'undefined' || supabase === null) {
               selectElement.value = '';
          }
     }
+
+    function toggleInfoModal(show) {
+        if (!infoModal) return;
+        if (show) { infoModal.style.display = 'flex'; setTimeout(() => infoModal.classList.add('active'), 10); }
+        else { infoModal.classList.remove('active'); setTimeout(() => { infoModal.style.display = 'none'; }, 300); }
+    }
+
+    function openInfoModal(title, message) {
+        if (!infoModalTitle || !infoModalMessage) { console.error("Elementos modal info no encontrados"); return; }
+        infoModalTitle.innerHTML = `<i class="fas fa-info-circle"></i> ${title}`; // Poner título con icono
+        infoModalMessage.textContent = message;
+        toggleInfoModal(true);
+         // Opcional: Enfocar botón al abrir
+         setTimeout(() => infoModalCloseBtn?.focus(), 350);
+    }
+
+    function closeInfoModal() { toggleInfoModal(false); }
 
     function toggle2faModal(show) {
         if (!setup2faModal) return;
@@ -514,16 +535,25 @@ if (typeof supabase === 'undefined' || supabase === null) {
         if (!currentUserId) { console.error("Settings.js: No user ID."); return; }
         console.log("Cargando configuraciones para user:", currentUserId);
         setLoadingState(true);
+        
+        let profile = null;
+        let error = null;
 
         try {
             const { data: profile, error } = await supabase
                 .from('profiles')
                 .select('theme, language, doble_factor_enabled, default_view, notify_fixed_expense, notify_budget_alert, notify_goal_reached, avatar_url')
                 .eq('id', currentUserId)
-                .single();
+                .single();  
 
             // Ahora el error 406 no debería ocurrir si creaste la fila
             if (error) throw error;
+            if (!profile) {
+                console.warn("No se encontró perfil, aplicando configuración por defecto.");
+                updateUISettings(); // Mostrar UI con los valores por defecto
+                setLoadingState(false);
+                return;
+             }  
 
             // Si llega aquí, el perfil SÍ se encontró
             console.log("Perfil encontrado:", profile);
@@ -886,13 +916,52 @@ if (typeof supabase === 'undefined' || supabase === null) {
        }
         // Botón Exportar Datos
         if (exportDataBtn) {
-            exportDataBtn.addEventListener('click', () => {
-                if (isLoading) return;
-                console.log("Botón Exportar presionado.");
-                alert("La exportación de datos es una funcionalidad avanzada pendiente de implementación (requiere lógica de servidor o Edge Function).");
-                // Aquí iría la llamada a la función que genere y descargue el CSV, ej:
-                // setLoadingState(true);
-                // generateAndDownloadExport().finally(() => setLoadingState(false));
+            exportDataBtn.addEventListener('click', async () => {
+                if (isLoading || !supabase) return;
+                console.log("Botón Exportar presionado. Llamando Edge Function...");
+                setLoadingState(true);
+                exportDataBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Exportando...'; // Mejor feedback
+    
+                try {
+                    // Invocar la función (esperamos JSON o CSV)
+                    const { data, error } = await supabase.functions.invoke('export_data', {
+                        method: 'POST',
+                        // IMPORTANTE: Especificar que podemos aceptar CSV o JSON
+                        // aunque el navegador manejará el CSV por Content-Disposition si viene así
+                        headers: {
+                            'Accept': 'text/csv, application/json'
+                        }
+                    });
+    
+                    if (error) {
+                        // Error al invocar la función (red, crash de función)
+                        console.error("Error invocando Edge Function 'export_data':", error);
+                         // Intenta obtener un mensaje más útil del error si está anidado
+                         const message = error.context?.message || error.message || 'Error al contactar con el servicio de exportación.';
+                        throw new Error(message);
+                    }
+    
+                    // La invocación fue exitosa, ahora vemos qué nos devolvió
+    
+                    // CASO 1: La función devolvió JSON indicando que no hay datos
+                    if (data && data.status === 'empty') {
+                        console.log("Exportación completada, pero no había datos.");
+                        openInfoModal('Exportar Datos', data.message || "No se encontraron transacciones para exportar.");
+                    }
+                    // CASO 2: La función devolvió CSV (implícito, no necesitamos procesar 'data')
+                    else {
+                        // El navegador debería haber iniciado la descarga gracias a las cabeceras
+                        console.log("Llamada a export_data exitosa, la descarga del CSV debería iniciarse/haberse iniciado.");
+                        // No mostramos 'alert' aquí para no interrumpir la posible descarga
+                    }
+    
+                } catch (error) {
+                    console.error('Error durante la exportación:', error);
+                    alert(`Error al exportar datos: ${error.message}`);
+                } finally {
+                    setLoadingState(false); // Quitar estado de carga
+                    exportDataBtn.innerHTML = '<i class="fas fa-download"></i> Exportar Datos'; // Restaurar
+                }
             });
         }
         // Botón Importar Datos
@@ -913,6 +982,9 @@ if (typeof supabase === 'undefined' || supabase === null) {
                 openDeleteModal(); // <-- Abre el nuevo modal en lugar de llamar a la lógica vieja
             });
         }
+
+        if (infoModalCloseBtn) infoModalCloseBtn.addEventListener('click', closeInfoModal);
+        if (infoModal) infoModal.addEventListener('click', (event) => { if (event.target === infoModal) closeInfoModal(); });
 
         // ---- Listeners para Enlaces de Ayuda (NUEVO) ----
 

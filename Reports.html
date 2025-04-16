@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FinAi - Generar Informes</title>
+    <link rel="stylesheet" href="/css/Reports.css"> 
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="page-container">
+        <div class="page-header reports-header">
+            <button id="backButton" class="btn-icon" aria-label="Volver"><i class="fas fa-arrow-left"></i></button>
+            <div class="header-title-group">
+                <img id="userAvatarSmall" src="https://finai.es/images/avatar_predeterminado.png" alt="Avatar" class="header-avatar-small">
+                <h1>Generar Informes</h1>
+            </div>
+            <div style="width: 40px;"></div> </div>
+
+        <div class="report-generator-container">
+
+            <div class="settings-card report-step">
+                <h2><span class="step-number">1</span> Qué quieres exportar?</h2>
+                <div class="report-type-selector">
+                    <button class="report-type-option active" data-report-type="transactions">
+                        <i class="fas fa-exchange-alt"></i> Transacciones
+                    </button>
+                    <button class="report-type-option" data-report-type="trip_expenses">
+                        <i class="fas fa-plane-departure"></i> Gastos de Viaje
+                    </button>
+                    </div>
+            </div>
+
+            <div class="settings-card report-step">
+                <h2><span class="step-number">2</span> Aplica los filtros</h2>
+
+                <div id="transactionFilters" class="filter-group active">
+                    <div class="date-range-filter">
+                        <div class="input-group">
+                            <label for="dateFrom"><i class="fas fa-calendar-alt icon-inline"></i> Fecha Desde</label>
+                            <input type="date" id="dateFrom" name="dateFrom">
+                        </div>
+                        <div class="input-group">
+                            <label for="dateTo"><i class="fas fa-calendar-alt icon-inline"></i> Fecha Hasta</label>
+                            <input type="date" id="dateTo" name="dateTo">
+                        </div>
+                        </div>
+                    <div class="input-group">
+                        <label><i class="fas fa-filter icon-inline"></i> Tipo</label>
+                        <div class="type-selector" id="filterTypeSelector">
+                             <button class="type-option active" data-type="all">Todos</button>
+                             <button class="type-option" data-type="ingreso">Ingresos</button>
+                             <button class="type-option" data-type="gasto">Gastos</button>
+                        </div>
+                    </div>
+                    <div class="setting-item clickable" id="accountFilterTrigger">
+                        <span><i class="fas fa-landmark icon-inline"></i> Cuenta</span>
+                        <span class="setting-value-editable" id="selectedAccountFilter">Todas las cuentas <i class="fas fa-chevron-right"></i></span>
+                    </div>
+                    <div class="setting-item clickable" id="categoryFilterTrigger">
+                        <span><i class="fas fa-tag icon-inline"></i> Categoría</span>
+                        <span class="setting-value-editable" id="selectedCategoryFilter">Todas las categorías <i class="fas fa-chevron-right"></i></span>
+                    </div>
+                </div>
+
+                <div id="tripFilters" class="filter-group" style="display: none;">
+                    <div class="input-group">
+                        <label for="tripFilterSelect"><i class="fas fa-suitcase-rolling icon-inline"></i> Selecciona el Viaje</label>
+                        <select id="tripFilterSelect" name="tripId" required>
+                             <option value="" disabled selected>Cargando viajes...</option>
+                             </select>
+                    </div>
+                     <div class="date-range-filter">
+                        <div class="input-group">
+                            <label for="tripDateFrom"><i class="fas fa-calendar-alt icon-inline"></i> Fecha Desde (Opcional)</label>
+                            <input type="date" id="tripDateFrom" name="tripDateFrom">
+                        </div>
+                        <div class="input-group">
+                            <label for="tripDateTo"><i class="fas fa-calendar-alt icon-inline"></i> Fecha Hasta (Opcional)</label>
+                            <input type="date" id="tripDateTo" name="tripDateTo">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="settings-card report-step">
+                 <h2><span class="step-number">3</span> Elige el formato</h2>
+                 <div class="format-selector" id="formatSelector">
+                     <button class="format-option active" data-format="csv">
+                         <i class="fas fa-file-csv"></i> CSV
+                     </button>
+                     <button class="format-option disabled" data-format="pdf" title="Próximamente">
+                         <i class="fas fa-file-pdf"></i> PDF
+                     </button>
+                 </div>
+            </div>
+
+            <div class="action-section">
+                 <button id="generateReportBtn" class="btn btn-primary btn-generate">
+                     <i class="fas fa-cogs"></i> Generar Informe
+                 </button>
+                 <p id="reportMessage" class="message" style="display: none;"></p>
+            </div>
+
+        </div> 
+    </div> 
+    
+    <div id="selectionModal" class="modal-overlay small" style="display: none;">
+        <div class="modal-content">
+            <h2 id="selectionModalTitle">Seleccionar Opción</h2>
+            <form id="selectionForm">
+                <input type="hidden" id="selectionSettingKey" name="selectionSettingKey">
+                <div id="selectionOptionsContainer" class="selection-options">
+                    <p>Cargando opciones...</p> </div>
+                <div class="modal-actions">
+                    <button type="button" id="cancelSelectionButton" class="btn btn-secondary">Cancelar</button>
+                    <button type="submit" id="saveSelectionButton" class="btn btn-primary">Aplicar Filtro</button>
+                </div>
+                <p id="modalSelectionError" class="error-message" style="display: none;"></p>
+            </form>
+        </div>
+    </div>
+    <div id="infoModal" class="modal-overlay small" style="display: none;">
+        <div class="modal-content info-modal-content"> <h2 id="infoModalTitle"><i class="fas fa-info-circle"></i> Información</h2>
+            <p id="infoModalMessage" class="modal-instructions" style="text-align: center; margin: 25px 0; line-height: 1.6;">
+                Mensaje informativo aquí.
+            </p>
+            <div class="modal-actions" style="justify-content: center;"> <button type="button" id="infoModalCloseBtn" class="btn btn-primary">Aceptar</button>
+            </div>
+        </div>
+    </div>
+
+    <button id="scrollTopBtn" class="scroll-top-btn" title="Volver arriba" style="display: none;">
+         <i class="fas fa-arrow-up"></i>
+     </button>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/Js/supabase-init.js"></script>
+    <script src="/Js/auth-listener.js"></script>
+    <script src="/Js/Reports.js"></script> </body>
+</html>
