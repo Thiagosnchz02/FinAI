@@ -377,7 +377,7 @@ if (typeof supabase === 'undefined' || supabase === null) {
         if (changePasswordButton) {
             changePasswordButton.addEventListener('click', () => {
                 console.log('DEBUG: Botón Cambiar Contraseña presionado');
-                window.location.href = '/Change-password.html'; // Ir a página de cambio de pass (pendiente)
+                window.location.href = '/Change_password.html'; // Ir a página de cambio de pass (pendiente)
             });
         }
     }); // Fin de DOMContentLoaded

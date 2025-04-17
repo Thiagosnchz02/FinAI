@@ -93,6 +93,8 @@ if (typeof supabase === 'undefined' || supabase === null) {
         }
     }
     function openBudgetModal(budget = null) {
+        console.log('--- Intentando abrir modal presupuesto ---'); // <--- AÑADE ESTO
+        console.log('Array global categories en este punto:', categories);
         if (!budgetForm || !modalTitleBudget || !budgetIdInput || !budgetCategoryInput || !budgetAmountInput || !saveBudgetButton || !budgetPeriodInput) {
              console.error("Error: Elementos del modal de presupuesto no encontrados."); return; }
 
@@ -106,9 +108,19 @@ if (typeof supabase === 'undefined' || supabase === null) {
 
         // Poblar categorías de GASTO que AÚN NO tengan presupuesto este mes
         const budgetedCategoryIds = currentBudgets.map(b => b.category_id);
+        console.log('Filtrando categorías desde:', categories);
+        console.log('IDs ya presupuestados:', budgetedCategoryIds);
+        console.log('Inspeccionando contenido del array categories:');
+        categories.forEach((cat, index) => {
+            // Mostramos los campos clave para cada categoría
+            console.log(`  Cat[${index}]: id=${cat.id}, name=${cat.name}, type=${cat.type}`); // <-- ESTE LOG ES IMPORTANTE
+        });
         const availableCategories = categories.filter(cat =>
              cat.type === 'gasto' && (budget ? cat.id === budget.category_id : !budgetedCategoryIds.includes(cat.id)) // Mostrar solo la actual si editamos, o las no presupuestadas si añadimos
         );
+        console.log('Categorías disponibles para el select:', availableCategories); // <--- AÑADE ESTO (¿Está vacío?)
+
+        console.log('Elemento select destino:', budgetCategoryInput);
         populateSelect(budgetCategoryInput, availableCategories, 'id', 'name', 'Selecciona categoría...');
 
         if (budget) { // Modo Edición
@@ -138,7 +150,7 @@ if (typeof supabase === 'undefined' || supabase === null) {
                 .select('amount, category_id')
                 .eq('user_id', currentUserId)
                 .eq('type', 'gasto')
-                .is('category_id', 'not.null')
+                .not('category_id', 'is', null)
                 .gte('transaction_date', startDate)
                 .lte('transaction_date', endDate);
 
@@ -282,7 +294,11 @@ if (typeof supabase === 'undefined' || supabase === null) {
 
          } catch (error) {
               console.error("Error cargando presupuestos/gastos:", error);
-              if(loadingBudgetsMessage) loadingMessage.textContent = `Error al cargar: ${error.message}`;
+              if (loadingBudgetsMessage) { // Usar la variable correcta
+                loadingBudgetsMessage.textContent = `Error al cargar: ${error.message}`;
+                loadingBudgetsMessage.style.color = 'red'; // Marcar como error visualmente
+                loadingBudgetsMessage.style.display = 'block'; // Asegurar que sea visible
+           }
               if(noBudgetsMessage) noBudgetsMessage.style.display = 'block';
               if(budgetList) budgetList.innerHTML = '';
               if (error.message.includes('CORS')) {
@@ -316,7 +332,9 @@ if (typeof supabase === 'undefined' || supabase === null) {
              const [profileRes, accountsRes, categoriesRes] = await Promise.all([
                  supabase.from('profiles').select('avatar_url').eq('id', currentUserId).single(),
                  supabase.from('accounts').select('id, name').eq('user_id', currentUserId).order('name'),
-                 supabase.from('categories').select('id, name').or(`user_id.eq.${currentUserId},is_default.eq.true`).eq('type', 'gasto').order('name') // SOLO GASTO
+                 supabase.from('categories').select('id, name, type, icon').or(`user_id.eq.${currentUserId},is_default.eq.true`)
+                 //.eq('type', 'gasto')
+                 .order('name') // SOLO GASTO
              ]);
 
              // Avatar
@@ -325,8 +343,14 @@ if (typeof supabase === 'undefined' || supabase === null) {
              if (accountsRes.error) throw accountsRes.error;
              accounts = accountsRes.data || [];
              // Categorías (para modal)
-             if (categoriesRes.error) throw categoriesRes.error;
-             categories = categoriesRes.data || [];
+             console.log('Resultado Query Categorías:', { data: categoriesRes.data, error: categoriesRes.error });
+             if (categoriesRes.error) {
+                console.error("Error específico cargando categorías:", categoriesRes.error); // <--- AÑADE ESTO
+                categories = [];
+             } else {
+                categories = categoriesRes.data || [];
+                console.log("Array global 'categories' rellenado:", categories); // <--- AÑADE ESTO (Ver si tiene datos)
+             }
              // Rellenar select del modal (se hará en openBudgetModal)
 
              // Establecer periodo actual y cargar datos iniciales
@@ -339,7 +363,11 @@ if (typeof supabase === 'undefined' || supabase === null) {
 
         } catch (error) {
              console.error("Error cargando datos iniciales (Budgets):", error);
-             if(loadingBudgetsMessage) loadingBudgetsMessage.textContent = `Error inicial: ${error.message}`;
+             if (loadingBudgetsMessage) { // Usar la variable correcta
+                loadingBudgetsMessage.textContent = `Error inicial: ${error.message}`;
+                loadingBudgetsMessage.style.color = 'red'; // Marcar como error visualmente
+                loadingBudgetsMessage.style.display = 'block'; // Asegurar que sea visible
+           }
              if (error.message.includes('CORS')) {
                  alert('Error de CORS. Revisa la configuración en Supabase.');
              }

@@ -1,12 +1,14 @@
 // auth-listener.js (v10 - Stable Base - NO Default View Logic)
 console.log('DEBUG: auth-listener.js - Cargado (v10 - Stable)');
 
+const defaultAvatarPath = 'https://finai.es/images/avatar_predeterminado.png';
+
 if (typeof supabase !== 'undefined' && supabase !== null) {
     console.log('auth-listener.js: Supabase client encontrado. Adjuntando listener.');
     let initialAuthCheckDone = false;
 
     // Volvemos a un listener síncrono o mínimamente asíncrono
-    supabase.auth.onAuthStateChange((event, session) => { // Quitamos async aquí temporalmente si es posible
+    supabase.auth.onAuthStateChange(async(event, session) => { // Quitamos async aquí temporalmente si es posible
         const currentPath = window.location.pathname;
         const user = session?.user;
 
@@ -74,6 +76,42 @@ if (typeof supabase !== 'undefined' && supabase !== null) {
              }
              return; // Importante detener aquí
          }
+
+         if (user) {
+            try {
+                const avatarImgElement = document.getElementById('userAvatarHeader');
+                if (avatarImgElement) {
+                    console.log('DEBUG (v10+Avatar): Elemento userAvatarHeader encontrado, buscando avatar en DB...');
+                    const { data: profileData, error: profileError } = await supabase
+                        .from('profiles')
+                        .select('avatar_url')
+                        .eq('id', user.id)
+                        .single();
+
+                    if (profileError && profileError.code !== 'PGRST116') {
+                        console.error('Auth-Listener: Error buscando avatar_url en profiles:', profileError);
+                        avatarImgElement.src = defaultAvatarPath;
+                    } else if (profileData && profileData.avatar_url) {
+                        console.log('DEBUG (v10+Avatar): Avatar personalizado encontrado:', profileData.avatar_url);
+                        // Añadir timestamp para evitar caché si la URL es la misma pero el contenido cambió
+                        const url = new URL(profileData.avatar_url);
+                        url.searchParams.set('t', new Date().getTime());
+                        avatarImgElement.src = url.toString();
+                    } else {
+                        console.log('DEBUG (v10+Avatar): No se encontró avatar personalizado, usando default.');
+                        avatarImgElement.src = defaultAvatarPath;
+                    }
+                } else {
+                    console.log('DEBUG (v10+Avatar): Elemento userAvatarHeader NO encontrado en:', currentPath);
+                }
+            } catch (error) {
+                console.error('Auth-Listener: Error inesperado al intentar actualizar avatar:', error);
+                const avatarImgElement = document.getElementById('userAvatarHeader');
+                if (avatarImgElement) {
+                    avatarImgElement.src = defaultAvatarPath; // Poner default en caso de error
+                }
+            }
+        }
 
 
         // --- LÓGICA GENERAL (Principalmente para INITIAL_SESSION) ---

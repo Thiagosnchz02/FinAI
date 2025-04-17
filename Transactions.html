@@ -12,7 +12,7 @@
         <div class="page-header transactions-header">
             <button id="backButton" class="btn-icon" aria-label="Volver"><i class="fas fa-arrow-left"></i></button>
             <div class="header-title-group">
-                <img id="userAvatarSmall" src="https://finai.es/images/avatar_predeterminado.png" alt="Avatar" class="header-avatar-small"> <h1>Transacciones</h1>
+                <img id="userAvatarHeader" src="https://finai.es/images/avatar_predeterminado.png" alt="Avatar" class="header-avatar-small"> <h1>Transacciones</h1>
             </div>
             <button id="addTransactionBtn" class="btn btn-primary btn-add">
                 <i class="fas fa-plus"></i> Añadir
@@ -57,7 +57,8 @@
         </div>
         <p id="noTransactionsMessage" class="empty-list-message" style="display: none;">No hay transacciones que coincidan con los filtros seleccionados.</p>
 
-    </div> <div id="transactionModal" class="modal-overlay" style="display: none;">
+    </div> 
+    <div id="transactionModal" class="modal-overlay" style="display: none;">
         <div class="modal-content">
             <h2 id="modalTitleTransaction">Añadir Transacción</h2>
             <form id="transactionForm">

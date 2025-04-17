@@ -471,7 +471,7 @@ if (typeof supabase === 'undefined' || supabase === null) {
                 .select('category_id, amount')
                 .eq('user_id', currentUserId)
                 .eq('type', 'gasto')
-                .is('category_id', 'not.null')
+                .not('category_id', 'is', null)
                 .gte('transaction_date', firstDayOfMonth)
                 .lte('transaction_date', lastDayOfMonth);
 
