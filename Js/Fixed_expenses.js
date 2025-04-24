@@ -280,6 +280,7 @@ if (typeof supabase === 'undefined' || supabase === null) {
     async function loadInitialDataFixedExpenses(user) {
         if (!user) { console.log("No hay usuario"); return; }
         currentUserId = user.id;
+        currentUser = user;
         categoriesLoaded = false;
         if(tableLoadingMessage) tableLoadingMessage.parentElement.style.display = 'table-footer-group';
         if(noExpensesMessage) noExpensesMessage.style.display = 'none';
@@ -312,8 +313,64 @@ if (typeof supabase === 'undefined' || supabase === null) {
                 console.log(`DEBUG: Categorías de GASTO cargadas con éxito: ${categories.length}`);
              }
              // Gastos Fijos
-             if (expensesRes.error) throw expensesRes.error;
-             fixedExpenses = expensesRes.data || [];
+             console.log("Cargando gastos fijos...");
+            const { data: initialExpenses, error: expensesError } = await supabase
+            .from('scheduled_fixed_expenses')
+            .select(`*, categories ( name, icon, color )`) // Traer todo, incluido JOIN
+            .eq('user_id', currentUserId)
+            .order('next_due_date');
+            if (expensesError) throw expensesError;
+            fixedExpenses = initialExpenses || [];
+            console.log(`Gastos fijos iniciales cargados: ${fixedExpenses.length}`);
+
+            const today = new Date();
+            today.setHours(0, 0, 0, 0); // Poner a medianoche para comparar solo fechas
+            const updatesToPerform = []; // Array para guardar las actualizaciones necesarias
+
+            for (const exp of fixedExpenses) {
+                if (exp.is_active && exp.next_due_date && exp.frequency && exp.frequency !== 'unico') { // Solo activos, con fecha, y recurrentes
+                    const nextDueDate = new Date(exp.next_due_date);
+                    // Ajuste zona horaria al comparar con 'today'
+                    const offset = nextDueDate.getTimezoneOffset();
+                    const adjustedNextDueDate = new Date(nextDueDate.getTime() + (offset * 60 * 1000));
+                    adjustedNextDueDate.setHours(0,0,0,0);
+
+
+                    if (adjustedNextDueDate < today) { // Si la fecha ya pasó
+                        console.log(`Fecha pasada detectada para '${exp.description}' (${exp.next_due_date}). Calculando siguiente...`);
+                        const newNextDueDate = calculateNextDueDate(adjustedNextDueDate, exp.frequency, exp.day_of_month);
+                        if (newNextDueDate) {
+                            const newDateString = newNextDueDate.toISOString().split('T')[0]; // Formato YYYY-MM-DD
+                            console.log(`   Nueva fecha calculada: ${newDateString}`);
+                            updatesToPerform.push({ id: exp.id, next_due_date: newDateString });
+                            // Actualizar el objeto en memoria para mostrar la fecha correcta inmediatamente
+                            exp.next_due_date = newDateString;
+                        } else {
+                            console.warn(`   No se pudo calcular la siguiente fecha para frecuencia: ${exp.frequency}`);
+                        }
+                    }
+                }
+            }
+
+            // Realizar las actualizaciones en la BD si hay alguna
+            if (updatesToPerform.length > 0) {
+                console.log(`Actualizando ${updatesToPerform.length} fechas de vencimiento en la BD...`);
+                // Usamos Promise.all para enviar todas las actualizaciones
+                const updatePromises = updatesToPerform.map(update =>
+                    supabase.from('scheduled_fixed_expenses')
+                        .update({ next_due_date: update.next_due_date, updated_at: new Date() })
+                        .eq('id', update.id)
+                        .eq('user_id', currentUserId) // Asegurar RLS
+                );
+                const results = await Promise.allSettled(updatePromises);
+                results.forEach((result, index) => {
+                    if (result.status === 'rejected') {
+                        console.error(`Error actualizando fecha para ID ${updatesToPerform[index].id}:`, result.reason);
+                    }
+                });
+                console.log("Actualizaciones de fecha completadas.");
+            }
+
              displayFixedExpensesList(fixedExpenses);
              displayFixedExpensesCalendar(fixedExpenses); // Renderizar calendario con datos
              displayMonthlyTotal(fixedExpenses);
@@ -333,6 +390,72 @@ if (typeof supabase === 'undefined' || supabase === null) {
         }
     }
 
+    // --- >>> INICIO: NUEVA FUNCIÓN calculateNextDueDate <<< ---
+    function calculateNextDueDate(currentDueDate, frequency, dayOfMonth) {
+        if (!(currentDueDate instanceof Date) || isNaN(currentDueDate.getTime())) {
+            console.error("calculateNextDueDate: currentDueDate inválida", currentDueDate);
+            return null; // Fecha inválida
+        }
+
+        let nextDate = new Date(currentDueDate.getTime()); // Clonar la fecha
+
+        switch (frequency) {
+            case 'mensual':
+                // Si tenemos day_of_month, lo usamos para calcular el día exacto del mes siguiente
+                if (dayOfMonth && dayOfMonth >= 1 && dayOfMonth <= 31) {
+                    let targetMonth = nextDate.getMonth() + 1;
+                    let targetYear = nextDate.getFullYear();
+                    if (targetMonth > 11) {
+                        targetMonth = 0; // Enero
+                        targetYear++;
+                    }
+                    // Calcular último día del mes objetivo
+                    let lastDayOfMonth = new Date(targetYear, targetMonth + 1, 0).getDate();
+                    let targetDay = Math.min(dayOfMonth, lastDayOfMonth); // Ajustar si el día no existe (ej: 31 en Feb)
+                    nextDate = new Date(targetYear, targetMonth, targetDay);
+                } else {
+                    // Si no hay day_of_month, simplemente añadimos un mes (menos preciso)
+                    console.warn("Calculando siguiente fecha mensual sin day_of_month, puede ser impreciso.");
+                    nextDate.setMonth(nextDate.getMonth() + 1);
+                }
+                break;
+            case 'anual':
+                nextDate.setFullYear(nextDate.getFullYear() + 1);
+                break;
+            case 'semanal':
+                nextDate.setDate(nextDate.getDate() + 7);
+                break;
+            case 'quincenal':
+                nextDate.setDate(nextDate.getDate() + 14); // O 15? Depende definición
+                break;
+            case 'bimestral':
+                nextDate.setMonth(nextDate.getMonth() + 2);
+                break;
+            case 'trimestral':
+                nextDate.setMonth(nextDate.getMonth() + 3);
+                break;
+            case 'semestral':
+                nextDate.setMonth(nextDate.getMonth() + 6);
+                break;
+            default:
+                console.warn(`Frecuencia no reconocida para calcular siguiente fecha: ${frequency}`);
+                return null; // Frecuencia no soportada
+        }
+
+        // Asegurarse que la nueva fecha no sea en el pasado (por si acaso)
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        if (nextDate < today) {
+            // Si la fecha calculada sigue en el pasado (ej. un gasto mensual muy viejo),
+            // seguir calculando hasta que esté en el futuro.
+            console.log("Fecha calculada aún en pasado, recalculando...");
+            return calculateNextDueDate(nextDate, frequency, dayOfMonth); // Llamada recursiva
+        }
+
+
+        return nextDate;
+    }
+
     /** Guarda/Edita un gasto fijo programado */
     async function handleExpenseFormSubmit(event) {
         event.preventDefault();
@@ -341,6 +464,14 @@ if (typeof supabase === 'undefined' || supabase === null) {
         const expenseId = expenseIdInput.value;
         const isEditing = !!expenseId;
         const originalSaveText = saveExpenseButton.textContent;
+        const nextDueDateValue = expenseNextDueDateInput.value; // YYYY-MM-DD
+        let dayOfMonthValue = null;
+        if (expenseFrequencyInput.value === 'mensual' && nextDueDateValue) {
+            try {
+                // Extraer el día del mes de la fecha seleccionada
+                dayOfMonthValue = new Date(nextDueDateValue + 'T00:00:00').getDate(); // Asegurar que interprete como local
+            } catch(e) { console.error("Error extrayendo día del mes de la fecha", e); }
+        }
 
         // Recoger datos
         const expenseData = {
@@ -348,20 +479,25 @@ if (typeof supabase === 'undefined' || supabase === null) {
             description: expenseDescriptionInput.value.trim(),
             amount: parseFloat(expenseAmountInput.value),
             category_id: expenseCategoryInput.value || null,
-            account_id: expenseAccountInput.value || null, // Permitir null
+            account_id: expenseAccountInput.value || null,
             frequency: expenseFrequencyInput.value,
-            next_due_date: expenseNextDueDateInput.value,
+            next_due_date: nextDueDateValue,
+            day_of_month: dayOfMonthValue, // <<< GUARDAR EL DÍA DEL MES
             notification_enabled: expenseNotificationInput.checked,
             is_active: expenseActiveInput.checked,
-            // updated_at se maneja por triggers o se añade aquí
         };
 
         // Validaciones
         if (!expenseData.description || isNaN(expenseData.amount) || !expenseData.category_id || !expenseData.frequency || !expenseData.next_due_date) {
              modalExpenseError.textContent = 'Descripción, Importe, Categoría, Frecuencia y Próxima Fecha son obligatorios.'; modalExpenseError.style.display = 'block'; return; }
+        if (expenseData.frequency === 'mensual' && !expenseData.day_of_month) {
+            console.warn("Guardando gasto mensual sin día del mes específico.");
+            // Podrías mostrar un warning al usuario o hacerlo obligatorio
+        }
         if (expenseData.amount <= 0) { modalExpenseError.textContent = 'El importe debe ser mayor que cero.'; modalExpenseError.style.display = 'block'; return; }
         modalExpenseError.style.display = 'none';
         saveExpenseButton.disabled = true; saveExpenseButton.textContent = isEditing ? 'Guardando...' : 'Creando...';
+
 
         try {
             let error;
@@ -372,6 +508,7 @@ if (typeof supabase === 'undefined' || supabase === null) {
                         description: expenseData.description, amount: expenseData.amount,
                         category_id: expenseData.category_id, account_id: expenseData.account_id,
                         frequency: expenseData.frequency, next_due_date: expenseData.next_due_date,
+                        day_of_month: expenseData.day_of_month,
                         notification_enabled: expenseData.notification_enabled, is_active: expenseData.is_active,
                         updated_at: new Date() })
                     .eq('id', expenseId).eq('user_id', currentUserId);
@@ -385,6 +522,7 @@ if (typeof supabase === 'undefined' || supabase === null) {
 
             console.log(isEditing ? 'Gasto Fijo actualizado' : 'Gasto Fijo creado');
             closeExpenseModal();
+            await loadInitialDataFixedExpenses({ id: currentUserId }); // Recargar todo
             loadInitialDataFixedExpenses({ id: currentUserId }); // Recargar todo
 
         } catch (error) {

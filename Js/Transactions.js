@@ -44,6 +44,12 @@ if (typeof supabase === 'undefined' || supabase === null) {
     const cancelTransactionButton = document.getElementById('cancelTransactionButton');
     const saveTransactionButton = document.getElementById('saveTransactionButton');
     const modalTransactionError = document.getElementById('modalTransactionError');
+    const typeToggleTransfer = document.querySelector('#transactionModal input[name="transactionType"][value="transferencia"]');
+    const accountSourceGroup = document.getElementById('accountSourceGroup'); // Opcional
+    const transactionAccountLabel = document.getElementById('transactionAccountLabel'); // Opcional
+    const accountDestinationGroup = document.getElementById('accountDestinationGroup');
+    const transactionAccountDestinationInput = document.getElementById('transactionAccountDestination');
+    const categoryGroup = document.getElementById('categoryGroup');
     // Otros
     const scrollTopBtn = document.getElementById('scrollTopBtn');
 
@@ -124,55 +130,125 @@ if (typeof supabase === 'undefined' || supabase === null) {
     }
 
     /** Abre el modal para añadir o editar una transacción */
-    function openTransactionModal(transaction = null) {
-        // Verificar que todos los elementos del modal existen
-        if (!transactionForm || !modalTitleTransaction || !transactionIdInput || !typeToggleExpense || !typeToggleIncome || !transactionAmountInput || !transactionDateInput || !transactionDescriptionInput || !transactionAccountInput || !transactionCategoryInput || !transactionNotesInput || !saveTransactionButton) {
-            console.error("Error: Elementos del modal de transacción no encontrados."); return; }
+    // REEMPLAZA tu función openTransactionModal con esta
+    function openTransactionModal(defaultType = 'gasto', transaction = null) { // Acepta transaction para edición (aunque no se usa en quick add)
+        console.log('--- DEBUG: openTransactionModal Iniciada ---');
+        console.log('DEBUG: Accounts:', accounts);
+        console.log('DEBUG: Categories:', categories);
+        console.log('DEBUG: Cuenta Select Origen:', transactionAccountInput);
+        console.log('DEBUG: Cuenta Select Destino:', transactionAccountDestinationInput); // Nuevo
+        console.log('DEBUG: Categoria Select:', transactionCategoryInput);
+
+
+        if (!transactionForm || !modalTitleTransaction || !transactionIdInput || !typeToggleExpense || !typeToggleIncome || !typeToggleTransfer || !transactionAmountInput || !transactionDateInput || !transactionDescriptionInput || !transactionAccountInput || !transactionAccountDestinationInput || !transactionCategoryInput || !transactionNotesInput || !saveTransactionButton || !categoryGroup || !accountDestinationGroup || !transactionAccountLabel) {
+            console.error("Error: Elementos clave del modal de transacción no encontrados."); return;
+        }
 
         transactionForm.reset();
         transactionIdInput.value = '';
         modalTransactionError.style.display = 'none';
         saveTransactionButton.disabled = false;
-        saveTransactionButton.textContent = 'Guardar Transacción';
+        saveTransactionButton.textContent = 'Guardar'; // Texto genérico inicial
 
-        if (transaction) { // Modo Edición
+        // Poblar AMBOS desplegables de cuenta
+        console.log('DEBUG: Poblando cuenta origen/principal...');
+        populateSelect(transactionAccountInput, accounts, 'id', 'name', 'Selecciona origen...');
+        console.log('DEBUG: Poblando cuenta destino...');
+        populateSelect(transactionAccountDestinationInput, accounts, 'id', 'name', 'Selecciona destino...');
+
+        if (transaction) { // Modo Edición (Simplificado - NO maneja edición de transferencias aún)
             modalTitleTransaction.textContent = 'Editar Transacción';
+            saveTransactionButton.textContent = 'Guardar Cambios';
             transactionIdInput.value = transaction.id;
-            transactionAmountInput.value = Math.abs(transaction.amount); // Mostrar siempre positivo en el input
-            transactionDateInput.value = transaction.transaction_date ? transaction.transaction_date.split('T')[0] : ''; // Formato YYYY-MM-DD
+            transactionAmountInput.value = Math.abs(transaction.amount);
+            transactionDateInput.value = transaction.transaction_date ? transaction.transaction_date.split('T')[0] : '';
             transactionDescriptionInput.value = transaction.description || '';
-            transactionAccountInput.value = transaction.account_id || '';
+            transactionAccountInput.value = transaction.account_id || ''; // Solo cuenta principal en edición simple
             transactionNotesInput.value = transaction.notes || '';
+            // NO preseleccionar cuenta destino ni ocultar categoría en edición simple
+            accountDestinationGroup.style.display = 'none';
+            categoryGroup.style.display = 'block';
+            transactionAccountDestinationInput.required = false;
+            transactionCategoryInput.required = false;
 
-            // Seleccionar tipo correcto y poblar categorías
+
             if (transaction.type === 'ingreso') {
                 typeToggleIncome.checked = true;
-                typeToggleIncome.parentElement.classList.add('active');
-                typeToggleExpense.parentElement.classList.remove('active');
                 populateCategoryFilter('ingreso');
-            } else { // Gasto o Transferencia por defecto
+            } else { // Gasto (o Transferencia se trataría como gasto en edición simple)
                 typeToggleExpense.checked = true;
-                typeToggleExpense.parentElement.classList.add('active');
-                typeToggleIncome.parentElement.classList.remove('active');
                 populateCategoryFilter('gasto');
             }
-             // Seleccionar categoría guardada
-             transactionCategoryInput.value = transaction.category_id || '';
+            transactionCategoryInput.value = transaction.category_id || '';
+            // Deshabilitar cambio de tipo en edición si es complejo manejar transferencias editadas
+            typeToggleExpense.disabled = true;
+            typeToggleIncome.disabled = true;
+            typeToggleTransfer.disabled = true;
+            document.querySelectorAll('.type-toggle label').forEach(l => l.classList.add('disabled'));
+
 
         } else { // Modo Añadir
-            modalTitleTransaction.textContent = 'Añadir Transacción';
-            typeToggleExpense.checked = true; // Gasto por defecto
-            typeToggleExpense.parentElement.classList.add('active');
-            typeToggleIncome.parentElement.classList.remove('active');
-            transactionDateInput.valueAsDate = new Date(); // Fecha de hoy por defecto
-            populateCategoryFilter('gasto'); // Poblar con categorías de gasto
+            modalTitleTransaction.textContent = 'Añadir Movimiento';
+            saveTransactionButton.textContent = 'Guardar';
+            transactionDateInput.valueAsDate = new Date(); // Fecha de hoy
+            // Habilitar cambio de tipo
+            typeToggleExpense.disabled = false;
+            typeToggleIncome.disabled = false;
+            typeToggleTransfer.disabled = false;
+            document.querySelectorAll('.type-toggle label').forEach(l => l.classList.remove('disabled'));
+
+            // Preseleccionar tipo (Gasto o Ingreso desde Quick Actions)
+            if (defaultType === 'ingreso') {
+                typeToggleIncome.checked = true;
+            } else {
+                typeToggleExpense.checked = true; // Gasto por defecto si no es ingreso
+            }
+            // Actualizar UI según el tipo inicial
+            updateModalUI(document.querySelector('input[name="transactionType"]:checked').value);
         }
+
+        // Asegurar estilos visuales de botones de tipo
+        document.querySelectorAll('#transactionModal .type-toggle label').forEach(label => label.classList.remove('active'));
+        const checkedRadio = document.querySelector('#transactionModal input[name="transactionType"]:checked');
+        if(checkedRadio) {
+            checkedRadio.parentElement.classList.add('active');
+        } else { //Fallback si nada está checked
+            typeToggleExpense.checked = true;
+            typeToggleExpense.parentElement.classList.add('active');
+            updateModalUI('gasto');
+        }
+
+
         toggleTransactionModal(true);
+        setTimeout(() => transactionDescriptionInput.focus(), 350);
     }
 
     /** Cierra el modal de transacción */
     function closeTransactionModal() {
         toggleTransactionModal(false);
+    }
+
+    // Añade esta nueva función en Dashboard.js
+    function updateModalUI(selectedType) {
+        const isTransfer = selectedType === 'transferencia';
+
+        // Mostrar/Ocultar campos
+        if (categoryGroup) categoryGroup.style.display = isTransfer ? 'none' : 'block';
+        if (accountDestinationGroup) accountDestinationGroup.style.display = isTransfer ? 'block' : 'none';
+
+        // Cambiar etiqueta de la primera cuenta
+        if (transactionAccountLabel) {
+            transactionAccountLabel.textContent = isTransfer ? 'Cuenta Origen' : 'Cuenta';
+        }
+
+        // Ajustar campos requeridos
+        if (transactionAccountDestinationInput) transactionAccountDestinationInput.required = isTransfer;
+        if (transactionCategoryInput) transactionCategoryInput.required = !isTransfer; // Categoría no requerida para transferencias
+
+        // Repoblar categorías si es Gasto/Ingreso
+        if (!isTransfer) {
+            populateCategoryFilter(selectedType);
+        }
     }
 
     // --- Funciones Principales ---
@@ -339,75 +415,135 @@ if (typeof supabase === 'undefined' || supabase === null) {
 
      /** Maneja el envío del formulario del modal (Añadir/Editar Transacción) */
      async function handleTransactionFormSubmit(event) {
-         event.preventDefault();
-         if (!supabase || !currentUserId || !transactionForm || !saveTransactionButton) return;
-
-         const transactionId = transactionIdInput.value;
-         const isEditing = !!transactionId;
-         const originalSaveText = saveTransactionButton.textContent;
-
-         // Obtener datos del formulario
-         const type = document.querySelector('input[name="transactionType"]:checked').value;
-         const amount = parseFloat(transactionAmountInput.value);
-         // Asegurar que el monto sea negativo para gastos, positivo para ingresos
-         const signedAmount = type === 'gasto' ? -Math.abs(amount) : Math.abs(amount);
-         const transaction_date = transactionDateInput.value; // Formato YYYY-MM-DD
-         const description = transactionDescriptionInput.value.trim();
-         const account_id = transactionAccountInput.value || null;
-         const category_id = transactionCategoryInput.value || null; // Guardar null si es "Sin categoría"
-         const notes = transactionNotesInput.value.trim() || null;
-
-         // Validaciones
-         if (isNaN(signedAmount)) { modalTransactionError.textContent = 'El importe debe ser un número válido.'; modalTransactionError.style.display = 'block'; return; }
-         if (!transaction_date) { modalTransactionError.textContent = 'La fecha es obligatoria.'; modalTransactionError.style.display = 'block'; return; }
-         if (!description) { modalTransactionError.textContent = 'La descripción es obligatoria.'; modalTransactionError.style.display = 'block'; return; }
-         if (!account_id) { modalTransactionError.textContent = 'Debes seleccionar una cuenta.'; modalTransactionError.style.display = 'block'; return; }
-         modalTransactionError.style.display = 'none';
-         saveTransactionButton.disabled = true;
-         saveTransactionButton.textContent = isEditing ? 'Guardando...' : 'Creando...';
-
-         try {
-             const transactionData = {
-                 // user_id se infiere por RLS en update/insert
-                 account_id: account_id,
-                 category_id: category_id,
-                 type: type,
-                 description: description,
-                 amount: signedAmount,
-                 transaction_date: transaction_date,
-                 notes: notes
-             };
-
-             let error;
-             if (isEditing) {
-                 // UPDATE
-                 const { error: updateError } = await supabase
-                     .from('transactions')
-                     .update(transactionData)
-                     .eq('id', transactionId)
-                     .eq('user_id', currentUserId); // Asegurar RLS
-                 error = updateError;
-             } else {
-                 // INSERT
-                 transactionData.user_id = currentUserId; // Añadir user_id explícitamente
-                 const { error: insertError } = await supabase.from('transactions').insert([transactionData]);
-                 error = insertError;
-             }
-             if (error) throw error;
-
-             console.log(isEditing ? 'Transacción actualizada' : 'Transacción creada');
-             closeTransactionModal();
-             fetchTransactions(); // Recargar lista
-
-         } catch (error) {
-              console.error('Error guardando transacción:', error);
-              modalTransactionError.textContent = `Error: ${error.message}`;
-              modalTransactionError.style.display = 'block';
-         } finally {
-             saveTransactionButton.disabled = false;
-             saveTransactionButton.textContent = originalSaveText;
-         }
-     }
+        event.preventDefault();
+        if (!supabase || !currentUserId || !transactionForm || !saveTransactionButton || !transactionAccountInput || !transactionAccountDestinationInput || !transactionCategoryInput) return;
+    
+        const transactionId = transactionIdInput.value;
+        const isEditing = !!transactionId;
+        const originalSaveText = saveTransactionButton.textContent; // Usa saveButton, no saveTransactionButton? Verifica ID
+    
+        // --- OBTENER DATOS COMUNES ---
+        const typeInput = document.querySelector('#transactionModal input[name="transactionType"]:checked');
+        const type = typeInput ? typeInput.value : 'gasto'; // Gasto por defecto si falla
+        const amount = Math.abs(parseFloat(transactionAmountInput.value) || 0); // Siempre positivo aquí
+        const transaction_date = transactionDateInput.value;
+        const description = transactionDescriptionInput.value.trim();
+        const notes = transactionNotesInput.value.trim() || null;
+    
+        // --- VALIDACIONES COMUNES ---
+        if (isNaN(amount) || amount <= 0) { modalTransactionError.textContent = 'El importe debe ser mayor que cero.'; modalTransactionError.style.display = 'block'; return; }
+        if (!transaction_date) { modalTransactionError.textContent = 'La fecha es obligatoria.'; modalTransactionError.style.display = 'block'; return; }
+        if (!description) { modalTransactionError.textContent = 'La descripción es obligatoria.'; modalTransactionError.style.display = 'block'; return; }
+    
+        modalTransactionError.style.display = 'none';
+        saveTransactionButton.disabled = true; // Usa saveButton? Verifica ID
+        saveTransactionButton.textContent = isEditing ? 'Guardando...' : 'Creando...';
+    
+        try {
+            let result = null; // Para almacenar el resultado de Supabase
+    
+            // --- LÓGICA SEGÚN TIPO ---
+            if (type === 'transferencia') {
+                console.log("Procesando TRANSFERENCIA...");
+                const sourceAccountId = transactionAccountInput.value;
+                const destinationAccountId = transactionAccountDestinationInput.value;
+    
+                // Validación específica de transferencia
+                if (!sourceAccountId || !destinationAccountId) {
+                    throw new Error('Debes seleccionar cuenta origen y destino para transferencias.');
+                }
+                if (sourceAccountId === destinationAccountId) {
+                    throw new Error('La cuenta origen y destino no pueden ser la misma.');
+                }
+    
+                // ID de categoría para transferencias (¡¡IMPORTANTE!!)
+                // Debes tener una (o dos) categorías para esto en tu tabla 'categories'
+                // Busca su UUID y ponlo aquí. Ejemplo:
+                const TRANSFER_CATEGORY_ID_OUT = '2d55034c-0587-4d9c-9d93-5284d6880c76'; // REEMPLAZA ESTO
+                const TRANSFER_CATEGORY_ID_IN = '7547fdfa-f7b2-44f4-af01-f937bfcc5be3'; // REEMPLAZA ESTO (o usa la misma si solo tienes una)
+    
+                 if (!TRANSFER_CATEGORY_ID_OUT || !TRANSFER_CATEGORY_ID_IN) {
+                     console.error("ERROR CRÍTICO: IDs de categoría de transferencia no definidos en el código JS.");
+                     throw new Error("Error de configuración interno (IDs de categoría de transferencia).");
+                 }
+    
+    
+                // Crear los dos registros de transacción
+                const gastoTransferencia = {
+                    user_id: currentUserId,
+                    account_id: sourceAccountId,
+                    category_id: TRANSFER_CATEGORY_ID_OUT,
+                    type: 'gasto',
+                    description: `Transferencia a ${accounts.find(a => a.id === destinationAccountId)?.name || 'otra cuenta'}: ${description}`, // Descripción auto-generada
+                    amount: -amount, // Negativo para gasto
+                    transaction_date: transaction_date,
+                    notes: notes
+                };
+                const ingresoTransferencia = {
+                    user_id: currentUserId,
+                    account_id: destinationAccountId,
+                    category_id: TRANSFER_CATEGORY_ID_IN,
+                    type: 'ingreso',
+                    description: `Transferencia desde ${accounts.find(a => a.id === sourceAccountId)?.name || 'otra cuenta'}: ${description}`, // Descripción auto-generada
+                    amount: amount, // Positivo para ingreso
+                    transaction_date: transaction_date,
+                    notes: notes
+                };
+    
+                // Insertar ambas en una sola llamada
+                console.log("Insertando transferencia (2 transacciones):", gastoTransferencia, ingresoTransferencia);
+                try { // Añadir un try/catch específico aquí
+                    console.log(">>> INTENTANDO AWAIT supabase.from('transactions').insert([...])"); // Log ANTES
+                    result = await supabase.from('transactions').insert([gastoTransferencia, ingresoTransferencia]);
+                    console.log(">>> AWAIT insert COMPLETADO. Resultado:", result); // Log DESPUÉS (solo si funciona)
+                } catch (insertError) {
+                    console.error(">>> ERROR específico durante el insert de transferencia:", insertError); // Log si falla el insert
+                    throw insertError; // Relanzar para que lo capture el catch principal
+                }
+    
+            } else { // Gasto o Ingreso normal
+                 console.log(`Procesando ${type.toUpperCase()}...`);
+                 const account_id = transactionAccountInput.value || null;
+                 const category_id = transactionCategoryInput.value || null;
+                 const signedAmount = type === 'gasto' ? -amount : amount;
+    
+                 if (!account_id) throw new Error('Debes seleccionar una cuenta.');
+                 // Puedes añadir validación de categoría si es obligatoria para Gasto/Ingreso
+    
+                 const transactionData = { user_id: currentUserId, account_id, category_id, type, description, amount: signedAmount, transaction_date, notes };
+    
+                 if (isEditing) { // Edición (simplificada, no maneja cambio a/desde transferencia)
+                    console.warn("Editando transacción desde Dashboard modal?");
+                     delete transactionData.user_id; // No se debe enviar en update si RLS protege
+                     result = await supabase.from('transactions').update(transactionData).eq('id', transactionId).eq('user_id', currentUserId);
+                 } else { // Inserción
+                     console.log("Insertando transacción única:", transactionData);
+                     result = await supabase.from('transactions').insert([transactionData]);
+                 }
+            }
+    
+            // Verificar error del resultado de Supabase
+            if (result.error) throw result.error;
+    
+            // Éxito
+            console.log('Operación guardada:', type, (isEditing ? '(Editado)' : '(Creado)'));
+            closeTransactionModal();
+            fetchTransactions()
+            //loadRecentActivity(); // Actualizar widget de actividad
+            //loadSummaryData(); // Actualizar widget principal (Gasto Variable Restante)
+            // Podrías querer recargar también el saldo total de la página de Cuentas si estuvieras allí
+            // if (typeof loadAccountsAndUser === 'function') loadAccountsAndUser(currentUser);
+    
+    
+        } catch (error) {
+            console.error(`Error guardando ${type}:`, error);
+            modalTransactionError.textContent = `Error: ${error.message}`;
+            modalTransactionError.style.display = 'block';
+        } finally {
+            saveTransactionButton.disabled = false;
+            saveTransactionButton.textContent = isEditing ? 'Guardar Cambios' : 'Guardar';
+        }
+    }
 
      /** Maneja el clic en el botón de eliminar transacción */
      async function handleDeleteTransaction(transactionId) {
@@ -470,19 +606,25 @@ if (typeof supabase === 'undefined' || supabase === null) {
          if (transactionModal) transactionModal.addEventListener('click', (event) => { if (event.target === transactionModal) closeTransactionModal(); });
          if (transactionForm) transactionForm.addEventListener('submit', handleTransactionFormSubmit);
 
-         // Listener para cambio de Tipo (Ingreso/Gasto) en Modal
-         if (typeToggleExpense && typeToggleIncome && transactionCategoryInput) {
-             const typeRadios = [typeToggleExpense, typeToggleIncome];
-             typeRadios.forEach(radio => {
-                 radio.addEventListener('change', () => {
-                    // Actualizar estilo visual
-                    document.querySelectorAll('.type-toggle label').forEach(label => label.classList.remove('active'));
-                    radio.parentElement.classList.add('active');
-                    // Repoblar categorías
-                    populateCategoryFilter(radio.value);
-                 });
-             });
-         }
+         
+         // Listener para cambio de Tipo (Ingreso/Gasto/Transferencia) en Modal
+        if (typeToggleExpense && typeToggleIncome && typeToggleTransfer) { // Comprobar los 3
+            const typeRadios = [typeToggleExpense, typeToggleIncome, typeToggleTransfer]; // Incluir los 3
+            typeRadios.forEach(radio => {
+                radio.addEventListener('change', () => {
+                    if(radio.checked){ // Asegurarse que el evento es del que se selecciona
+                        console.log(`Tipo cambiado a: ${radio.value}`);
+                        // Actualizar estilo visual
+                        document.querySelectorAll('#transactionModal .type-toggle label').forEach(label => label.classList.remove('active'));
+                        radio.parentElement.classList.add('active');
+
+                        // Actualizar UI (mostrar/ocultar campos, cambiar label)
+                        updateModalUI(radio.value);
+                    }
+                });
+            });
+            // Quitar la lógica de estado inicial de aquí, se maneja en openTransactionModal
+        } else { console.error("Error: Elementos para el toggle de tipo de transacción no encontrados.");}
 
          // Delegación para Editar/Eliminar en Tabla
          if (transactionsTableBody) {

@@ -40,6 +40,7 @@ if (typeof supabase === 'undefined' || supabase === null) {
     const backButton = document.getElementById('backButton');
     const userAvatarSmall = document.getElementById('userAvatarSmall');
     const totalBalanceAmount = document.getElementById('totalBalanceAmount');
+    const accountBankInput = document.getElementById('accountBank');
 
     // --- Variables de Estado ---
     let currentUserId = null;
@@ -61,7 +62,9 @@ if (typeof supabase === 'undefined' || supabase === null) {
     function getIconForAccountType(type) {
         switch (type) {
             case 'corriente': return 'fas fa-landmark';
+            case 'viajes': return 'fa-solid fa-plane';
             case 'ahorro': return 'fas fa-piggy-bank';
+            case 'ahorro_colchon': return 'fas fa-piggy-bank';
             case 'tarjeta_credito': return 'fas fa-credit-card';
             case 'efectivo': return 'fas fa-wallet';
             case 'inversion': return 'fas fa-chart-line';
@@ -92,7 +95,7 @@ if (typeof supabase === 'undefined' || supabase === null) {
 
     /** Abre el modal para añadir o editar una cuenta */
     function openModal(account = null) {
-        if (!accountForm || !accountIdInput || !modalTitle || !accountNameInput || !accountTypeInput || !accountBalanceInput || !accountCurrencyInput || !saveButton) {
+        if (!accountForm || !accountIdInput || !modalTitle || !accountNameInput || !accountTypeInput || !accountBalanceInput || !accountCurrencyInput || !accountBankInput || !saveButton) {
             console.error("Error: Elementos del modal no encontrados.");
             return;
         }
@@ -109,15 +112,17 @@ if (typeof supabase === 'undefined' || supabase === null) {
             accountIdInput.value = account.id;
             accountNameInput.value = account.name;
             accountTypeInput.value = account.type;
-            accountBalanceInput.value = account.balance;
+            accountBalanceInput.value = '0.00';
             accountBalanceInput.readOnly = true; // Saldo no editable aquí
             accountBalanceInput.style.backgroundColor = '#e9ecef';
             accountCurrencyInput.value = account.currency;
+            if (accountBankInput) accountBankInput.value = account.bank_name || '';
         } else {
             modalTitle.textContent = 'Añadir Nueva Cuenta';
             accountBalanceInput.readOnly = false; // Editable al añadir
             accountBalanceInput.style.backgroundColor = '#ffffff';
             accountCurrencyInput.value = 'EUR';
+            if (accountBankInput) accountBankInput.value = '';
         }
         toggleModal(true);
     }
@@ -128,47 +133,82 @@ if (typeof supabase === 'undefined' || supabase === null) {
     }
 
     /** Muestra las tarjetas de cuenta y calcula saldo total */
-    function displayAccounts(accounts) {
-        if (!accountList || !noAccountsMessage || !totalBalanceAmount) return; // Verificar elementos
-
-        accountList.innerHTML = '';
-        let totalBalance = 0;
+    async function displayAccounts(accounts) {
+        if (!accountList || !noAccountsMessage || !totalBalanceAmount) {
+             console.error("displayAccounts: Elementos UI no encontrados.");
+             return; // Salir si faltan elementos clave
+        }
+    
+        accountList.innerHTML = ''; // Limpiar antes de empezar
+        let calculatedTotalBalance = 0;
         const excludedTypesForTotal = ['tarjeta_credito'];
-
+    
         if (!accounts || accounts.length === 0) {
             noAccountsMessage.style.display = 'block';
             accountList.style.display = 'none';
             totalBalanceAmount.textContent = formatCurrency(0);
             return;
         }
-
+    
         noAccountsMessage.style.display = 'none';
         accountList.style.display = 'grid';
-
-        accounts.forEach(acc => {
-            if (!excludedTypesForTotal.includes(acc.type)) {
-                totalBalance += Number(acc.balance) || 0;
+    
+        // Usamos for...of para poder usar await dentro del bucle
+        for (const acc of accounts) {
+            let currentAccountBalance = 0; // Saldo calculado para esta cuenta
+            let balanceText = 'Calculando...'; // Texto mientras se calcula
+    
+            try {
+                // --- CORRECCIÓN AQUÍ: Pedir todos los importes, NO la suma ---
+                const { data: transactions, error: balanceError } = await supabase
+                    .from('transactions')
+                    .select('amount') // <-- Pedimos solo la columna amount
+                    .eq('user_id', currentUserId)
+                    .eq('account_id', acc.id); // Filtrar por el ID de esta cuenta
+    
+                if (balanceError) {
+                    console.error(`Error obteniendo transacciones para cuenta ${acc.id}:`, balanceError);
+                    balanceText = 'Error';
+                    // No sumar al total si falla el cálculo de esta cuenta
+                } else {
+                    // --- CORRECCIÓN AQUÍ: Sumar los importes en JavaScript ---
+                    // 'transactions' será un array de objetos [{amount: N}, {amount: M}, ...] o null/[]
+                    currentAccountBalance = (transactions || []).reduce((sum, tx) => {
+                        return sum + (Number(tx.amount) || 0); // Sumar (los gastos ya son negativos)
+                    }, 0); // Empezar suma en 0
+    
+                    balanceText = formatCurrency(currentAccountBalance, acc.currency || 'EUR'); // Usar moneda de la cuenta o EUR por defecto
+    
+                    // Añadir al saldo total SI no es un tipo excluido
+                    if (!excludedTypesForTotal.includes(acc.type)) {
+                        calculatedTotalBalance += currentAccountBalance;
+                    }
+                }
+    
+            } catch (error) {
+                console.error(`Excepción calculando saldo para cuenta ${acc.id}:`, error);
+                balanceText = 'Error';
             }
-
+    
+            // Crear la tarjeta de la cuenta (igual que antes)
             const card = document.createElement('div');
             card.classList.add('account-card');
             card.setAttribute('data-id', acc.id);
             card.setAttribute('data-type', acc.type);
-
+    
             const iconClass = getIconForAccountType(acc.type);
-            const formattedBalance = formatCurrency(acc.balance, acc.currency);
             let typeText = (acc.type || 'otro').replace('_', ' ');
             typeText = typeText.charAt(0).toUpperCase() + typeText.slice(1);
             if (typeText === 'Tarjeta credito') typeText = 'Tarjeta de Crédito';
-
+    
+            // Usar el balanceText (que contiene el saldo calculado o 'Error')
             card.innerHTML = `
                 <div class="card-header">
                     <span class="account-icon"><i class="${iconClass}"></i></span>
-                    <h3 class="account-name">${acc.name || 'Sin Nombre'}</h3>
+                    <h3 class="account-name">${acc.name + ' | ' + acc.bank_name || 'Sin Nombre'}</h3>
                 </div>
                 <div class="card-body">
-                    <p class="account-balance">${formattedBalance}</p>
-                    <p class="account-type">Tipo: ${typeText}</p>
+                    <p class="account-balance">${balanceText}</p> <p class="account-type">Tipo: ${typeText}</p>
                 </div>
                 <div class="card-actions">
                     <button class="btn-icon btn-edit" aria-label="Editar" data-id="${acc.id}"><i class="fas fa-pencil-alt"></i></button>
@@ -176,9 +216,11 @@ if (typeof supabase === 'undefined' || supabase === null) {
                 </div>
             `;
             accountList.appendChild(card);
-        });
-
-        totalBalanceAmount.textContent = formatCurrency(totalBalance);
+        } // Fin del bucle for...of
+    
+        // Actualizar el saldo total general DESPUÉS de calcular todos los saldos individuales
+        totalBalanceAmount.textContent = formatCurrency(calculatedTotalBalance);
+        console.log("Saldo total calculado:", calculatedTotalBalance);
     }
 
     /** Carga las cuentas y también el avatar del usuario para la cabecera */
@@ -209,34 +251,24 @@ if (typeof supabase === 'undefined' || supabase === null) {
         console.log('Accounts.js: Cargando datos para User ID:', currentUserId);
 
         try {
-            // Obtener perfil y cuentas en paralelo
             const [profileResponse, accountsResponse] = await Promise.all([
-                supabase.from('profiles').select('avatar_url').eq('id', currentUserId).single(),
-                supabase.from('accounts').select('*').eq('user_id', currentUserId).order('name', { ascending: true })
+                 supabase.from('profiles').select('avatar_url').eq('id', currentUserId).single(),
+                 // La consulta de cuentas sigue igual, trae todos los datos de la cuenta
+                 supabase.from('accounts').select('*').eq('user_id', currentUserId).order('name', { ascending: true })
             ]);
-
-            // Procesar perfil (avatar)
-            const profileData = profileResponse.data;
-            const profileError = profileResponse.error;
-            if (userAvatarSmall) {
-                 if (profileError && profileError.code !== 'PGRST116') {
-                      console.warn('Accounts.js: Error cargando avatar:', profileError.message); // Usar warn en lugar de error
-                      userAvatarSmall.src = defaultAvatarPath;
-                 } else if (profileData && profileData.avatar_url) {
-                      userAvatarSmall.src = profileData.avatar_url;
-                 } else {
-                      userAvatarSmall.src = defaultAvatarPath;
-                 }
-            }
-
+    
+            // ... (código existente para procesar perfil/avatar) ...
+    
             // Procesar cuentas
             const accounts = accountsResponse.data;
             const accountsError = accountsResponse.error;
-            if (accountsError) throw accountsError; // Lanza error de cuentas
-
-            accountsData = accounts;
-            displayAccounts(accountsData);
-
+            if (accountsError) throw accountsError;
+    
+            accountsData = accounts; // Guardar datos base de cuentas (nombre, tipo, etc.)
+    
+            // --- LLAMADA ASÍNCRONA A displayAccounts ---
+            await displayAccounts(accountsData); // <-- AÑADIR await AQUÍ
+    
         } catch (error) {
             console.error('Error cargando datos (profile/accounts):', error);
             accountList.innerHTML = `<p style="text-align: center; color: red;">Error al cargar: ${error.message}</p>`;
@@ -248,11 +280,12 @@ if (typeof supabase === 'undefined' || supabase === null) {
      /** Maneja el envío del formulario del modal (Añadir o Editar) */
      async function handleFormSubmit(event) {
          event.preventDefault();
-         if (!supabase || !currentUserId || !accountForm || !saveButton) return;
+         if (!supabase || !currentUserId || !accountForm || !saveButton || !accountBankInput) return;
 
          const accountId = accountIdInput.value;
          const isEditing = !!accountId;
          const originalSaveText = saveButton.textContent;
+         const bank_name_value = accountBankInput.value.trim() || null;
 
          // Extraer datos del formulario
          const formData = {
@@ -262,6 +295,7 @@ if (typeof supabase === 'undefined' || supabase === null) {
              // Solo coger balance si NO estamos editando
              balance: isEditing ? undefined : parseFloat(accountBalanceInput.value),
              currency: (accountCurrencyInput.value.trim().toUpperCase() || 'EUR'),
+             bank_name: bank_name_value,
              updated_at: new Date() // Solo relevante para update, pero lo incluimos
          };
 
@@ -283,10 +317,17 @@ if (typeof supabase === 'undefined' || supabase === null) {
              let error;
              if (isEditing) {
                   // --- UPDATE ---
+                  const updateData = {
+                    name: formData.name,
+                    type: formData.type,
+                    currency: formData.currency,
+                    bank_name: formData.bank_name, // <-- Añadido aquí
+                    updated_at: formData.updated_at
+                  };
                   // Excluimos user_id (controlado por RLS/FK) y balance (no editable aquí)
                   const { error: updateError } = await supabase
                       .from('accounts')
-                      .update({ name: formData.name, type: formData.type, currency: formData.currency, updated_at: formData.updated_at })
+                      .update(updateData)
                       .eq('id', accountId)
                       .eq('user_id', currentUserId);
                   error = updateError;
@@ -341,6 +382,93 @@ if (typeof supabase === 'undefined' || supabase === null) {
          }
      }
 
+     function setActiveSidebarLink() {
+        const currentPagePath = window.location.pathname;
+        // Usamos querySelectorAll en el NAV dentro de la sidebar
+        const navButtons = document.querySelectorAll('.sidebar-nav .nav-button[data-page]');
+    
+        if (!navButtons || navButtons.length === 0) {
+            console.warn("setActiveSidebarLink: No se encontraron botones de navegación con 'data-page'.");
+            return;
+        }
+    
+        let mostSpecificMatch = null;
+    
+        navButtons.forEach(button => {
+            const linkPath = button.getAttribute('data-page');
+            button.classList.remove('active'); // Limpiar todos primero
+    
+            // Comprobar si la ruta actual COMIENZA con la ruta del botón
+            if (linkPath && currentPagePath.startsWith(linkPath)) {
+                // Priorizar la coincidencia más específica (más larga)
+                if (!mostSpecificMatch || linkPath.length > mostSpecificMatch.dataset.page.length) {
+                    mostSpecificMatch = button;
+                }
+            }
+        });
+    
+        // Activar el botón más específico encontrado
+        if (mostSpecificMatch) {
+            mostSpecificMatch.classList.add('active');
+            console.log('setActiveSidebarLink: Active link set to:', mostSpecificMatch.dataset.page);
+        } else {
+             // Si no hay coincidencia, marcar Dashboard por defecto
+             const dashboardButton = document.querySelector('.sidebar-nav .nav-button[data-page="/Dashboard.html"]');
+             if (dashboardButton) dashboardButton.classList.add('active');
+             console.log('setActiveSidebarLink: No specific match, defaulting to Dashboard.');
+        }
+    }
+
+    function addSidebarNavigationListeners() {
+        console.log("Attempting to add sidebar listeners...");
+        const navButtons = document.querySelectorAll('.sidebar-nav .nav-button[data-page]');
+        console.log(`Found ${navButtons.length} nav buttons.`);
+        navButtons.forEach(button => {
+            // Evitar añadir múltiples listeners
+            if (button.dataset.listenerAttached === 'true') return;
+    
+            button.addEventListener('click', () => {
+                const pageUrl = button.getAttribute('data-page');
+                if (pageUrl && window.location.pathname !== pageUrl) {
+                    console.log(`Navegando a: ${pageUrl}`);
+                    window.location.href = pageUrl;
+                } else if (pageUrl) {
+                     console.log(`Ya estás en ${pageUrl} o no se encontró la URL.`);
+                }
+            });
+            button.dataset.listenerAttached = 'true'; // Marcar que ya tiene listener
+        });
+    
+        // Listener para el botón de logout
+        const logoutButton = document.getElementById('btnLogoutSidebar');
+        if (logoutButton) {
+             console.log("Found logout button, attaching listener.");
+             // Evitar añadir múltiples listeners
+             if (logoutButton.dataset.listenerAttached !== 'true') {
+                 logoutButton.addEventListener('click', async () => {
+                     console.log("Logout button clicked");
+                     // Asegúrate que 'supabase' está disponible en este scope
+                     if (typeof supabase !== 'undefined' && supabase.auth && typeof supabase.auth.signOut === 'function') {
+                         logoutButton.disabled = true; // Deshabilitar mientras cierra
+                         const { error } = await supabase.auth.signOut();
+                         if (error) {
+                             console.error("Error during sign out:", error);
+                             alert("Error al cerrar sesión.");
+                             logoutButton.disabled = false; // Rehabilitar si hay error
+                         }
+                         // No redirigir aquí, auth-listener.js lo hará
+                     } else {
+                          console.error("Supabase client or signOut function not available for logout.");
+                          alert("Error interno al cerrar sesión.");
+                     }
+                 });
+                 logoutButton.dataset.listenerAttached = 'true'; // Marcar que ya tiene listener
+             }
+        } else {
+             console.error("ERROR: Botón #btnLogoutSidebar no encontrado para añadir listener!");
+        }
+    }
+
     // --- Asignación de Event Listeners ---
 
     // Escuchar el evento personalizado 'authReady' disparado por auth-listener.js
@@ -393,6 +521,10 @@ if (typeof supabase === 'undefined' || supabase === null) {
                  }
             });
         }
+
+        console.log("Initializing sidebar...");
+         setActiveSidebarLink();             // <--- LLAMADA 1
+         addSidebarNavigationListeners();
 
          // Botón Volver (Cabecera)
          if (backButton) {

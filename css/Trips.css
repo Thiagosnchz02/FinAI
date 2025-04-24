@@ -79,8 +79,25 @@ body { font-family: 'Nunito', sans-serif; background-color: #a0d2eb; margin: 0; 
 
 
 /* --- Resumen Footer Lista --- */
-.summary-footer { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-top: 30px; padding-top: 20px; border-top: 1px solid #d0d8e8; }
-.summary-box { background-color: #fff; border-radius: 20px; padding: 15px 20px; text-align: center; box-shadow: 0 5px 10px rgba(0, 0, 0, 0.07); }
+.summary-footer {
+    /*display: grid;*/
+    /*grid-template-columns: 1fr 1fr 1fr;  3 columnas de igual tamaño fraccional */
+    display: flex;                /* Activa Flexbox */
+    flex-wrap: wrap;              /* Permite que bajen de línea si no caben */
+    justify-content: space-between; /* <<< Distribuye espacio ENTRE los items */
+    gap: 15px;
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid #d0d8e8;
+}
+.summary-box { background-color: #fff; 
+    border-radius: 20px; 
+    padding: 15px 20px; 
+    text-align: center; 
+    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.07); 
+    flex-grow: 1;
+    max-width: 32%; /* Ajusta este porcentaje según necesites */
+    box-sizing: border-box;}
 /* Colores Viajes */
 .summary-box.blue { background-color: #e3f2fd; border-left: 5px solid #64b5f6; }
 .summary-box.purple { background-color: #ede7f6; border-left: 5px solid #9575cd; }
@@ -133,4 +150,26 @@ body { font-family: 'Nunito', sans-serif; background-color: #a0d2eb; margin: 0; 
     .modal-content { padding: 20px; }
     .summary-box strong { font-size: 1.2em; }
     .detail-actions-header { flex-direction: column; gap: 10px; align-items: stretch; }
+}
+.empty-list-message {
+    text-align: center;
+    margin-top: 40px;
+    padding: 40px 20px;
+    color: #718096;
+    background-color: #fff;
+    border-radius: 20px;
+    box-shadow: 0 6px 15px rgba(140, 150, 170, 0.07);
+}
+.empty-mascot {
+    max-width: 80px;
+    margin-bottom: 15px;
+    opacity: 0.7;
+}
+.empty-list-message p {
+    margin: 8px 0;
+    line-height: 1.6;
+    font-size: 1.05em;
+}
+.empty-list-message .btn {
+    margin-top: 25px;
 }

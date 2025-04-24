@@ -2,6 +2,30 @@
 /* Importar fuente si no es global */
 @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800&display=swap');
 
+:root {
+    --primary-blue: #a0d2eb; /* Azul cielo fondo */
+    --sidebar-bg: #6BB9F0; /* Azul más oscuro sidebar */
+    --header-bg: #ffffff; /* Cabecera blanca */
+    --content-bg: #f8fafc; /* Fondo contenido principal muy claro */
+    --panel-bg: #ffffff; /* Fondo paneles */
+    --text-dark: #2d3748;
+    --text-light: #ffffff;
+    --text-muted: #718096;
+    --accent-purple: #8a82d5;
+    --accent-orange: #ff9800; /* Naranja para botones y detalles */
+    --accent-green: #4CAF50;
+    --accent-red: #f44336;
+    --border-color: #e2e8f0;
+    --shadow-color: rgba(100, 110, 140, 0.1);
+    --font-family: 'Nunito', sans-serif;
+}
+
+/* --- Estructura Principal --- */
+
+.dashboard-container { display: flex; min-height: 100vh; background-color: var(--content-bg); /* Fondo principal */ }
+
+
+
 body {
     font-family: 'Nunito', sans-serif;
     /* Asegúrate que este es el color de fondo que quieres */
@@ -18,16 +42,183 @@ body {
     padding-bottom: 20px;
 }
 
-.page-container {
-    /* Este será el contenedor blanco principal */
-    width: 100%; /* Ocupa el ancho disponible */
-    max-width: 900px; /* O el ancho máximo que prefieras para esta página */
-    margin: 0 auto; /* Centrado horizontal automático */
-    padding: 25px 30px; /* Espaciado interno */
-    background-color: #ffffff;
-    border-radius: 25px; /* Bordes redondeados */
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1); /* Sombra */
+.sidebar {
+    width: 85px; /* Ancho colapsado INICIAL */
+    background-color: var(--sidebar-bg, #6BB9F0);
+    padding: 20px 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transition: width 0.3s ease; /* TRANSICIÓN PARA EXPANSIÓN */
+    position: fixed;
+    left: 0; top: 0; bottom: 0;
+    z-index: 1010;
+    overflow-x: hidden; /* Evitar scroll horizontal */
+    box-sizing: border-box; /* Asegurar que padding no añada ancho */
+}
+
+.sidebar-logo {
+    margin-bottom: 30px;
+    padding: 0 15px;
+    align-self: center;
+    transition: align-self 0.3s ease, padding 0.3s ease;
+}
+.sidebar-logo img { max-width: 50px; height: auto; display: block; }
+
+.sidebar-nav {
+    display: flex; flex-direction: column; align-items: center; gap: 5px; /* Menos gap inicial */
+    flex-grow: 1; width: 100%;
+}
+
+.nav-button {
+    background-color: transparent; color: rgba(255, 255, 255, 0.7); border: none;
+    border-radius: 10px;
+    width: calc(100% - 20px); /* Ancho botón colapsado */
+    height: 55px; /* Altura fija */
+    display: flex; align-items: center; justify-content: center; /* Icono centrado */
+    font-size: 1.4rem; /* Tamaño icono */
+    cursor: pointer; transition: all 0.2s ease;
+    position: relative; text-decoration: none; padding: 0 10px;
+    margin: 0 10px 5px 10px;
+    overflow: hidden;
+    white-space: nowrap;
     box-sizing: border-box;
+}
+.nav-button i {
+    width: 25px; text-align: center; flex-shrink: 0;
+    transition: color 0.2s ease; /* Transición solo para color icono */
+}
+.nav-button span {
+    display: none; /* OCULTO por defecto */
+    margin-left: 15px; font-weight: 700; font-size: 0.9em;
+    opacity: 0; /* Invisible por defecto */
+    transition: opacity 0.1s ease; /* Transición rápida para ocultar/mostrar */
+}
+
+/* Hover y Active (Estado Colapsado) */
+.nav-button:hover { background-color: rgba(255, 255, 255, 0.1); color: var(--text-light); }
+.nav-button.active { background-color: rgba(255, 255, 255, 0.2); color: var(--text-light); }
+/* Quitar el ::after si no lo usas */
+/*.nav-button.active::after { content: none; }*/
+
+/* --- >>> ESTILOS PARA SIDEBAR EXPANDIDA (EN HOVER) <<< --- */
+.sidebar:hover {
+    width: 230px; /* O el ancho que prefieras para expandir */
+    align-items: flex-start; /* Alinear contenido a la izquierda */
+}
+
+.sidebar:hover .sidebar-logo {
+    align-self: flex-start; /* Alinear logo a la izquierda */
+    padding: 0 25px; /* Ajustar padding logo expandido */
+}
+
+.sidebar:hover .nav-button {
+    justify-content: flex-start; /* Alinear icono y texto a la izquierda */
+    width: calc(100% - 30px); /* Ancho botones expandidos (con margen) */
+    margin: 0 15px 10px 15px; /* Ajustar margen botones expandidos */
+    padding: 12px 18px; /* Padding interno botones expandidos */
+    gap: 15px; /* Espacio entre icono y texto */
+    /*height: auto; /* Altura automática para adaptarse al texto */
+    font-size: 1em; /* Tamaño de fuente general del botón */
+}
+
+.sidebar:hover .nav-button i {
+    font-size: 1.2em; /* Tamaño icono */
+    width: 20px; /* Ancho fijo icono */
+    text-align: center; /* Centrar icono en su espacio */
+    color: rgba(255, 255, 255, 0.8); /* Color icono normal */
+    flex-shrink: 0;
+}
+
+.sidebar:hover .nav-button span {
+    display: inline !important; /* FORZAR que se muestre el texto */
+    opacity: 1 !important; /* FORZAR que sea visible */
+    margin-left: 0; /* Quitar margen extra si gap ya lo gestiona */
+    font-size: 1.1em; /* Tamaño texto */
+    font-weight: 600; /* Peso texto */
+    transition: opacity 0.2s ease 0.1s; /* Transición para aparecer suave */
+}
+
+/* Hover y Active (Estado Expandido) */
+.sidebar:hover .nav-button:hover {
+    background-color: rgba(255, 255, 255, 0.15);
+    color: white;
+}
+.sidebar:hover .nav-button:hover i {
+    color: white;
+}
+
+.sidebar:hover .nav-button.active {
+    background-color: white; /* Fondo blanco */
+    color: var(--sidebar-bg, #6BB9F0); /* Texto color sidebar */
+    font-weight: 700;
+    padding: 12px 18px; /* <<< Asegurar mismo padding que el normal expandido */
+}
+.sidebar:hover .nav-button.active i {
+    color: var(--sidebar-bg, #6BB9F0); /* Icono color sidebar */
+}
+.sidebar:hover .nav-button.active span {
+    color: var(--sidebar-bg, #6BB9F0); /* Texto color sidebar */
+}
+
+
+/* Logout Button */
+.logout-button {
+    margin-top: auto; /* Empuja abajo */
+    width: calc(100% - 20px);
+    margin: 10px 10px 0 10px; /* Ajustar margen inferior */
+    justify-content: center; /* Centrar icono */
+    border-top: 1px solid rgba(255, 255, 255, 0.1); /* Separador */
+    padding-top: 15px; /* Espacio arriba */
+}
+.logout-button span { display: none; } /* Texto oculto */
+
+.sidebar:hover .logout-button {
+    justify-content: flex-start; /* Alinear a la izquierda */
+    width: calc(100% - 30px);
+    margin: 10px 15px 0 15px; /* Ajustar margen */
+    padding: 12px 20px; /* Padding como otros botones */
+}
+.sidebar:hover .logout-button span {
+    display: inline !important; /* Mostrar texto */
+    opacity: 1 !important;
+    font-size: 0.95em;
+    font-weight: 600;
+     color: rgba(255, 255, 255, 0.85); /* Color normal */
+}
+.sidebar:hover .logout-button i {
+     color: rgba(255, 255, 255, 0.75); /* Color normal */
+}
+
+.sidebar:hover .logout-button:hover {
+    background-color: rgba(239, 83, 80, 0.15);
+    color: #ffcdd2;
+}
+.sidebar:hover .logout-button:hover i,
+.sidebar:hover .logout-button:hover span {
+    color: #ef9a9a;
+}
+
+
+.sidebar:hover ~ .page-container {
+    margin-left: 240px; /* Ajustar al ancho expandido */
+}
+
+.dashboard-container { display: flex; 
+    min-height: 100vh; 
+    background-color: 
+    var(--content-bg); /* Fondo principal */ }
+
+.page-container {
+    margin-left: 85px; /* Ajustar al nuevo ancho fijo de la sidebar */
+    transition: margin-left 0.3s ease; /* Quitar transición si la sidebar no cambia de ancho */
+    flex-grow: 1; /* Asegurar que ocupe el resto */
+    padding: 25px 30px; /* Mantener tu padding */
+    background-color: var(--primary-blue);
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box; /* Añadir por si acaso */
+    
     /* Añade aquí otros estilos si quieres que sean comunes a todos los contenedores */
 }
 
@@ -40,6 +231,10 @@ body {
     padding: 0 5px;
     flex-wrap: nowrap;
     gap: 15px;
+    background-color: var(--sidebar-bg);
+    Padding: 10px 25px; 
+    border-radius: 15px; 
+    box-shadow: var(--shadow-color);
 }
 
 .header-title-group {
@@ -112,7 +307,7 @@ body {
     text-align: center;
     margin-bottom: 35px;
     padding: 15px;
-    background-color: #e8efff; /* Fondo azul muy claro */
+    /*background-color: var(--sidebar-bg); /* Fondo azul muy claro */
     border-radius: 15px;
     font-size: 1.3em;
     font-weight: 700;
@@ -144,26 +339,44 @@ body {
     background-color: #ffffff;
     border-radius: 20px;
     padding: 20px;
-    box-shadow: 0 6px 15px rgba(140, 150, 170, 0.1); /* Sombra más suave */
+    /*box-shadow: 0 6px 15px rgba(140, 150, 170, 0.1); /* Sombra más suave */
     display: flex;
     flex-direction: column;
-    border-left: 6px solid #cccccc; /* Borde por defecto */
+    border-left: 6px solid; /* Borde por defecto */
     transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.3s ease;
     position: relative; /* Para acciones */
 }
 .account-card:hover {
-    transform: translateY(-6px);
-    box-shadow: 0 12px 22px rgba(140, 150, 170, 0.15);
+    transform: translateY(-5px);
+    /*box-shadow: 0 12px 22px rgba(140, 150, 170, 0.15);*/
     border-left-color: #8a82d5;
 }
 
 /* Colores de borde según tipo */
-.account-card[data-type="corriente"] { border-left-color: #4299e1; } /* Azul medio */
+.account-card[data-type="corriente"] { border-left-color: #4299e1; }
+.account-card:hover[data-type="corriente"] { border-left-color: #4299e1;  box-shadow: 0 1px 25px #ff4800;} 
+
 .account-card[data-type="ahorro"] { border-left-color: #48bb78; } /* Verde */
-.account-card[data-type="tarjeta_credito"] { border-left-color: #f56565; } /* Rojo/Naranja */
+.account-card:hover[data-type="ahorro"] { border-left-color: #48bb78;  box-shadow: 0 1px 25px #ff4800;} 
+
+.account-card[data-type="tarjeta_credito"] { border-left-color: #f1ff70; } /* Rojo/Naranja */
+.account-card:hover[data-type="tarjeta_credito"] { border-left-color: #f1ff70;  box-shadow: 0 1px 25px #ff4800;} 
+
 .account-card[data-type="efectivo"] { border-left-color: #a0aec0; } /* Gris */
+.account-card:hover[data-type="efectivo"] { border-left-color: #a0aec0;  box-shadow: 0 1px 25px #ff4800;} 
+
 .account-card[data-type="inversion"] { border-left-color: #9f7aea; } /* Morado más vivo */
+.account-card:hover[data-type="inversion"] { border-left-color: #9f7aea;  box-shadow: 0 1px 25px #ff4800;} 
+
 .account-card[data-type="otro"] { border-left-color: #718096; } /* Gris azulado */
+.account-card:hover[data-type="otro"] { border-left-color: #718096;  box-shadow: 0 1px 25px #ff4800;} 
+
+.account-card[data-type="ahorro_colchon"] { border-left-color: #e3ff7d; } /* Gris azulado */
+.account-card:hover[data-type="ahorro_colchon"] { border-left-color: #e3ff7d;  box-shadow: 0 1px 25px #ff4800;} 
+
+.account-card[data-type="viajes"] { border-left-color: #ffa319; } 
+.account-card:hover[data-type="viajes"] { border-left-color: #ffa319;  box-shadow: 0 1px 25px #ff4800;} 
+
 
 .card-header {
     display: flex;

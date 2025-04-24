@@ -195,10 +195,152 @@ if (typeof supabase === 'undefined' || supabase === null) {
 
     // --- Funciones de Renderizado ---
 
-    function displayListSummary(trips) { /* ... (igual que antes) ... */ }
-    function displayTripsList(trips) { /* ... (igual que antes, renderiza las tarjetas) ... */ }
-    function displayTripDetailHeader(trip, expenses) { /* ... (igual que antes, actualiza cabecera detalle) ... */ }
-    function displayTripExpenses(expenses) { /* ... (igual que antes, renderiza tabla gastos) ... */ }
+    function displayListSummary(trips) {
+        if (!summaryFooterList || !nextTripDateEl || !totalBudgetedTripsEl || !totalSavedForTripsEl) return;
+   
+        if (!trips || trips.length === 0) {
+            summaryFooterList.style.display = 'none'; // Ocultar si no hay viajes
+            return;
+        }
+   
+        const today = new Date().toISOString().split('T')[0];
+        let nextTripDate = null;
+        let totalBudgeted = 0;
+        let totalSaved = 0;
+   
+        trips.forEach(trip => {
+            // Considerar viajes futuros o activos (ej: que no hayan terminado)
+            const isFutureOrActive = !trip.end_date || trip.end_date >= today;
+   
+            if (isFutureOrActive) {
+                totalBudgeted += parseFloat(trip.budget) || 0;
+                totalSaved += parseFloat(trip.saved_amount) || 0;
+   
+                // Encontrar la próxima fecha de inicio
+                if (trip.start_date && trip.start_date >= today) {
+                     if (!nextTripDate || trip.start_date < nextTripDate) {
+                        nextTripDate = trip.start_date;
+                    }
+                }
+            }
+        });
+   
+        nextTripDateEl.textContent = formatDate(nextTripDate);
+        totalBudgetedTripsEl.textContent = formatCurrency(totalBudgeted);
+        totalSavedForTripsEl.textContent = formatCurrency(totalSaved);
+   
+        summaryFooterList.style.display = 'flex'; // Mostrar el footer
+   }
+   function displayTripsList(trips) {
+    // Verificar elementos DOM necesarios
+    if (!tripListContainer || !noTripsMessage) {
+        console.error("displayTripsList: Elementos tripListContainer o noTripsMessage no encontrados.");
+        return;
+    }
+
+    tripListContainer.innerHTML = ''; // Limpiar antes de añadir
+
+    if (!trips || trips.length === 0) {
+        noTripsMessage.style.display = 'block';
+        tripListContainer.style.display = 'none';
+        return;
+    }
+
+    noTripsMessage.style.display = 'none';
+    tripListContainer.style.display = 'flex'; // O 'grid' si prefieres grid para la lista general
+
+    trips.forEach(trip => {
+        const card = document.createElement('div');
+        card.classList.add('trip-card'); // <<< Clase existente en tu CSS
+        card.setAttribute('data-id', trip.id);
+
+        const iconClass = getIconForTrip(trip.name, trip.destination);
+        const budget = parseFloat(trip.budget) || 0;
+        const saved = parseFloat(trip.saved_amount) || 0;
+        const progress = budget > 0 ? Math.min(100, Math.max(0, (saved / budget) * 100)) : 0;
+        let progressBarColor = '#ffcc80'; // Naranja claro por defecto (definido en tu CSS para trip-progress-bar)
+        // Podrías añadir lógica para cambiar color si está 100% ahorrado, si quieres
+
+        // Generar HTML usando las clases de TU Trips.css
+        card.innerHTML = `
+            <div class="trip-icon-container">  
+                <i class="${iconClass}"></i>
+            </div>
+            <div class="trip-info">          
+                <h3 class="trip-name">${trip.name || 'Viaje sin nombre'}</h3>
+                ${trip.destination ? `<p class="trip-destination">${trip.destination}</p>` : ''}
+                <p class="trip-dates">${formatDate(trip.start_date)} - ${formatDate(trip.end_date)}</p>
+                <div class="trip-budget-saved"> 
+                    <span>Presup.: <strong>${formatCurrency(budget)}</strong></span>
+                    <span>Ahorrado: <strong>${formatCurrency(saved)}</strong></span>
+                </div>
+                <div class="trip-progress-bar-container"> 
+                     <div class="trip-progress-bar" style="width: ${progress.toFixed(1)}%; background-color: ${progressBarColor};" title="${progress.toFixed(1)}% Ahorrado"></div>
+                 </div>
+            </div>
+            <div class="trip-actions">       
+                <button class="btn-icon btn-view-expenses" aria-label="Ver Gastos" data-id="${trip.id}" title="Ver Gastos"><i class="fas fa-receipt"></i></button>
+                <button class="btn-icon btn-edit-trip" aria-label="Editar Viaje" data-id="${trip.id}" title="Editar Viaje"><i class="fas fa-pencil-alt"></i></button>
+                <button class="btn-icon btn-delete-trip" aria-label="Eliminar Viaje" data-id="${trip.id}" title="Eliminar Viaje"><i class="fas fa-trash-alt"></i></button>
+            </div>
+        `;
+        tripListContainer.appendChild(card);
+    });
+}
+    function displayTripDetailHeader(trip, expenses) {
+        if (!trip || !detailTripNameEl || !detailTripDatesEl || !detailTripBudgetEl || !detailTripSpentEl || !detailTripRemainingEl) return;
+    
+        detailTripNameEl.textContent = trip.name || 'Detalle del Viaje';
+        detailTripDatesEl.textContent = `${formatDate(trip.start_date)} - ${formatDate(trip.end_date)}`;
+    
+        const budget = parseFloat(trip.budget) || 0;
+        const totalSpent = (expenses || []).reduce((sum, exp) => sum + (Number(exp.amount) || 0), 0);
+        const remaining = budget - totalSpent;
+    
+        detailTripBudgetEl.textContent = formatCurrency(budget);
+        detailTripSpentEl.textContent = formatCurrency(totalSpent);
+        detailTripRemainingEl.textContent = formatCurrency(remaining);
+    
+        // Cambiar clase para color del restante
+        detailTripRemainingEl.classList.remove('positive', 'negative', 'zero');
+        if (remaining > 0) {
+            detailTripRemainingEl.classList.add('positive');
+        } else if (remaining < 0) {
+            detailTripRemainingEl.classList.add('negative');
+        } else {
+             detailTripRemainingEl.classList.add('zero');
+        }
+    }
+    function displayTripExpenses(expenses) {
+        if (!tripExpensesTableBody || !tripExpensesTableWrapper || !noTripExpensesMessage) return;
+   
+        tripExpensesTableBody.innerHTML = ''; // Limpiar tabla
+   
+        if (!expenses || expenses.length === 0) {
+            noTripExpensesMessage.style.display = 'block';
+            tripExpensesTableWrapper.style.display = 'none';
+            return;
+        }
+   
+        noTripExpensesMessage.style.display = 'none';
+        tripExpensesTableWrapper.style.display = 'block'; // Asegurarse que la tabla es visible
+   
+        expenses.forEach(exp => {
+            const row = tripExpensesTableBody.insertRow();
+            row.setAttribute('data-id', exp.id);
+   
+            row.innerHTML = `
+                <td>${formatDate(exp.expense_date)}</td>
+                <td>${exp.description || '-'}</td>
+                <td>${exp.category || '-'}</td>
+                <td class="amount-col expense">${formatCurrency(exp.amount)}</td>
+                <td class="actions-col">
+                    <button class="btn-icon btn-edit-expense" aria-label="Editar Gasto" data-id="${exp.id}"><i class="fas fa-pencil-alt"></i></button>
+                    <button class="btn-icon btn-delete-expense" aria-label="Eliminar Gasto" data-id="${exp.id}"><i class="fas fa-trash-alt"></i></button>
+                </td>
+            `;
+        });
+   }
 
 
     // --- Funciones de Modales y CRUD ---
@@ -234,7 +376,7 @@ if (typeof supabase === 'undefined' || supabase === null) {
 
     async function handleTripFormSubmit(event) {
         event.preventDefault();
-        if (!currentUserId || !tripForm) return;
+        if (!currentUserId || !tripForm || !saveTripButton) return;
 
         const tripId = tripIdInput.value;
         const isEditing = !!tripId;
@@ -251,6 +393,9 @@ if (typeof supabase === 'undefined' || supabase === null) {
             notes: tripNotesInput.value.trim() || null
         };
 
+        // Log de datos a enviar
+        console.log("handleTripFormSubmit: Intentando guardar datos:", JSON.stringify(formData, null, 2));
+
         if (!formData.name) { modalTripError.textContent = 'El nombre del viaje es obligatorio.'; modalTripError.style.display = 'block'; return; }
         if (formData.start_date && formData.end_date && new Date(formData.end_date) < new Date(formData.start_date)) { modalTripError.textContent = 'La fecha fin no puede ser anterior a la fecha inicio.'; modalTripError.style.display = 'block'; return; }
 
@@ -259,23 +404,38 @@ if (typeof supabase === 'undefined' || supabase === null) {
         saveTripButton.textContent = isEditing ? 'Guardando...' : 'Creando...';
 
         try {
-            let result;
+            let result = null;
+            console.log("handleTripFormSubmit: Dentro de TRY, antes de await Supabase");
             if (isEditing) {
                 // No incluir user_id en el update
                 const { user_id, ...updateData } = formData;
                 updateData.updated_at = new Date(); // Añadir timestamp de actualización
+                console.log("handleTripFormSubmit: Ejecutando UPDATE con:", updateData);
                 result = await supabase.from('trips').update(updateData).eq('id', tripId).eq('user_id', currentUserId);
             } else {
-                result = await supabase.from('trips').insert([formData]);
+                console.log("handleTripFormSubmit: Ejecutando INSERT con:", formData);
+                result = await supabase.from('trips').insert([formData]).select();
             }
-
-            const { error } = result;
-            if (error) throw error;
-
+            console.log("handleTripFormSubmit: Await Supabase COMPLETADO. Resultado:", result); // <<< VER ESTE LOG
+            // Comprobar error de forma segura
+            const error = result?.error;
+            // Comprobar también si 'data' viene vacío en insert (a veces indica fallo RLS)
+            const data = result?.data;
+            if (error) {
+                console.error("handleTripFormSubmit: Error detectado en resultado Supabase", error);
+                throw error; // Lanza al catch block
+            }
+            // Verifica si la inserción devolvió datos (si usaste .select())
+            if (!isEditing && (!data || data.length === 0)) {
+                 console.error("handleTripFormSubmit: Inserción no devolvió datos (posible RLS o error silencioso).");
+                 throw new Error("La inserción no devolvió confirmación.");
+            }
+    
+    
+            console.log("handleTripFormSubmit: Operación BD exitosa.");
             alert(isEditing ? 'Viaje actualizado.' : 'Viaje creado.');
             closeTripModal();
-            loadInitialData(currentUser); // Recargar lista de viajes
-
+            loadAndDisplayTrips(currentUser); // Recargar lista de viajes
         } catch (error) {
             console.error('Error guardando viaje:', error);
             modalTripError.textContent = `Error: ${error.message}`;
@@ -312,7 +472,7 @@ if (typeof supabase === 'undefined' || supabase === null) {
             if (tripError) throw new Error(`Error eliminando el viaje: ${tripError.message}`);
 
             alert('Viaje y sus gastos eliminados.');
-            loadInitialData(currentUser); // Recargar lista
+            loadAndDisplayTrips(currentUser); // Recargar lista
 
         } catch (error) {
             console.error("Error durante la eliminación del viaje:", error);
@@ -350,6 +510,62 @@ if (typeof supabase === 'undefined' || supabase === null) {
         toggleExpenseModal(true);
     }
     function closeTripExpenseModal() { toggleExpenseModal(false); }
+
+    async function loadAndDisplayTrips(user) {
+        if (!user) {
+            console.log("loadAndDisplayTrips: No user, cannot load trips.");
+            if(tripListContainer) tripListContainer.innerHTML = "<p>Inicia sesión para ver tus viajes.</p>";
+            if(loadingTripsMessage) loadingTripsMessage.style.display = 'none';
+            if(noTripsMessage) noTripsMessage.style.display = 'none';
+            if(summaryFooterList) summaryFooterList.style.display = 'none';
+            return;
+        }
+        // Asegúrate de que estas variables globales se asignan correctamente
+        currentUserId = user.id;
+        currentUser = user;
+        console.log(`loadAndDisplayTrips: Loading trips for user ${currentUserId}`);
+    
+        // Referenciar elementos DOM (asegúrate que existen y son correctos)
+        const loadingMsg = document.getElementById('loadingTripsMessage');
+        const noMsg = document.getElementById('noTripsMessage');
+        const listContainer = document.getElementById('tripListContainer');
+        const summaryFooter = document.getElementById('summary-footer-list'); // Referencia al footer
+    
+        if(loadingMsg) loadingMsg.style.display = 'block';
+        if(noMsg) noMsg.style.display = 'none';
+        if(listContainer) listContainer.innerHTML = ''; // Limpiar
+        if(summaryFooter) summaryFooter.style.display = 'none'; // Ocultar footer mientras carga
+    
+        try {
+            const { data: trips, error } = await supabase
+                .from('trips')
+                .select('*') // O las columnas que necesites para la tarjeta de lista
+                .eq('user_id', currentUserId)
+                .order('start_date', { ascending: false, nullsLast: true }); // O el orden que prefieras
+    
+            if (error) throw error;
+    
+            allTripsData = trips || []; // Actualizar caché global
+    
+            // Llamar a las funciones que muestran los datos en la UI
+            displayTripsList(allTripsData); // Esta función debería existir y renderizar las tarjetas
+            displayListSummary(allTripsData); // Esta función debería existir y calcular/mostrar el footer
+    
+             // Ocultar mensaje de carga final
+             if(loadingMsg) loadingMsg.style.display = 'none';
+             // Mostrar footer si hay viajes
+             if(allTripsData.length > 0 && summaryFooter) summaryFooter.style.display = 'flex';
+    
+    
+        } catch (error) {
+            console.error("Error cargando lista de viajes:", error);
+            if(loadingMsg) loadingMsg.textContent = `Error al cargar viajes: ${error.message}`;
+            if(listContainer) listContainer.innerHTML = `<p class="error-text" style="color:red; text-align:center;">Error al cargar viajes.</p>`;
+            if(noMsg) noMsg.style.display = 'none';
+             if(summaryFooter) summaryFooter.style.display = 'none'; // Ocultar footer en error
+        }
+        // No necesitamos 'finally' aquí si el mensaje de carga se oculta bien
+    }
 
     async function handleTripExpenseFormSubmit(event) {
         event.preventDefault();
@@ -426,8 +642,10 @@ if (typeof supabase === 'undefined' || supabase === null) {
     // --- Asignación de Event Listeners ---
     document.addEventListener('authReady', (e) => {
         console.log('Trips.js: Received authReady event.');
-        currentUser = e.detail.user; // Guardar el usuario
-        loadInitialData(currentUser);
+        currentUser = e.detail.user;
+        // currentUserId = currentUser?.id; // Se asigna dentro de la función de carga
+        loadAndDisplayTrips(currentUser); // CORRECTO (o el nombre de tu función)
+        // --- FIN CORRECCIÓN ---
     });
 
     document.addEventListener('DOMContentLoaded', () => {

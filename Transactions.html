@@ -63,57 +63,63 @@
             <h2 id="modalTitleTransaction">Añadir Transacción</h2>
             <form id="transactionForm">
                 <input type="hidden" id="transactionId" name="transactionId">
-
+    
                 <div class="input-group">
-                    <label>Tipo de Transacción</label>
+                    <label>Tipo de Movimiento</label>
                     <div class="radio-group type-toggle">
-                        <label class="type-button expense-btn active">
-                            <input type="radio" name="transactionType" value="gasto" checked> Gasto
+                        <label class="type-button expense-btn active"> <input type="radio" name="transactionType" value="gasto" checked> Gasto
                         </label>
                         <label class="type-button income-btn">
                             <input type="radio" name="transactionType" value="ingreso"> Ingreso
                         </label>
-                        </div>
+                        <label class="type-button transfer-btn"> <input type="radio" name="transactionType" value="transferencia"> Transferencia
+                        </label>
+                    </div>
                 </div>
-
+    
                 <div class="input-group">
                     <label for="transactionAmount">Importe</label>
                     <input type="number" id="transactionAmount" name="transactionAmount" required step="0.01" placeholder="0.00">
                 </div>
-
+    
                 <div class="input-group">
                     <label for="transactionDate">Fecha</label>
                     <input type="date" id="transactionDate" name="transactionDate" required>
                 </div>
-
+    
                 <div class="input-group">
                     <label for="transactionDescription">Descripción</label>
-                    <input type="text" id="transactionDescription" name="transactionDescription" required placeholder="Ej: Café, Nómina Enero...">
+                    <input type="text" id="transactionDescription" name="transactionDescription" required placeholder="Ej: Café, Nómina Enero, Transfer Ahorro...">
                 </div>
-
-                 <div class="input-group">
-                    <label for="transactionAccount">Cuenta</label>
-                    <select id="transactionAccount" name="transactionAccount" required>
-                        <option value="" disabled selected>Selecciona una cuenta...</option>
-                        </select>
-                </div>
-
-                 <div class="input-group">
-                     <label for="transactionCategory">Categoría</label>
-                     <select id="transactionCategory" name="transactionCategory">
-                         <option value="">(Sin categoría)</option>
+    
+                 <div class="input-group" id="accountSourceGroup">
+                     <label for="transactionAccount" id="transactionAccountLabel">Cuenta</label>
+                     <select id="transactionAccount" name="transactionAccount" required>
+                         <option value="" disabled selected>Selecciona cuenta origen...</option>
                          </select>
                  </div>
-
+    
+                 <div class="input-group" id="accountDestinationGroup" style="display: none;">
+                      <label for="transactionAccountDestination">Cuenta Destino</label>
+                      <select id="transactionAccountDestination" name="transactionAccountDestination"> <option value="" disabled selected>Selecciona cuenta destino...</option>
+                          </select>
+                 </div>
+    
+                 <div class="input-group" id="categoryGroup">
+                       <label for="transactionCategory">Categoría</label>
+                       <select id="transactionCategory" name="transactionCategory">
+                           <option value="">(Sin categoría)</option>
+                           </select>
+                   </div>
+    
                  <div class="input-group">
-                    <label for="transactionNotes">Notas (Opcional)</label>
-                    <textarea id="transactionNotes" name="transactionNotes" rows="2"></textarea>
-                </div>
-
+                     <label for="transactionNotes">Notas (Opcional)</label>
+                     <textarea id="transactionNotes" name="transactionNotes" rows="2"></textarea>
+                 </div>
+    
                 <div class="modal-actions">
                     <button type="button" id="cancelTransactionButton" class="btn btn-secondary">Cancelar</button>
-                    <button type="submit" id="saveTransactionButton" class="btn btn-primary">Guardar Transacción</button>
-                </div>
+                    <button type="submit" id="saveTransactionButton" class="btn btn-primary">Guardar</button> </div>
                 <p id="modalTransactionError" class="error-message" style="display: none;"></p>
             </form>
         </div>

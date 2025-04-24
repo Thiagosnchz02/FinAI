@@ -31,6 +31,7 @@ if (typeof supabase === 'undefined' || supabase === null) {
     const categoryIconInput = document.getElementById('categoryIcon');
     const categoryColorInput = document.getElementById('categoryColor');
     const cancelCategoryButton = document.getElementById('cancelCategoryButton');
+    const categoryIsVariableCheckbox = document.getElementById('categoryIsVariable');
     const saveCategoryButton = document.getElementById('saveCategoryButton');
     const modalCategoryError = document.getElementById('modalCategoryError');
     const noCustomCategoriesMessage = document.getElementById('noCustomCategoriesMessage');
@@ -66,7 +67,7 @@ if (typeof supabase === 'undefined' || supabase === null) {
         'educacion': 'fas fa-graduation-cap', 'libros': 'fas fa-book', 'mascotas': 'fas fa-paw',
         'gimnasio': 'fas fa-dumbbell', 'deporte': 'fas fa-running', 'viajes': 'fas fa-plane-departure',
         'facturas': 'fas fa-file-invoice-dollar', 'telefono': 'fas fa-phone', 'internet': 'fas fa-wifi',
-        'agua': 'fas fa-tint', 'luz': 'fas fa-lightbulb', 'gas': 'fas fa-burn',
+        'agua': 'fas fa-tint', 'luz': 'fas fa-lightbulb', 'gas': 'fas fa-burn', 'transaccion': 'fa-solid fa-money-bill-transfer',
         'nomina': 'fas fa-money-check-alt', 'salario': 'fas fa-money-check-alt', 'freelance': 'fas fa-briefcase',
         'inversion': 'fas fa-chart-line', 'otros': 'fas fa-question-circle', 'default': 'fas fa-tag'
     };
@@ -118,7 +119,7 @@ if (typeof supabase === 'undefined' || supabase === null) {
 
     /** Abre el modal para añadir o editar categoría */
     function openCategoryModal(category = null) {
-        if (!categoryForm || !modalTitleCategory || !categoryNameInput || !categoryTypeRadioGasto || !categoryTypeRadioIngreso || !categoryIconInput || !categoryColorInput || !saveCategoryButton || !categoryIdInput || !isDefaultCategoryInput) {
+        if (!categoryForm || !modalTitleCategory || !categoryNameInput || !categoryTypeRadioGasto || !categoryTypeRadioIngreso || !categoryIconInput || !categoryColorInput || !saveCategoryButton || !categoryIdInput || !isDefaultCategoryInput || !categoryIsVariableCheckbox) {
             console.error("Error: Elementos del modal de categoría no encontrados."); return; }
         categoryForm.reset();
         categoryIdInput.value = '';
@@ -134,6 +135,8 @@ if (typeof supabase === 'undefined' || supabase === null) {
         categoryTypeRadioIngreso.disabled = false;
         categoryIconInput.disabled = false;
         categoryColorInput.disabled = false;
+        categoryIsVariableCheckbox.disabled = false; // <-- Habilitar checkbox
+        categoryIsVariableCheckbox.checked = false;
 
         if (category) { // Modo Edición/Vista
             categoryIdInput.value = category.id;
@@ -143,6 +146,7 @@ if (typeof supabase === 'undefined' || supabase === null) {
             if (category.type === 'ingreso') categoryTypeRadioIngreso.checked = true;
             else categoryTypeRadioGasto.checked = true;
             isDefaultCategoryInput.value = category.is_default ? 'true' : 'false';
+            categoryIsVariableCheckbox.checked = category.is_variable || false;
 
             if (category.is_default) { // Si es default, modo solo vista
                  modalTitleCategory.textContent = 'Ver Categoría por Defecto';
@@ -151,16 +155,20 @@ if (typeof supabase === 'undefined' || supabase === null) {
                  categoryTypeRadioIngreso.disabled = true;
                  categoryIconInput.disabled = true;
                  categoryColorInput.disabled = true;
-                 saveCategoryButton.style.display = 'none'; // Ocultar botón guardar
+                 saveCategoryButton.style.display = 'none';
+                 categoryIsVariableCheckbox.disabled = true; // Ocultar botón guardar
             } else { // Si es personalizada, modo edición
                  modalTitleCategory.textContent = 'Editar Categoría';
                  saveCategoryButton.style.display = 'inline-flex'; // Mostrar botón guardar
+                 categoryIsVariableCheckbox.disabled = false;
             }
         } else { // Modo Añadir
             modalTitleCategory.textContent = 'Añadir Nueva Categoría';
             categoryTypeRadioGasto.checked = true; // Gasto por defecto
             categoryColorInput.value = '#e0e0e0'; // Color gris por defecto
              isDefaultCategoryInput.value = 'false';
+             categoryIsVariableCheckbox.checked = false; // Asegurar desmarcado
+             categoryIsVariableCheckbox.disabled = false; // Asegurar habilitado
              saveCategoryButton.style.display = 'inline-flex';
         }
         toggleCategoryModal(true);
@@ -358,7 +366,7 @@ function displayCategories(categories) {
     /** Maneja el envío del formulario del modal (Añadir o Editar Categoría) */
     async function handleCategoryFormSubmit(event) {
         event.preventDefault();
-        if (!supabase || !currentUserId || !categoryForm || !saveCategoryButton) return; // No permitir si no está logueado
+        if (!supabase || !currentUserId || !categoryForm || !saveCategoryButton || !categoryIsVariableCheckbox) return; // No permitir si no está logueado
 
         const categoryId = categoryIdInput.value;
         const isEditing = !!categoryId;
@@ -367,13 +375,15 @@ function displayCategories(categories) {
         if (isDefault) { alert("Las categorías por defecto no se pueden modificar."); return; }
 
         const originalSaveText = saveCategoryButton.textContent;
+        const is_variable_value = categoryIsVariableCheckbox.checked; // true si está marcado, false si no
         const categoryData = {
             user_id: currentUserId, // Asegurar que se asocia al usuario logueado
             name: categoryNameInput.value.trim(),
             type: document.querySelector('input[name="categoryType"]:checked').value,
             icon: categoryIconInput.value.trim() || null,
             color: categoryColorInput.value || '#e0e0e0',
-            is_default: false
+            is_default: false,
+            is_variable: is_variable_value
         };
 
         if (!categoryData.name) { modalCategoryError.textContent = 'El nombre es obligatorio.'; modalCategoryError.style.display = 'block'; return; }
@@ -383,7 +393,7 @@ function displayCategories(categories) {
         try {
             let error;
             if (isEditing) {
-                 const { error: updateError } = await supabase.from('categories').update({ name: categoryData.name, type: categoryData.type, icon: categoryData.icon, color: categoryData.color }).eq('id', categoryId).eq('user_id', currentUserId).eq('is_default', false); error = updateError;
+                 const { error: updateError } = await supabase.from('categories').update({ name: categoryData.name, type: categoryData.type, icon: categoryData.icon, color: categoryData.color, is_variable: categoryData.is_variable }).eq('id', categoryId).eq('user_id', currentUserId).eq('is_default', false); error = updateError;
             } else { const { error: insertError } = await supabase.from('categories').insert([categoryData]); error = insertError; }
             if (error) throw error;
             console.log(isEditing ? 'Categoría actualizada' : 'Categoría creada');
