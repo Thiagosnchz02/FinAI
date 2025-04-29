@@ -6,7 +6,7 @@ Thumbs.db
 .vscode/
 
 # Ignorar dependencias de Node (si usaras Node.js/npm más adelante)
-# node_modules/
+ node_modules/
 
 # Ignorar archivos de entorno con claves (si los usaras)
 #.env
