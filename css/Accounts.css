@@ -236,6 +236,14 @@ body {
     border-radius: 15px; 
     box-shadow: var(--shadow-color);
 }
+.page-header h1 {
+    margin: 0; 
+    font-size: 1.8em; 
+    font-weight: 800; 
+    color: #334; 
+    flex-grow: 1; 
+    text-align: center;
+}
 
 .header-title-group {
     display: flex;

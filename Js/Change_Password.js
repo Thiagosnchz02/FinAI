@@ -144,7 +144,7 @@ if (typeof supabase === 'undefined' || supabase === null) {
         if (backToSettingsButton) {
             backToSettingsButton.addEventListener('click', () => {
                 // Navegar de vuelta a configuración, usando replace para no guardar esta página en el historial
-                window.location.replace('/Settings.html');
+                window.location.replace("/Profile.html");
             });
         }
 

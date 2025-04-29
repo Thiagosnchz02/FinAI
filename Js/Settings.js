@@ -722,6 +722,92 @@ if (typeof supabase === 'undefined' || supabase === null) {
             // setLoadingState lo maneja la función que llama a esta
         }
     }
+    function setActiveSidebarLink() {
+        const currentPagePath = window.location.pathname;
+        // Usamos querySelectorAll en el NAV dentro de la sidebar
+        const navButtons = document.querySelectorAll('.sidebar-nav .nav-button[data-page]');
+    
+        if (!navButtons || navButtons.length === 0) {
+            console.warn("setActiveSidebarLink: No se encontraron botones de navegación con 'data-page'.");
+            return;
+        }
+    
+        let mostSpecificMatch = null;
+    
+        navButtons.forEach(button => {
+            const linkPath = button.getAttribute('data-page');
+            button.classList.remove('active'); // Limpiar todos primero
+    
+            // Comprobar si la ruta actual COMIENZA con la ruta del botón
+            if (linkPath && currentPagePath.startsWith(linkPath)) {
+                // Priorizar la coincidencia más específica (más larga)
+                if (!mostSpecificMatch || linkPath.length > mostSpecificMatch.dataset.page.length) {
+                    mostSpecificMatch = button;
+                }
+            }
+        });
+    
+        // Activar el botón más específico encontrado
+        if (mostSpecificMatch) {
+            mostSpecificMatch.classList.add('active');
+            console.log('setActiveSidebarLink: Active link set to:', mostSpecificMatch.dataset.page);
+        } else {
+             // Si no hay coincidencia, marcar Dashboard por defecto
+             const dashboardButton = document.querySelector('.sidebar-nav .nav-button[data-page="/Dashboard.html"]');
+             if (dashboardButton) dashboardButton.classList.add('active');
+             console.log('setActiveSidebarLink: No specific match, defaulting to Dashboard.');
+        }
+    }
+
+    function addSidebarNavigationListeners() {
+        console.log("Attempting to add sidebar listeners...");
+        const navButtons = document.querySelectorAll('.sidebar-nav .nav-button[data-page]');
+        console.log(`Found ${navButtons.length} nav buttons.`);
+        navButtons.forEach(button => {
+            // Evitar añadir múltiples listeners
+            if (button.dataset.listenerAttached === 'true') return;
+    
+            button.addEventListener('click', () => {
+                const pageUrl = button.getAttribute('data-page');
+                if (pageUrl && window.location.pathname !== pageUrl) {
+                    console.log(`Navegando a: ${pageUrl}`);
+                    window.location.href = pageUrl;
+                } else if (pageUrl) {
+                     console.log(`Ya estás en ${pageUrl} o no se encontró la URL.`);
+                }
+            });
+            button.dataset.listenerAttached = 'true'; // Marcar que ya tiene listener
+        });
+    
+        // Listener para el botón de logout
+        const logoutButton = document.getElementById('btnLogoutSidebar');
+        if (logoutButton) {
+             console.log("Found logout button, attaching listener.");
+             // Evitar añadir múltiples listeners
+             if (logoutButton.dataset.listenerAttached !== 'true') {
+                 logoutButton.addEventListener('click', async () => {
+                     console.log("Logout button clicked");
+                     // Asegúrate que 'supabase' está disponible en este scope
+                     if (typeof supabase !== 'undefined' && supabase.auth && typeof supabase.auth.signOut === 'function') {
+                         logoutButton.disabled = true; // Deshabilitar mientras cierra
+                         const { error } = await supabase.auth.signOut();
+                         if (error) {
+                             console.error("Error during sign out:", error);
+                             alert("Error al cerrar sesión.");
+                             logoutButton.disabled = false; // Rehabilitar si hay error
+                         }
+                         // No redirigir aquí, auth-listener.js lo hará
+                     } else {
+                          console.error("Supabase client or signOut function not available for logout.");
+                          alert("Error interno al cerrar sesión.");
+                     }
+                 });
+                 logoutButton.dataset.listenerAttached = 'true'; // Marcar que ya tiene listener
+             }
+        } else {
+             console.error("ERROR: Botón #btnLogoutSidebar no encontrado para añadir listener!");
+        }
+    }
     
 
     // --- Asignación de Event Listeners ---
@@ -737,12 +823,15 @@ if (typeof supabase === 'undefined' || supabase === null) {
         console.log("Settings.js: DOM fully loaded.");
 
         // Navegación básica (igual que antes)
-        if (backButton) backButton.addEventListener('click', () => { window.location.href = '/Dashboard.html'; });
+        if (backButton) backButton.addEventListener('click', () => { if (currentView === 'detail') switchView('list'); else window.location.href = '/Dashboard.html'; });
         if (editProfileBtn) editProfileBtn.addEventListener('click', () => { window.location.href = '/Profile.html'; });
         if (manageCategoriesBtn) manageCategoriesBtn.addEventListener('click', () => { window.location.href = '/Categories.html'; });
         if (changePasswordBtn) changePasswordBtn.addEventListener('click', () => { window.location.href = '/ChangePassword.html'; }); // Ajusta nombre si es necesario
         if (logoutBtn) logoutBtn.addEventListener('click', async () => { setLoadingState(true); await supabase.auth.signOut(); });
 
+        console.log("Initializing sidebar...");
+         setActiveSidebarLink();             // <--- LLAMADA 1
+         addSidebarNavigationListeners(); 
 
         // ---- Listener para Selector de Tema (IMPLEMENTADO) ----
         if (themeSelector) {

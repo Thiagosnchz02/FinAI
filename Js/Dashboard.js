@@ -1233,7 +1233,7 @@ async function loadNextTripSummary() {
             // 4. Renderizar la lista de presupuestos en el widget
             budgetSummaryList.innerHTML = ''; // Limpiar "cargando"
             // Mostrar solo algunos (ej. los 3 primeros o los más importantes)
-            budgets.slice(0, 3).forEach(b => { // Mostrar máximo 3
+            budgets.slice(0, 7).forEach(b => { // Mostrar máximo 3
                 const categoryName = b.categories?.name || 'Desconocido';
                 const categoryIcon = getIconClass(b.categories?.icon);
                 const budgetAmount = Number(b.amount) || 0;
@@ -1262,8 +1262,8 @@ async function loadNextTripSummary() {
              if (budgets.length > 3) {
                  const link = document.createElement('a');
                  link.href = '/Budgets.html';
-                 link.textContent = 'Ver todos...';
-                 link.classList.add('panel-link', 'more-link');
+                 //link.textContent = 'Ver todos...';
+                 //link.classList.add('panel-link', 'more-link');
                  budgetSummaryList.appendChild(link);
              }
 

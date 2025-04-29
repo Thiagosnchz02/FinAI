@@ -61,6 +61,7 @@ if (typeof supabase === 'undefined' || supabase === null) {
     /** Devuelve el icono Font Awesome según el tipo de cuenta */
     function getIconForAccountType(type) {
         switch (type) {
+            case 'Nomina': return 'fas fa-wallet';
             case 'corriente': return 'fas fa-landmark';
             case 'viajes': return 'fa-solid fa-plane';
             case 'ahorro': return 'fas fa-piggy-bank';

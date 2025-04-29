@@ -236,9 +236,17 @@ body {
     gap: 15px; 
     Padding: 10px 25px; 
     border-radius: 15px; 
-    box-shadow: var(--shadow-color);}
+    box-shadow: var(--shadow-color);
+}
 
-
+.page-header h1 {
+    margin: 0; 
+    font-size: 1.8em; 
+    font-weight: 800; 
+    color: #334; 
+    flex-grow: 1; 
+    text-align: center;
+}
 
 .header-title-group { display: flex; align-items: center; gap: 12px; flex-grow: 1; justify-content: center; }
 .header-title-group h1 { margin: 0; font-size: 1.8em; font-weight: 800; color: #334; white-space: nowrap; }

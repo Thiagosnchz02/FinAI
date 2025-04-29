@@ -231,62 +231,59 @@ if (typeof supabase === 'undefined' || supabase === null) {
    
         summaryFooterList.style.display = 'flex'; // Mostrar el footer
    }
-   function displayTripsList(trips) {
-    // Verificar elementos DOM necesarios
-    if (!tripListContainer || !noTripsMessage) {
-        console.error("displayTripsList: Elementos tripListContainer o noTripsMessage no encontrados.");
-        return;
-    }
-
-    tripListContainer.innerHTML = ''; // Limpiar antes de añadir
-
-    if (!trips || trips.length === 0) {
-        noTripsMessage.style.display = 'block';
-        tripListContainer.style.display = 'none';
-        return;
-    }
-
-    noTripsMessage.style.display = 'none';
-    tripListContainer.style.display = 'flex'; // O 'grid' si prefieres grid para la lista general
-
-    trips.forEach(trip => {
-        const card = document.createElement('div');
-        card.classList.add('trip-card'); // <<< Clase existente en tu CSS
-        card.setAttribute('data-id', trip.id);
-
-        const iconClass = getIconForTrip(trip.name, trip.destination);
-        const budget = parseFloat(trip.budget) || 0;
-        const saved = parseFloat(trip.saved_amount) || 0;
-        const progress = budget > 0 ? Math.min(100, Math.max(0, (saved / budget) * 100)) : 0;
-        let progressBarColor = '#ffcc80'; // Naranja claro por defecto (definido en tu CSS para trip-progress-bar)
-        // Podrías añadir lógica para cambiar color si está 100% ahorrado, si quieres
-
-        // Generar HTML usando las clases de TU Trips.css
-        card.innerHTML = `
-            <div class="trip-icon-container">  
+    function displayTripsList(trips) {
+        if (!tripListContainer || !noTripsMessage) return;
+    
+        tripListContainer.innerHTML = ''; // Limpiar antes de añadir
+    
+        if (!trips || trips.length === 0) {
+            noTripsMessage.style.display = 'block'; // Mostrar mensaje si no hay viajes
+            tripListContainer.style.display = 'none'; // Ocultar contenedor grid
+            return;
+        }
+    
+        noTripsMessage.style.display = 'none'; // Ocultar mensaje de vacío
+        tripListContainer.style.display = 'flex';
+        tripListContainer.style.flexDirection = 'column';
+        tripListContainer.style.gap = '15px'; // Espacio entre tarjetas
+    
+        trips.forEach(trip => {
+            const card = document.createElement('div');
+            card.classList.add('trip-card'); // Asegúrate que esta clase exista en tu CSS
+            card.setAttribute('data-id', trip.id);
+    
+            const iconClass = getIconForTrip(trip.name, trip.destination);
+            const budget = parseFloat(trip.budget) || 0;
+            const saved = parseFloat(trip.saved_amount) || 0;
+            // Calcular progreso de ahorro (no de gasto aún)
+            const progress = budget > 0 ? Math.min(100, Math.max(0, (saved / budget) * 100)) : 0;
+            let progressBarColor = 'var(--accent-orange)'; // Morado por defecto para ahorro
+    
+            card.innerHTML = `
+                <div class="trip-icon-container">  
                 <i class="${iconClass}"></i>
-            </div>
-            <div class="trip-info">          
-                <h3 class="trip-name">${trip.name || 'Viaje sin nombre'}</h3>
-                ${trip.destination ? `<p class="trip-destination">${trip.destination}</p>` : ''}
-                <p class="trip-dates">${formatDate(trip.start_date)} - ${formatDate(trip.end_date)}</p>
-                <div class="trip-budget-saved"> 
-                    <span>Presup.: <strong>${formatCurrency(budget)}</strong></span>
-                    <span>Ahorrado: <strong>${formatCurrency(saved)}</strong></span>
                 </div>
-                <div class="trip-progress-bar-container"> 
-                     <div class="trip-progress-bar" style="width: ${progress.toFixed(1)}%; background-color: ${progressBarColor};" title="${progress.toFixed(1)}% Ahorrado"></div>
-                 </div>
-            </div>
-            <div class="trip-actions">       
-                <button class="btn-icon btn-view-expenses" aria-label="Ver Gastos" data-id="${trip.id}" title="Ver Gastos"><i class="fas fa-receipt"></i></button>
-                <button class="btn-icon btn-edit-trip" aria-label="Editar Viaje" data-id="${trip.id}" title="Editar Viaje"><i class="fas fa-pencil-alt"></i></button>
-                <button class="btn-icon btn-delete-trip" aria-label="Eliminar Viaje" data-id="${trip.id}" title="Eliminar Viaje"><i class="fas fa-trash-alt"></i></button>
-            </div>
-        `;
-        tripListContainer.appendChild(card);
-    });
-}
+                <div class="trip-info">          
+                    <h3 class="trip-name">${trip.name || 'Viaje sin nombre'}</h3>
+                    ${trip.destination ? `<p class="trip-destination">${trip.destination}</p>` : ''}
+                    <p class="trip-dates">${formatDate(trip.start_date)} - ${formatDate(trip.end_date)}</p>
+                    <div class="trip-budget-saved"> 
+                        <span>Presup.: <strong>${formatCurrency(budget)} / Ahorrado: <strong>${formatCurrency(saved)}</strong></span>
+                        
+                    </div>
+                    <div class="trip-progress-bar-container">  
+                        <div class="trip-progress-bar" style="width: ${progress.toFixed(1)}%; background-color: ${progressBarColor};" title="${progress.toFixed(1)}% Ahorrado"></div>
+                    </div>
+                </div>
+                <div class="trip-actions">       
+                    <button class="btn-icon btn-view-expenses" aria-label="Ver Gastos" data-id="${trip.id}" title="Ver Gastos"><i class="fas fa-receipt"></i></button>
+                    <button class="btn-icon btn-edit-trip" aria-label="Editar Viaje" data-id="${trip.id}" title="Editar Viaje"><i class="fas fa-pencil-alt"></i></button>
+                    <button class="btn-icon btn-delete-trip" aria-label="Eliminar Viaje" data-id="${trip.id}" title="Eliminar Viaje"><i class="fas fa-trash-alt"></i></button>
+                </div>
+            `;
+            tripListContainer.appendChild(card);
+        });
+    }
     function displayTripDetailHeader(trip, expenses) {
         if (!trip || !detailTripNameEl || !detailTripDatesEl || !detailTripBudgetEl || !detailTripSpentEl || !detailTripRemainingEl) return;
     
@@ -312,35 +309,35 @@ if (typeof supabase === 'undefined' || supabase === null) {
         }
     }
     function displayTripExpenses(expenses) {
-        if (!tripExpensesTableBody || !tripExpensesTableWrapper || !noTripExpensesMessage) return;
-   
-        tripExpensesTableBody.innerHTML = ''; // Limpiar tabla
-   
-        if (!expenses || expenses.length === 0) {
-            noTripExpensesMessage.style.display = 'block';
-            tripExpensesTableWrapper.style.display = 'none';
-            return;
-        }
-   
-        noTripExpensesMessage.style.display = 'none';
-        tripExpensesTableWrapper.style.display = 'block'; // Asegurarse que la tabla es visible
-   
-        expenses.forEach(exp => {
-            const row = tripExpensesTableBody.insertRow();
-            row.setAttribute('data-id', exp.id);
-   
-            row.innerHTML = `
-                <td>${formatDate(exp.expense_date)}</td>
-                <td>${exp.description || '-'}</td>
-                <td>${exp.category || '-'}</td>
-                <td class="amount-col expense">${formatCurrency(exp.amount)}</td>
-                <td class="actions-col">
-                    <button class="btn-icon btn-edit-expense" aria-label="Editar Gasto" data-id="${exp.id}"><i class="fas fa-pencil-alt"></i></button>
-                    <button class="btn-icon btn-delete-expense" aria-label="Eliminar Gasto" data-id="${exp.id}"><i class="fas fa-trash-alt"></i></button>
-                </td>
-            `;
-        });
-   }
+     if (!tripExpensesTableBody || !tripExpensesTableWrapper || !noTripExpensesMessage) return;
+
+     tripExpensesTableBody.innerHTML = ''; // Limpiar tabla
+
+     if (!expenses || expenses.length === 0) {
+         noTripExpensesMessage.style.display = 'block';
+         tripExpensesTableWrapper.style.display = 'none';
+         return;
+     }
+
+     noTripExpensesMessage.style.display = 'none';
+     tripExpensesTableWrapper.style.display = 'block'; // Asegurarse que la tabla es visible
+
+     expenses.forEach(exp => {
+         const row = tripExpensesTableBody.insertRow();
+         row.setAttribute('data-id', exp.id);
+
+         row.innerHTML = `
+             <td>${formatDate(exp.expense_date)}</td>
+             <td>${exp.description || '-'}</td>
+             <td>${exp.category || '-'}</td>
+             <td class="amount-col expense">${formatCurrency(exp.amount)}</td>
+             <td class="actions-col">
+                 <button class="btn-icon btn-edit-expense" aria-label="Editar Gasto" data-id="${exp.id}"><i class="fas fa-pencil-alt"></i></button>
+                 <button class="btn-icon btn-delete-expense" aria-label="Eliminar Gasto" data-id="${exp.id}"><i class="fas fa-trash-alt"></i></button>
+             </td>
+         `;
+     });
+}
 
 
     // --- Funciones de Modales y CRUD ---
@@ -639,6 +636,93 @@ if (typeof supabase === 'undefined' || supabase === null) {
         }
     }
 
+    function setActiveSidebarLink() {
+        const currentPagePath = window.location.pathname;
+        // Usamos querySelectorAll en el NAV dentro de la sidebar
+        const navButtons = document.querySelectorAll('.sidebar-nav .nav-button[data-page]');
+    
+        if (!navButtons || navButtons.length === 0) {
+            console.warn("setActiveSidebarLink: No se encontraron botones de navegación con 'data-page'.");
+            return;
+        }
+    
+        let mostSpecificMatch = null;
+    
+        navButtons.forEach(button => {
+            const linkPath = button.getAttribute('data-page');
+            button.classList.remove('active'); // Limpiar todos primero
+    
+            // Comprobar si la ruta actual COMIENZA con la ruta del botón
+            if (linkPath && currentPagePath.startsWith(linkPath)) {
+                // Priorizar la coincidencia más específica (más larga)
+                if (!mostSpecificMatch || linkPath.length > mostSpecificMatch.dataset.page.length) {
+                    mostSpecificMatch = button;
+                }
+            }
+        });
+    
+        // Activar el botón más específico encontrado
+        if (mostSpecificMatch) {
+            mostSpecificMatch.classList.add('active');
+            console.log('setActiveSidebarLink: Active link set to:', mostSpecificMatch.dataset.page);
+        } else {
+             // Si no hay coincidencia, marcar Dashboard por defecto
+             const dashboardButton = document.querySelector('.sidebar-nav .nav-button[data-page="/Dashboard.html"]');
+             if (dashboardButton) dashboardButton.classList.add('active');
+             console.log('setActiveSidebarLink: No specific match, defaulting to Dashboard.');
+        }
+    }
+
+    function addSidebarNavigationListeners() {
+        console.log("Attempting to add sidebar listeners...");
+        const navButtons = document.querySelectorAll('.sidebar-nav .nav-button[data-page]');
+        console.log(`Found ${navButtons.length} nav buttons.`);
+        navButtons.forEach(button => {
+            // Evitar añadir múltiples listeners
+            if (button.dataset.listenerAttached === 'true') return;
+    
+            button.addEventListener('click', () => {
+                const pageUrl = button.getAttribute('data-page');
+                if (pageUrl && window.location.pathname !== pageUrl) {
+                    console.log(`Navegando a: ${pageUrl}`);
+                    window.location.href = pageUrl;
+                } else if (pageUrl) {
+                     console.log(`Ya estás en ${pageUrl} o no se encontró la URL.`);
+                }
+            });
+            button.dataset.listenerAttached = 'true'; // Marcar que ya tiene listener
+        });
+    
+        // Listener para el botón de logout
+        const logoutButton = document.getElementById('btnLogoutSidebar');
+        if (logoutButton) {
+             console.log("Found logout button, attaching listener.");
+             // Evitar añadir múltiples listeners
+             if (logoutButton.dataset.listenerAttached !== 'true') {
+                 logoutButton.addEventListener('click', async () => {
+                     console.log("Logout button clicked");
+                     // Asegúrate que 'supabase' está disponible en este scope
+                     if (typeof supabase !== 'undefined' && supabase.auth && typeof supabase.auth.signOut === 'function') {
+                         logoutButton.disabled = true; // Deshabilitar mientras cierra
+                         const { error } = await supabase.auth.signOut();
+                         if (error) {
+                             console.error("Error during sign out:", error);
+                             alert("Error al cerrar sesión.");
+                             logoutButton.disabled = false; // Rehabilitar si hay error
+                         }
+                         // No redirigir aquí, auth-listener.js lo hará
+                     } else {
+                          console.error("Supabase client or signOut function not available for logout.");
+                          alert("Error interno al cerrar sesión.");
+                     }
+                 });
+                 logoutButton.dataset.listenerAttached = 'true'; // Marcar que ya tiene listener
+             }
+        } else {
+             console.error("ERROR: Botón #btnLogoutSidebar no encontrado para añadir listener!");
+        }
+    }
+
     // --- Asignación de Event Listeners ---
     document.addEventListener('authReady', (e) => {
         console.log('Trips.js: Received authReady event.');
@@ -677,6 +761,9 @@ if (typeof supabase === 'undefined' || supabase === null) {
                 if (deleteBtn) { handleDeleteTrip(deleteBtn.dataset.id); return; }
             });
         }
+        console.log("Initializing sidebar...");
+         setActiveSidebarLink();             // <--- LLAMADA 1
+         addSidebarNavigationListeners(); 
 
         // Delegación en Tabla de Gastos
          if (tripExpensesTableBody) {
