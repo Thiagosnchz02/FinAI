@@ -40,8 +40,8 @@ export const AuthProvider = ({ children }) => {
                 setUser(session?.user ?? null); // Actualiza el usuario basado en la nueva sesión
                 // Opcional: Podrías añadir lógica aquí si necesitas hacer algo específico
                 // en ciertos eventos, como cargar datos del perfil después de SIGNED_IN.
-                // if (event === 'SIGNED_IN') { /* cargar perfil */ }
-                // if (event === 'SIGNED_OUT') { /* limpiar datos usuario */ }
+                if (event === 'SIGNED_IN') { /* cargar perfil */ }
+                if (event === 'SIGNED_OUT') { /* limpiar datos usuario */ }
 
                 // Asegurarse de que la carga inicial termine si este evento llega antes que getSession
                 if (loading) {
@@ -66,12 +66,12 @@ export const AuthProvider = ({ children }) => {
         session,    // La sesión completa de Supabase (o null)
         loading,    // Booleano para saber si aún se está comprobando la sesión inicial
         // --- Funciones de Autenticación (a añadir si quieres llamarlas desde el contexto) ---
-        // signUp: (email, password, options) => supabase.auth.signUp({ email, password, options }),
-        // signIn: (email, password) => supabase.auth.signInWithPassword({ email, password }),
-        // signInWithGoogle: () => supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.origin + '/dashboard' } }),
-        // signOut: () => supabase.auth.signOut(),
-        // resetPasswordForEmail: (email) => supabase.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + '/reset-password' }),
-        // updateUserPassword: (newPassword) => supabase.auth.updateUser({ password: newPassword }),
+        signUp: (email, password, options) => supabase.auth.signUp({ email, password, options }),
+        signIn: (email, password) => supabase.auth.signInWithPassword({ email, password }),
+        signInWithGoogle: () => supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.origin + '/dashboard' } }),
+        signOut: () => supabase.auth.signOut(),
+        resetPasswordForEmail: (email) => supabase.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + '/reset-password' }),
+        updateUserPassword: (newPassword) => supabase.auth.updateUser({ password: newPassword }),
     };
 
     // El proveedor devuelve el Contexto con el 'value' definido,
