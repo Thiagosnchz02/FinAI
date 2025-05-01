@@ -8,8 +8,8 @@ import React from 'react'; // Importa React (aunque no siempre es estrictamente 
 import ReactDOM from 'react-dom/client'; // Importa la librería para interactuar con el DOM
 import App from './App.jsx'; // Importa el componente principal de la aplicación
 import './styles/global.scss'; // Importa nuestros estilos SCSS globales
-// import './index.css'; // Eliminamos la importación del CSS por defecto de Vite
 import { BrowserRouter } from 'react-router-dom'; // Importa el componente BrowserRouter para el enrutamiento
+import { AuthProvider } from './contexts/AuthContext.jsx';
 
 // Obtiene el elemento raíz del HTML (definido en index.html)
 const rootElement = document.getElementById('root');
@@ -17,11 +17,13 @@ const rootElement = document.getElementById('root');
 // Crea el root de React y renderiza la aplicación
 ReactDOM.createRoot(rootElement).render(
   <React.StrictMode>
-    {/* StrictMode ayuda a detectar problemas potenciales en la aplicación */}
+    {/* 1. BrowserRouter maneja las rutas */}
     <BrowserRouter>
-      {/* BrowserRouter habilita el enrutamiento basado en historial de navegación */}
-      <App />
-      {/* Renderiza el componente principal App */}
+      {/* 2. AuthProvider gestiona y provee el estado de autenticación */}
+      <AuthProvider>
+        {/* 3. App contiene el AppRouter que muestra las páginas */}
+        <App />
+      </AuthProvider>
     </BrowserRouter>
   </React.StrictMode>,
 );
