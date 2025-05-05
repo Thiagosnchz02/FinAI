@@ -2,39 +2,26 @@
 Archivo: src/pages/Categories.jsx
 Propósito: Componente para la página de gestión de categorías de ingresos/gastos.
 */
-import React, { useState, useEffect, useMemo } from 'react'; // Importa useMemo
-import { Link, useNavigate } from 'react-router-dom';
-import { supabase } from '../services/supabaseClient'; // Importa cliente Supabase
+import React, { useState, useEffect, useMemo, useCallback } from 'react'; // Añade useCallback
+import { useNavigate } from 'react-router-dom';
+import { supabase } from '../services/supabaseClient';
+import { useAuth } from '../contexts/AuthContext.jsx'; // Importa useAuth
+//import { getIconClass } from '../utils/iconUtils.js'; // Importa desde utils
+//import { isColorDark } from '../utils/colorUtils.js'; // Importa desde utils
+import toast from 'react-hot-toast';
+import ConfirmationModal from '../components/ConfirmationModal.jsx';
+import { useCallback } from 'react'; // Asegúrate de importar useCallback
+import CategoryItem from '../components/Categories/CategoryItem.jsx';
+import CategoryModal from '../components/Categories/CategoryModal.jsx';
+import Sidebar from '../components/layout/Sidebar.jsx'; 
 
 // Importa imágenes
-import finAiLogo from '../assets/Logo_FinAI_Oficial.png';
 import defaultAvatar from '../assets/avatar_predeterminado.png';
 import emptyMascot from '../assets/monstruo_pixar.png';
 
-// --- Funciones de Utilidad --- (Mover a /utils)
-const getIconClass = (iconKeyword) => {
-    const iconMap = { /* ... tu mapeo de iconos ... */ 'default': 'fas fa-tag' };
-    return iconMap[iconKeyword?.toLowerCase()] || (iconKeyword?.startsWith('fa') ? iconKeyword : 'fas fa-tag');
-};
-
-const isColorDark = (bgColor) => {
-    if (!bgColor || typeof bgColor !== 'string' || bgColor.length < 4) return false;
-    try {
-        const color = bgColor.charAt(0) === '#' ? bgColor.substring(1) : bgColor;
-        if (color.length !== 6 && color.length !== 3) return false;
-        const r = parseInt(color.substring(0, color.length === 3 ? 1 : 2), 16) * (color.length === 3 ? 17 : 1);
-        const g = parseInt(color.substring(color.length === 3 ? 1 : 2, color.length === 3 ? 2 : 4), 16) * (color.length === 3 ? 17 : 1);
-        const b = parseInt(color.substring(color.length === 3 ? 2 : 4, color.length === 3 ? 3 : 6), 16) * (color.length === 3 ? 17 : 1);
-        const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-        return luminance < 0.5;
-    } catch (e) { return false; }
-};
-// --- Fin Funciones de Utilidad ---
-
-
 function Categories() {
     // --- Estado del Componente ---
-    const [userId, setUserId] = useState(null); // Vendrá de AuthContext
+    const { user, loading: authLoading } = useAuth();
     const [avatarUrl, setAvatarUrl] = useState(defaultAvatar);
     const [allCategories, setAllCategories] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -43,60 +30,74 @@ function Categories() {
     const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
     const [modalMode, setModalMode] = useState('add'); // 'add', 'edit', 'view' (para default)
     const [selectedCategory, setSelectedCategory] = useState(null); // Categoría a editar/ver
-    const [formData, setFormData] = useState({ // Estado para formulario modal
-        categoryName: '',
-        categoryType: 'gasto',
-        isVariable: false,
-        categoryIcon: '',
-        categoryColor: '#e0e0e0',
-    });
     const [isSaving, setIsSaving] = useState(false);
     const [modalError, setModalError] = useState('');
+    const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+    const [categoryToDelete, setCategoryToDelete] = useState(null); // { id, name }
     // UI state
     const [showScrollTop, setShowScrollTop] = useState(false);
 
     const navigate = useNavigate();
 
+    const fetchData = useCallback(async (currentUserId) => {
+        setIsLoading(true); // Indicar que la carga de categorías está en curso
+        setError(null);
+        setAllCategories([]); // Limpiar antes de cargar
+        console.log(`Categories: Cargando datos para usuario ${currentUserId}`);
+    
+        try {
+            // Cargar perfil y categorías en paralelo
+            const [profileRes, categoriesRes] = await Promise.all([
+                supabase.from('profiles').select('avatar_url').eq('id', currentUserId).single(),
+                supabase.from('categories').select('*')
+                    .or(`user_id.eq.${currentUserId},is_default.eq.true`) // Defaults O las del usuario
+                    .order('is_default', { ascending: false }) // Opcional: mostrar custom primero?
+                    .order('type')
+                    .order('name')
+            ]);
+    
+            // Procesar perfil
+            if (profileRes.error && profileRes.status !== 406) throw profileRes.error;
+            setAvatarUrl(profileRes.data?.avatar_url || defaultAvatar);
+    
+            // Procesar categorías
+            if (categoriesRes.error) throw categoriesRes.error;
+            setAllCategories(categoriesRes.data || []);
+            console.log(`Categories: ${categoriesRes.data?.length || 0} categorías cargadas.`);
+    
+        } catch (err) {
+            console.error("Error cargando datos (Categories):", err);
+            setError(err.message || "Error al cargar categorías.");
+            setAllCategories([]); // Asegurar lista vacía en caso de error
+        } finally {
+            setIsLoading(false); // Terminar carga (de categorías)
+        }
+     // Asegúrate de incluir supabase en las dependencias si lo usas directamente
+     }, [supabase]);
+
     // --- Efectos ---
     useEffect(() => {
-        // Carga inicial: usuario, avatar, categorías
-        const loadInitialData = async () => {
-            setIsLoading(true);
-            setError(null);
-            try {
-                // 1. Obtener usuario (Simulado)
-                const simulatedUserId = 'USER_ID_PLACEHOLDER'; // Reemplazar con AuthContext
-                setUserId(simulatedUserId);
-
-                // 2. Cargar perfil (avatar) y categorías
-                const [profileRes, categoriesRes] = await Promise.all([
-                    supabase.from('profiles').select('avatar_url').eq('id', simulatedUserId).single(),
-                    // Cargar TODAS las categorías (default + usuario)
-                    supabase.from('categories').select('*').or(`user_id.eq.${simulatedUserId},is_default.eq.true`).order('type').order('name')
-                ]);
-
-                if (profileRes.error && profileRes.status !== 406) throw profileRes.error;
-                setAvatarUrl(profileRes.data?.avatar_url || defaultAvatar);
-
-                if (categoriesRes.error) throw categoriesRes.error;
-                setAllCategories(categoriesRes.data || []);
-
-            } catch (err) {
-                console.error("Error cargando datos iniciales (Categories):", err);
-                setError(err.message || "Error al cargar datos.");
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
-        loadInitialData();
-
-        // Scroll-top listener
+        if (authLoading) {
+            console.log("Categories: Esperando autenticación...");
+            // Podrías mantener un estado de carga general aquí si quieres
+            // setIsLoading(true);
+            return; // Espera
+        }
+        if (!user) {
+            console.log("Categories: No autenticado. Redirigiendo...");
+            navigate('/login');
+            return;
+        }
+    
+        // Si el usuario está listo, llama a fetchData
+        fetchData(user.id);
+    
+        // Scroll-top listener (sin cambios)
         const handleScroll = () => setShowScrollTop(window.scrollY > 300);
         window.addEventListener('scroll', handleScroll);
         return () => window.removeEventListener('scroll', handleScroll);
-
-    }, [navigate]); // Dependencia navigate
+    
+    }, [user, authLoading, navigate, fetchData]); // Añade fetchData como dependencia
 
     // --- Separar categorías (usando useMemo para eficiencia) ---
     const { defaultCategories, customCategories } = useMemo(() => {
@@ -106,126 +107,127 @@ function Categories() {
     }, [allCategories]); // Recalcular solo si allCategories cambia
 
     // --- Manejadores Modal ---
-    const handleOpenCategoryModal = (mode = 'add', category = null) => {
+    const handleOpenCategoryModal = useCallback((mode = 'add', category = null) => {
         setModalMode(mode);
-        setSelectedCategory(category);
-        setModalError('');
+        setSelectedCategory(category); // Guarda la categoría completa para pasarla al modal
+        setModalError(''); // Limpia error del modal padre
         setIsSaving(false);
-
-        if (mode === 'edit' && category) {
-            setFormData({
-                categoryName: category.name || '',
-                categoryType: category.type || 'gasto',
-                isVariable: category.is_variable || false,
-                categoryIcon: category.icon || '',
-                categoryColor: category.color || '#e0e0e0',
-            });
-        } else if (mode === 'view' && category) { // Para ver default
-             setFormData({ // Cargar datos para verlos, aunque estén disabled
-                categoryName: category.name || '',
-                categoryType: category.type || 'gasto',
-                isVariable: category.is_variable || false,
-                categoryIcon: category.icon || '',
-                categoryColor: category.color || '#e0e0e0',
-            });
-        } else { // Modo 'add'
-            setFormData({ // Resetear
-                categoryName: '', categoryType: 'gasto', isVariable: false,
-                categoryIcon: '', categoryColor: '#e0e0e0',
-            });
-        }
         setIsCategoryModalOpen(true);
-    };
+    }, []);
 
     const handleCloseCategoryModal = () => setIsCategoryModalOpen(false);
 
-    const handleFormChange = (event) => {
-        const { name, value, type, checked } = event.target;
-        setFormData(prevData => ({
-            ...prevData,
-            [name]: type === 'checkbox' ? checked : value,
-        }));
-        if (modalError) setModalError('');
-    };
-
-    const handleCategoryFormSubmit = async (event) => {
-        event.preventDefault();
-        if (modalMode === 'view') return; // No hacer nada si solo es vista
-        if (!userId) { setModalError("Error: Usuario no identificado."); return; }
-
-        // Validaciones
-        if (!formData.categoryName.trim()) { setModalError('El nombre es obligatorio.'); return; }
+    const handleCategoryFormSubmit = useCallback(async (submittedFormData) => { // Añadido useCallback
+        submittedFormData.preventDefault();
+        if (modalMode === 'view') return;
+        if (!user?.id) {
+            toast.error("Error: Usuario no identificado.");
+            return;
+        }
+    
+        if (!submittedFormData.categoryName.trim()) { setModalError('El nombre es obligatorio.'); return; }
+    
         setModalError('');
         setIsSaving(true);
-
+        const toastId = toast.loading(modalMode === 'edit' ? 'Guardando cambios...' : 'Creando categoría...');
+    
         try {
             const categoryData = {
-                user_id: userId,
-                name: formData.categoryName.trim(),
-                type: formData.categoryType,
-                icon: formData.categoryIcon.trim() || null,
-                color: formData.categoryColor || '#e0e0e0',
-                is_default: false, // Las creadas/editadas por usuario nunca son default
-                is_variable: formData.isVariable,
+                // user_id se puede añadir explícitamente o dejar a RLS
+                name: submittedFormData.categoryName.trim(),
+                type: submittedFormData.categoryType,
+                icon: submittedFormData.categoryIcon.trim() || null,
+                color: submittedFormData.categoryColor || '#e0e0e0',
+                is_default: false,
+                is_variable: submittedFormData.isVariable,
             };
-
+    
             let error;
             if (modalMode === 'edit' && selectedCategory) {
                 // UPDATE
                 const { error: updateError } = await supabase.from('categories')
-                    .update(categoryData) // Actualizar todos los campos editables
+                    .update({ ...categoryData, user_id: user.id, updated_at: new Date() }) // Asegurar user_id y updated_at
                     .eq('id', selectedCategory.id)
-                    .eq('user_id', userId) // Seguridad
-                    .eq('is_default', false); // No permitir editar defaults accidentalmente
+                    .eq('user_id', user.id)
+                    .eq('is_default', false);
                 error = updateError;
             } else {
                 // INSERT
-                const { error: insertError } = await supabase.from('categories').insert([categoryData]);
+                const { error: insertError } = await supabase.from('categories')
+                    .insert([{ ...categoryData, user_id: user.id }]); // Asegurar user_id
                 error = insertError;
             }
-
+    
             if (error) throw error;
-
-            console.log(`Categoría ${modalMode === 'edit' ? 'actualizada' : 'creada'}`);
+    
+            toast.success(`Categoría ${modalMode === 'edit' ? 'actualizada' : 'creada'}!`, { id: toastId });
             handleCloseCategoryModal();
-            // Recargar categorías para ver cambios
-            const { data, error: refreshError } = await supabase.from('categories').select('*').or(`user_id.eq.${userId},is_default.eq.true`).order('type').order('name');
-            if (refreshError) throw refreshError;
-            setAllCategories(data || []);
-
+            fetchData(user.id); // Recargar datos
+    
         } catch (err) {
             console.error('Error guardando categoría:', err);
-            setModalError(`Error: ${err.message}`);
+            setModalError(`Error: ${err.message}`); // Error en modal
+            toast.error(`Error al guardar: ${err.message}`, { id: toastId }); // Error en toast
         } finally {
             setIsSaving(false);
         }
+    // Incluir dependencias usadas de fuera
+    }, [user, modalMode, selectedCategory, supabase, handleCloseCategoryModal, fetchData]); // Ya no depende de formDat
+
+    const handleDeleteCategory = (categoryId, categoryName) => {
+        if (!categoryId || !categoryName) {
+            console.error("Se necesita ID y nombre para eliminar categoría.");
+            return;
+        }
+        // Guarda los datos de la categoría a eliminar
+        setCategoryToDelete({ id: categoryId, name: categoryName });
+        // Abre el modal de confirmación
+        setIsConfirmModalOpen(true);
     };
 
-    const handleDeleteCategory = async (categoryId, categoryName) => {
-        // Usar modal de confirmación idealmente
-        if (!window.confirm(`¿Seguro que quieres eliminar la categoría "${categoryName}"?\nLas transacciones y presupuestos asociados perderán su categoría.`)) return;
-
+    const confirmDeleteHandler = useCallback(async () => {
+        if (!categoryToDelete || !user?.id) {
+            toast.error("No se pudo eliminar (faltan datos).");
+            setIsConfirmModalOpen(false);
+            setCategoryToDelete(null);
+            return;
+        }
+    
+        const { id: categoryId, name: categoryName } = categoryToDelete;
+        setIsConfirmModalOpen(false); // Cierra el modal de confirmación
+        const deletingToastId = toast.loading(`Eliminando categoría "${categoryName}"...`);
+    
         try {
-            const { error } = await supabase.from('categories')
+            // Intenta eliminar la categoría personalizada
+            const { error } = await supabase
+                .from('categories')
                 .delete()
                 .eq('id', categoryId)
-                .eq('user_id', userId) // Asegurar que solo borra las suyas
-                .eq('is_default', false); // Doble seguridad para no borrar defaults
-
-            if (error) throw error;
-            console.log('Categoría eliminada');
-            alert('Categoría eliminada.');
-            // Quitar del estado local
-            setAllCategories(prev => prev.filter(cat => cat.id !== categoryId));
-
+                .eq('user_id', user.id) // Seguridad
+                .eq('is_default', false); // Doble seguridad
+    
+            if (error) {
+                // Podría haber error si la categoría está en uso y hay restricciones FK
+                // El código '23503' es común para FK violation en PostgreSQL
+                if (error.code === '23503') {
+                     toast.error('Error: Categoría en uso (transacciones/presupuestos). No se puede eliminar.', { id: deletingToastId, duration: 6000 });
+                } else {
+                    throw error; // Otros errores de Supabase
+                }
+            } else {
+                toast.success('Categoría eliminada.', { id: deletingToastId });
+                fetchData(user.id); // Recarga la lista de categorías
+            }
         } catch (err) {
-            console.error('Error eliminando categoría:', err);
-            alert(`Error: ${err.message}`);
+            console.error('Error eliminando categoría (confirmado):', err);
+            toast.error(`Error al eliminar: ${err.message}`, { id: deletingToastId });
+        } finally {
+            setCategoryToDelete(null); // Limpia el estado
         }
-    };
+    // Incluir dependencias
+    }, [user, categoryToDelete, supabase, fetchData]);
 
     // Reutilizar handleLogout, handleBack, scrollToTop
-    const handleLogout = () => console.log('Logout pendiente');
     const handleBack = () => navigate(-1);
     const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
 
@@ -234,27 +236,10 @@ function Categories() {
         <div style={{ display: 'flex' }}>
 
             {/* --- Sidebar (Reutilizable) --- */}
-            <aside className="sidebar">
-                 <div className="sidebar-logo"> <img src={finAiLogo} alt="FinAi Logo Small" /> </div>
-                 <nav className="sidebar-nav">
-                     {/* Marcar como 'active' el link correspondiente */}
-                     <Link to="/dashboard" className="nav-button" title="Dashboard"><i className="fas fa-home"></i> <span>Dashboard</span></Link>
-                     <Link to="/accounts" className="nav-button" title="Cuentas"><i className="fas fa-wallet"></i> <span>Cuentas</span></Link>
-                     <Link to="/budgets" className="nav-button" title="Presupuestos"><i className="fas fa-chart-pie"></i> <span>Presupuestos</span></Link>
-                     <Link to="/categories" className="nav-button active" title="Categorías"><i className="fas fa-tags"></i> <span>Categorías</span></Link> {/* Active */}
-                     <Link to="/transactions" className="nav-button" title="Transacciones"><i className="fas fa-exchange-alt"></i> <span>Transacciones</span></Link>
-                     <Link to="/trips" className="nav-button" title="Viajes"><i className="fas fa-suitcase-rolling"></i> <span>Viajes</span></Link>
-                     <Link to="/evaluations" className="nav-button" title="Evaluación"><i className="fas fa-balance-scale"></i> <span>Evaluación</span></Link>
-                     <Link to="/reports" className="nav-button" title="Informes"><i className="fas fa-chart-bar"></i> <span>Informes</span></Link>
-                     <Link to="/profile" className="nav-button" title="Perfil"><i className="fas fa-user-circle"></i> <span>Perfil</span></Link>
-                     <Link to="/settings" className="nav-button" title="Configuración"><i className="fas fa-cog"></i> <span>Configuración</span></Link>
-                     <Link to="/debts" className="nav-button" title="Deudas"><i className="fas fa-credit-card"></i> <span>Deudas</span></Link>
-                     <Link to="/loans" className="nav-button" title="Préstamos"><i className="fas fa-hand-holding-usd"></i> <span>Préstamos</span></Link>
-                     <Link to="/fixed-expenses" className="nav-button" title="Gastos Fijos"><i className="fas fa-receipt"></i> <span>Gastos Fijos</span></Link>
-                     <Link to="/goals" className="nav-button" title="Metas"><i className="fas fa-bullseye"></i> <span>Metas</span></Link>
-                 </nav>
-                 <button className="nav-button logout-button" onClick={handleLogout} title="Cerrar Sesión"><i className="fas fa-sign-out-alt"></i> <span>Salir</span></button>
-            </aside>
+            <Sidebar
+                // Pasar estado de carga/guardado si quieres deshabilitar botones mientras ocurre algo
+                isProcessing={isLoading || isSaving /* ...o el estado relevante */}
+            />
 
             {/* --- Contenido Principal --- */}
             <div className="page-container">
@@ -295,21 +280,12 @@ function Categories() {
                                 <>
                                     <h2 className="category-section-header" style={{ width: '100%' }}>Categorías por Defecto</h2>
                                     {defaultCategories.map(cat => {
-                                        const bgColor = cat.color || '#e0e0e0';
-                                        const textColor = isColorDark(bgColor) ? '#ffffff' : '#2d3748';
-                                        const iconClass = getIconClass(cat.icon);
-                                        const typeIndicator = cat.type === 'ingreso' ? '(Ingreso)' : '(Gasto)';
-                                        return (
-                                            <div key={cat.id} className="category-item" style={{ backgroundColor: bgColor, color: textColor }} onClick={() => handleOpenCategoryModal('view', cat)} title="Ver detalle (no editable)">
-                                                <span className="category-icon"><i className={iconClass}></i></span>
-                                                <span className="category-name">{cat.name}</span>
-                                                 <div className="category-actions">
-                                                      <span className="category-type-indicator">{typeIndicator}</span>
-                                                      {/* No hay botones para default */}
-                                                 </div>
-                                                <span className="default-badge" title="Categoría por defecto">Default</span>
-                                            </div>
-                                        );
+                                        <CategoryItem
+                                        key={cat.id}
+                                        category={cat}
+                                        onViewClick={handleOpenCategoryModal} // Llama a handleOpen en modo 'view'
+                                        // No pasar onEditClick ni onDeleteClick para defaults
+                                    />
                                     })}
                                 </>
                             )}
@@ -318,22 +294,13 @@ function Categories() {
                                 <>
                                     <h2 className="category-section-header" style={{ width: '100%' }}>Mis Categorías Personalizadas</h2>
                                     {customCategories.map(cat => {
-                                        const bgColor = cat.color || '#e0e0e0';
-                                        const textColor = isColorDark(bgColor) ? '#ffffff' : '#2d3748';
-                                        const iconClass = getIconClass(cat.icon);
-                                        const typeIndicator = cat.type === 'ingreso' ? '(Ingreso)' : '(Gasto)';
-                                        return (
-                                            <div key={cat.id} className="category-item" style={{ backgroundColor: bgColor, color: textColor }}>
-                                                <span className="category-icon"><i className={iconClass}></i></span>
-                                                <span className="category-name">{cat.name}</span>
-                                                 <div className="category-actions">
-                                                      <span className="category-type-indicator">{typeIndicator}</span>
-                                                      <button onClick={() => handleOpenCategoryModal('edit', cat)} className="btn-icon btn-edit" aria-label="Editar" style={{ color: 'inherit' }}><i className="fas fa-pencil-alt"></i></button>
-                                                      <button onClick={() => handleDeleteCategory(cat.id, cat.name)} className="btn-icon btn-delete" aria-label="Eliminar" style={{ color: 'inherit' }}><i className="fas fa-trash-alt"></i></button>
-                                                 </div>
-                                                 {/* No hay badge default */}
-                                            </div>
-                                        );
+                                        <CategoryItem
+                                        key={cat.id}
+                                        category={cat}
+                                        onEditClick={(categoryToEdit) => handleOpenCategoryModal('edit', categoryToEdit)} // Abre en modo 'edit'
+                                        onDeleteClick={handleDeleteCategory} // Llama a la función que abre el confirm modal
+                                        // No pasar onViewClick aquí (o sí, si quieres verlas también)
+                                    />
                                     })}
                                 </>
                             )}
@@ -350,69 +317,29 @@ function Categories() {
             </div> {/* Fin page-container */}
 
              {/* --- Modal Añadir/Editar Categoría --- */}
-             {isCategoryModalOpen && (
-                <div id="categoryModal" className="modal-overlay active" style={{ display: 'flex' }} onClick={(e) => { if (e.target === e.currentTarget) handleCloseCategoryModal(); }}>
-                    <div className="modal-content">
-                        <h2 id="modalTitleCategory">
-                            {modalMode === 'add' ? 'Añadir Nueva Categoría' : (modalMode === 'edit' ? 'Editar Categoría' : 'Ver Categoría')}
-                        </h2>
-                        <form id="categoryForm" onSubmit={handleCategoryFormSubmit}>
-                            {/* ID oculto y flag default (no editable) */}
-                            <input type="hidden" id="categoryId" name="categoryId" value={selectedCategory?.id || ''} readOnly />
-                            <input type="hidden" id="isDefaultCategory" name="isDefaultCategory" value={selectedCategory?.is_default ? 'true' : 'false'} readOnly/>
+            <CategoryModal
+                isOpen={isCategoryModalOpen}
+                onClose={handleCloseCategoryModal}
+                onSubmit={handleCategoryFormSubmit} // Pasa la función que guarda
+                mode={modalMode}
+                initialData={selectedCategory} // Pasa la categoría seleccionada
+                isSaving={isSaving}
+                error={modalError} // Pasa el error del padre
+            />
 
-                            <div className="input-group">
-                                <label htmlFor="categoryName">Nombre</label>
-                                <input type="text" id="categoryName" name="categoryName" required placeholder="Ej: Supermercado..." value={formData.categoryName} onChange={handleFormChange} disabled={modalMode === 'view' || isSaving}/>
-                            </div>
-
-                            <div className="input-group">
-                                <label>Tipo</label>
-                                <div className="radio-group">
-                                    <label> <input type="radio" name="categoryType" value="gasto" checked={formData.categoryType === 'gasto'} onChange={handleFormChange} disabled={modalMode === 'view' || isSaving}/> Gasto </label>
-                                    <label> <input type="radio" name="categoryType" value="ingreso" checked={formData.categoryType === 'ingreso'} onChange={handleFormChange} disabled={modalMode === 'view' || isSaving}/> Ingreso </label>
-                                </div>
-                            </div>
-
-                            <div className="input-group">
-                                <div className="checkbox-container" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                    <input type="checkbox" id="categoryIsVariable" name="isVariable" checked={formData.isVariable} onChange={handleFormChange} style={{ width: 'auto' }} disabled={modalMode === 'view' || isSaving}/>
-                                    <label htmlFor="categoryIsVariable" style={{ marginBottom: '0' }}>¿Es Gasto Variable?</label>
-                                </div>
-                                <p className="input-description" style={{ fontSize: '0.8em', color: '#666', marginTop: '5px' }}> Marcar para gastos variables (Ocio, Comidas...). Desmarcar para fijos (Alquiler...). </p>
-                            </div>
-
-                            <div className="input-group">
-                                <label htmlFor="categoryIcon">Icono (Clase Font Awesome)</label>
-                                <input type="text" id="categoryIcon" name="categoryIcon" placeholder="Ej: fas fa-shopping-cart" value={formData.categoryIcon} onChange={handleFormChange} disabled={modalMode === 'view' || isSaving}/>
-                                <small>Busca en <a href="https://fontawesome.com/search?m=free&s=solid" target="_blank" rel="noopener noreferrer">Font Awesome</a>.</small>
-                            </div>
-
-                            <div className="input-group">
-                                <label htmlFor="categoryColor">Color de Fondo</label>
-                                <input type="color" id="categoryColor" name="categoryColor" value={formData.categoryColor} onChange={handleFormChange} disabled={modalMode === 'view' || isSaving}/>
-                            </div>
-
-                            {modalError && (
-                                <p id="modalCategoryError" className="error-message">{modalError}</p>
-                            )}
-
-                            <div className="modal-actions">
-                                <button type="button" onClick={handleCloseCategoryModal} className="btn btn-secondary" disabled={isSaving}>
-                                    {modalMode === 'view' ? 'Cerrar' : 'Cancelar'}
-                                </button>
-                                {/* Mostrar botón guardar solo si no es vista */}
-                                {modalMode !== 'view' && (
-                                    <button type="submit" id="saveCategoryButton" className="btn btn-primary" disabled={isSaving}>
-                                        {isSaving ? 'Guardando...' : 'Guardar Categoría'}
-                                    </button>
-                                )}
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )} {/* Fin modal */}
-
+            <ConfirmationModal
+                isOpen={isConfirmModalOpen}
+                onClose={() => {
+                    setIsConfirmModalOpen(false);
+                    setCategoryToDelete(null); // Limpiar al cerrar
+                }}
+                onConfirm={confirmDeleteHandler} // Llama a la función de borrado
+                title="Confirmar Eliminación"
+                message={`¿Seguro que quieres eliminar la categoría "${categoryToDelete?.name || ''}"? Las transacciones y presupuestos asociados perderán esta categoría.`}
+                confirmText="Eliminar"
+                cancelText="Cancelar"
+                isDanger={true} // Botón confirmar en rojo
+            />
 
             {/* --- Botón Scroll-Top --- */}
             {showScrollTop && (

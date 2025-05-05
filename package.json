@@ -1,5 +1,6 @@
 {
   "dependencies": {
-    "react-hot-toast": "^2.5.2"
+    "react-hot-toast": "^2.5.2",
+    "sass": "^1.87.0"
   }
 }

@@ -3,231 +3,125 @@ Archivo: src/pages/Trips.jsx
 Propósito: Componente para gestionar viajes, incluyendo una vista de lista y una de detalle.
 */
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { supabase } from '../services/supabaseClient'; // Asegúrate que la ruta sea correcta
+import { useNavigate } from 'react-router-dom';
+import { supabase } from '../services/supabaseClient';
+import { useAuth } from '../contexts/AuthContext.jsx';
+import { formatCurrency, formatDate } from '../utils/formatters.js';
+import Sidebar from '../components/layout/Sidebar.jsx'; 
+//import { getIconForTrip } from '../utils/iconUtils.js'; // Asegúrate que esta función está en utils
+import TripCard from '../components/Trips/TripCard.jsx'; // Asume ruta src/components/Trips/
+import TripExpenseRow from '../components/Trips/TripExpenseRow.jsx'; // Asume ruta src/components/Trips/
+import TripModal from '../components/Trips/TripModal.jsx'; // Asume ruta src/components/Trips/
+import TripExpenseModal from '../components/Trips/TripExpenseModal.jsx'; // Asume ruta src/components/Trips/
+import toast from 'react-hot-toast';
+import ConfirmationModal from '../components/ConfirmationModal.jsx';
 
 // Importa imágenes
-import finAiLogo from '../assets/Logo_FinAI_Oficial.png'; // Asegúrate que la ruta sea correcta
-import defaultAvatar from '../assets/avatar_predeterminado.png'; // Asegúrate que la ruta sea correcta
-import emptyMascot from '../assets/monstruo_pixar.png'; // Asegúrate que la ruta sea correcta
-
-// --- Componentes Internos Simples (Podrían extraerse a archivos separados) ---
-
-// Componente Tarjeta Viaje
-function TripCard({ trip, onViewDetail, onEdit, onDelete }) {
-    const { id, name, destination, start_date, end_date, budget, saved_amount } = trip;
-
-    const iconClass = useMemo(() => getIconForTrip(name, destination), [name, destination]);
-    const formattedBudget = useMemo(() => formatCurrency(budget), [budget]);
-    const formattedSaved = useMemo(() => formatCurrency(saved_amount), [saved_amount]);
-    const formattedStartDate = useMemo(() => formatDate(start_date), [start_date]);
-    const formattedEndDate = useMemo(() => formatDate(end_date), [end_date]);
-
-    const progress = useMemo(() => {
-        const numBudget = parseFloat(budget) || 0;
-        const numSaved = parseFloat(saved_amount) || 0;
-        return numBudget > 0 ? Math.min(100, Math.max(0, (numSaved / numBudget) * 100)) : 0;
-    }, [budget, saved_amount]);
-
-    const progressBarColor = 'var(--accent-orange)'; // Color para ahorro
-
-    return (
-        <div className="trip-card" data-id={id}>
-            <div className="trip-icon-container">
-                <i className={iconClass}></i>
-            </div>
-            <div className="trip-info">
-                <h3 className="trip-name">{name || 'Viaje sin nombre'}</h3>
-                {destination && <p className="trip-destination">{destination}</p>}
-                <p className="trip-dates">{formattedStartDate} - {formattedEndDate}</p>
-                <div className="trip-budget-saved">
-                    <span>Presup.: <strong>{formattedBudget}</strong> / Ahorrado: <strong>{formattedSaved}</strong></span>
-                </div>
-                <div className="trip-progress-bar-container">
-                    <div className="trip-progress-bar" style={{ width: `${progress.toFixed(1)}%`, backgroundColor: progressBarColor }} title={`${progress.toFixed(1)}% Ahorrado`}></div>
-                </div>
-            </div>
-            <div className="trip-actions">
-                <button className="btn-icon btn-view-expenses" aria-label="Ver Gastos" onClick={onViewDetail} title="Ver Gastos"><i className="fas fa-receipt"></i></button>
-                <button className="btn-icon btn-edit-trip" aria-label="Editar Viaje" onClick={onEdit} title="Editar Viaje"><i className="fas fa-pencil-alt"></i></button>
-                <button className="btn-icon btn-delete-trip" aria-label="Eliminar Viaje" onClick={onDelete} title="Eliminar Viaje"><i className="fas fa-trash-alt"></i></button>
-            </div>
-        </div>
-    );
-}
-
-// Componente Fila Gasto Viaje
-function TripExpenseRow({ expense, onEdit, onDelete }) {
-    const { id, expense_date, description, category, amount } = expense;
-    const formattedDate = useMemo(() => formatDate(expense_date), [expense_date]);
-    const formattedAmount = useMemo(() => formatCurrency(amount), [amount]);
-
-    return (
-        <tr data-id={id}>
-            <td>{formattedDate}</td>
-            <td>{description || '-'}</td>
-            <td>{category || '-'}</td>
-            <td className="amount-col expense">{formattedAmount}</td>
-            <td className="actions-col">
-                <button className="btn-icon btn-edit-expense" aria-label="Editar Gasto" onClick={onEdit}><i className="fas fa-pencil-alt"></i></button>
-                <button className="btn-icon btn-delete-expense" aria-label="Eliminar Gasto" onClick={onDelete}><i className="fas fa-trash-alt"></i></button>
-            </td>
-        </tr>
-    );
-}
-
-// --- Funciones de Utilidad (Podrían moverse a un archivo utils) ---
-const formatCurrency = (value, currency = 'EUR') => {
-    const numberValue = Number(value);
-    if (isNaN(numberValue) || value === null || value === undefined) return '€0.00'; // Default a 0 si no es válido
-    try {
-        return new Intl.NumberFormat('es-ES', { style: 'currency', currency: currency, minimumFractionDigits: 2 }).format(numberValue);
-    } catch (e) {
-        console.error("Error formatting currency:", value, e);
-        return `${numberValue.toFixed(2)} ${currency}`;
-    }
-};
-
-const formatDate = (dateString, options = { day: '2-digit', month: '2-digit', year: 'numeric' }) => {
-    if (!dateString) return '--/--/----';
-    try {
-        const date = new Date(dateString);
-        const offset = date.getTimezoneOffset();
-        const adjustedDate = new Date(date.getTime() + (offset * 60 * 1000));
-        if (isNaN(adjustedDate.getTime())) return '--/--/----';
-        return adjustedDate.toLocaleDateString('es-ES', options);
-    } catch (e) {
-        console.error("Error formatting date:", dateString, e);
-        return '--/--/----';
-    }
-};
-
-const getIconForTrip = (name = '', destination = '') => {
-    const text = `${(name || '').toLowerCase()} ${(destination || '').toLowerCase()}`;
-    if (text.includes('japón') || text.includes('asia') || text.includes('tokio')) return 'fas fa-torii-gate';
-    if (text.includes('parís') || text.includes('francia') || text.includes('europa') || text.includes('torre eiffel')) return 'fas fa-archway';
-    if (text.includes('montaña') || text.includes('senderismo') || text.includes('rural') || text.includes('trekking')) return 'fas fa-hiking';
-    if (text.includes('playa') || text.includes('costa') || text.includes('cancún') || text.includes('méxico') || text.includes('caribe')) return 'fas fa-umbrella-beach';
-    if (text.includes('avión') || text.includes('vuelo')) return 'fas fa-plane';
-    return 'fas fa-suitcase-rolling'; // Icono por defecto
-};
-
+import defaultAvatar from '../assets/avatar_predeterminado.png';
+import emptyMascot from '../assets/monstruo_pixar.png';
 // --- Componente Principal ---
 function Trips() {
     // --- Estado ---
-    const [userId, setUserId] = useState(null);
-    const [userAvatarUrl, setUserAvatarUrl] = useState(defaultAvatar);
+    const { user, loading: authLoading } = useAuth();
+    const [avatarUrl, setAvatarUrl] = useState(defaultAvatar);
     const [viewMode, setViewMode] = useState('list'); // 'list' o 'detail'
-    const [trips, setTrips] = useState([]);
-    const [selectedTrip, setSelectedTrip] = useState(null); // Objeto del viaje en detalle
-    const [tripExpenses, setTripExpenses] = useState([]);
-    const [isLoadingTrips, setIsLoadingTrips] = useState(true);
-    const [isLoadingExpenses, setIsLoadingExpenses] = useState(false);
+    const [trips, setTrips] = useState([]); // Lista de todos los viajes
+    const [selectedTrip, setSelectedTrip] = useState(null); // Viaje seleccionado para detalle/modales
+    const [tripExpenses, setTripExpenses] = useState([]); // Gastos del viaje seleccionado
+    const [isLoadingTrips, setIsLoadingTrips] = useState(true); // Carga inicial de viajes
+    const [isLoadingExpenses, setIsLoadingExpenses] = useState(false); // Carga de gastos en detalle
+
+    // Estados Modales
     const [isTripModalOpen, setIsTripModalOpen] = useState(false);
     const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
     const [tripModalMode, setTripModalMode] = useState('add');
     const [expenseModalMode, setExpenseModalMode] = useState('add');
-    const [editingTrip, setEditingTrip] = useState(null); // Para precargar form viaje
-    const [editingExpense, setEditingExpense] = useState(null); // Para precargar form gasto
-    const [isSavingTrip, setIsSavingTrip] = useState(false);
-    const [isSavingExpense, setIsSavingExpense] = useState(false);
-    const [modalTripError, setModalTripError] = useState('');
-    const [modalExpenseError, setModalExpenseError] = useState('');
+    const [editingTrip, setEditingTrip] = useState(null); // Objeto trip para editar
+    const [editingExpense, setEditingExpense] = useState(null); // Objeto expense para editar
+    const [isSavingTrip, setIsSavingTrip] = useState(false); // Estado guardado modal Viaje
+    const [isSavingExpense, setIsSavingExpense] = useState(false); // Estado guardado modal Gasto
+    const [modalTripError, setModalTripError] = useState(''); // Error para modal Viaje
+    const [modalExpenseError, setModalExpenseError] = useState(''); // Error para modal Gasto
+
+    // Estados Confirmación
+    const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+    // Guardará { type: 'trip' | 'expense', id: string, name: string }
+    const [itemToDelete, setItemToDelete] = useState(null);
+
+    // UI
     const [showScrollTop, setShowScrollTop] = useState(false);
-    const [message, setMessage] = useState(''); // Mensajes generales (ej. error carga)
-    const [messageType, setMessageType] = useState('');
+    const [error, setError] = useState(null); // Error general de carga
 
     const navigate = useNavigate();
-    const isMounted = useRef(true);
+    const isMounted = useRef(true); // Para evitar updates en unmount
 
     // --- Carga Inicial (Usuario, Avatar, Viajes) ---
-    const fetchInitialData = useCallback(async () => {
-        setIsLoadingTrips(true);
-        setMessage('');
-        try {
-            const { data: { user }, error: userError } = await supabase.auth.getUser();
-            if (userError || !user) {
-                console.error('Trips: No user session.', userError);
-                if (isMounted.current) navigate('/login');
-                return;
-            }
-             if (!isMounted.current) return;
-            setUserId(user.id);
+    const fetchProfileAndTrips = useCallback(async (currentUserId) => {
+      setIsLoadingTrips(true); setError(null); setTrips([]);
+      console.log(`Trips: Cargando perfil y viajes para ${currentUserId}`);
+      try {
+          const [profileRes, tripsRes] = await Promise.all([
+              supabase.from('profiles').select('avatar_url').eq('id', currentUserId).single(),
+              supabase.from('trips').select('*').eq('user_id', currentUserId).order('start_date', { ascending: false, nullsLast: true })
+          ]);
 
-            const [profileRes, tripsRes] = await Promise.all([
-                supabase.from('profiles').select('avatar_url').eq('id', user.id).single(),
-                supabase.from('trips').select('*').eq('user_id', user.id).order('start_date', { ascending: false, nullsLast: true })
-            ]);
+          if (profileRes.error && profileRes.status !== 406) throw profileRes.error;
+          if (isMounted.current) setAvatarUrl(profileRes.data?.avatar_url || defaultAvatar);
 
-            if (!isMounted.current) return;
+          if (tripsRes.error) throw tripsRes.error;
+          if (isMounted.current) setTrips(tripsRes.data || []);
 
-            if (profileRes.error && profileRes.error.code !== 'PGRST116') console.warn("Error loading avatar", profileRes.error);
-            setUserAvatarUrl(profileRes.data?.avatar_url || defaultAvatar);
+      } catch (err) {
+          console.error("Error loading profile/trips:", err);
+          if (isMounted.current) setError(err.message || "Error al cargar viajes.");
+      } finally {
+          if (isMounted.current) setIsLoadingTrips(false);
+      }
+  }, [supabase]);
 
-            if (tripsRes.error) throw new Error(`Error cargando viajes: ${tripsRes.error.message}`);
-            setTrips(tripsRes.data || []);
+  const fetchExpensesForTrip = useCallback(async (currentUserId, tripId) => {
+      if (!currentUserId || !tripId) return;
+      setIsLoadingExpenses(true); setTripExpenses([]); setError(null); // Limpiar error específico de gastos
+      console.log(`Trips: Cargando gastos para viaje ${tripId}`);
+      try {
+          const { data, error: expensesError } = await supabase
+              .from('trip_expenses').select('*')
+              .eq('user_id', currentUserId).eq('trip_id', tripId)
+              .order('expense_date', { ascending: false });
 
-        } catch (error) {
-            console.error("Error loading initial data:", error);
-            if (isMounted.current) {
-                setMessage(`Error cargando datos: ${error.message}`);
-                setMessageType('error');
-            }
-        } finally {
-            if (isMounted.current) setIsLoadingTrips(false);
-        }
-    }, [navigate]);
+          if (expensesError) throw expensesError;
+          if (isMounted.current) setTripExpenses(data || []);
 
-    useEffect(() => {
-        isMounted.current = true;
-        fetchInitialData();
-        return () => { isMounted.current = false; }; // Cleanup
-    }, [fetchInitialData]);
-
-    // --- Carga Gastos Detalle ---
-    const fetchTripExpenses = useCallback(async (tripId) => {
-        if (!userId || !tripId) return;
-        setIsLoadingExpenses(true);
-        setTripExpenses([]); // Limpiar antes de cargar
-        try {
-            const { data, error } = await supabase
-                .from('trip_expenses')
-                .select('*')
-                .eq('user_id', userId)
-                .eq('trip_id', tripId)
-                .order('expense_date', { ascending: false });
-
-            if (error) throw error;
-            if (isMounted.current) {
-                setTripExpenses(data || []);
-            }
-        } catch (error) {
-            console.error("Error loading trip expenses:", error);
-             if (isMounted.current) {
-                setMessage(`Error cargando gastos: ${error.message}`);
-                setMessageType('error');
-             }
-        } finally {
-            if (isMounted.current) setIsLoadingExpenses(false);
-        }
-    }, [userId]);
+      } catch (err) {
+          console.error("Error loading trip expenses:", err);
+          if (isMounted.current) setError(`Error cargando gastos: ${err.message}`); // Mostrar error general
+      } finally {
+          if (isMounted.current) setIsLoadingExpenses(false);
+      }
+    }, [supabase]);
 
     useEffect(() => {
-        if (viewMode === 'detail' && selectedTrip?.id) {
-            fetchTripExpenses(selectedTrip.id);
-        }
-    }, [viewMode, selectedTrip, fetchTripExpenses]);
+      isMounted.current = true;
+      return () => { isMounted.current = false; }; // Cleanup on unmount
+    }, []);
 
-    // --- Scroll-Top ---
-    useEffect(() => {
-        const handleScroll = () => {
-            if (isMounted.current) setShowScrollTop(window.scrollY > 300);
-        };
+    useEffect(() => { // Carga inicial
+        if (authLoading) { setIsLoadingTrips(true); return; }
+        if (!user) { navigate('/login'); return; }
+        fetchProfileAndTrips(user.id);
+    }, [user, authLoading, navigate, fetchProfileAndTrips]);
+
+    useEffect(() => { // Carga gastos al entrar en detalle
+        if (viewMode === 'detail' && selectedTrip?.id && user?.id) {
+            fetchExpensesForTrip(user.id, selectedTrip.id);
+        }
+    }, [viewMode, selectedTrip, user, fetchExpensesForTrip]);
+
+    useEffect(() => { // Listener Scroll
+        const handleScroll = () => isMounted.current && setShowScrollTop(window.scrollY > 300);
         window.addEventListener('scroll', handleScroll);
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
-
-    // --- Cálculos Resúmenes (useMemo) ---
 
     // Resumen Footer Lista
     const listSummary = useMemo(() => {
@@ -271,189 +165,170 @@ function Trips() {
 
     // --- Manejadores Vistas y Modales ---
     const handleViewTripDetail = useCallback((trip) => {
-        setSelectedTrip(trip);
-        setViewMode('detail');
-        window.scrollTo(0, 0);
+      setSelectedTrip(trip); setViewMode('detail'); window.scrollTo(0, 0);
     }, []);
 
     const handleViewTripList = useCallback(() => {
-        setSelectedTrip(null);
-        setTripExpenses([]); // Limpiar gastos al volver a lista
-        setViewMode('list');
+      setSelectedTrip(null); setTripExpenses([]); setViewMode('list'); setError(null); // Limpiar error al cambiar vista
     }, []);
 
     const handleOpenTripModal = useCallback((mode = 'add', trip = null) => {
-        setTripModalMode(mode);
-        setEditingTrip(mode === 'edit' ? trip : null); // Guardar viaje a editar
-        setModalTripError(''); // Limpiar error modal
-        setIsTripModalOpen(true);
+      setTripModalMode(mode); setEditingTrip(trip); setModalTripError('');
+      setIsSavingTrip(false); setIsTripModalOpen(true);
     }, []);
+
     const handleCloseTripModal = useCallback(() => setIsTripModalOpen(false), []);
 
     const handleOpenExpenseModal = useCallback((mode = 'add', expense = null) => {
-        if (viewMode !== 'detail' || !selectedTrip?.id) return; // Asegurar que estamos en detalle
-        setExpenseModalMode(mode);
-        setEditingExpense(mode === 'edit' ? expense : null);
-        setModalExpenseError('');
-        setIsExpenseModalOpen(true);
+        if (viewMode !== 'detail' || !selectedTrip?.id) return;
+        setExpenseModalMode(mode); setEditingExpense(expense); setModalExpenseError('');
+        setIsSavingExpense(false); setIsExpenseModalOpen(true);
     }, [viewMode, selectedTrip]);
+
     const handleCloseExpenseModal = useCallback(() => setIsExpenseModalOpen(false), []);
 
     // --- Manejadores CRUD ---
 
     // Viajes
-    const handleTripFormSubmit = useCallback(async (formData) => { // Recibe datos del modal
-        if (!userId) return;
-        setIsSavingTrip(true);
-        setModalTripError('');
-
-        const dataToSave = {
-            user_id: userId,
-            name: formData.name,
-            destination: formData.destination || null,
-            start_date: formData.start_date || null,
-            end_date: formData.end_date || null,
-            budget: parseFloat(formData.budget) || 0,
-            saved_amount: parseFloat(formData.saved_amount) || 0,
-            notes: formData.notes || null
-        };
-
+    const handleTripFormSubmit = useCallback(async (submittedFormData) => {
+        if (!user?.id) { toast.error("Error: Usuario no identificado."); return; }
+        // Validación básica ya hecha en el modal
+        setIsSavingTrip(true); setModalTripError('');
+        const toastId = toast.loading(tripModalMode === 'edit' ? 'Actualizando viaje...' : 'Creando viaje...');
         try {
-            let result;
+            const dataToSave = {
+                name: submittedFormData.name, destination: submittedFormData.destination || null,
+                start_date: submittedFormData.start_date || null, end_date: submittedFormData.end_date || null,
+                budget: parseFloat(submittedFormData.budget) || 0,
+                saved_amount: parseFloat(submittedFormData.saved_amount) || 0,
+                notes: submittedFormData.notes || null
+            };
+
+            let error;
             if (tripModalMode === 'edit' && editingTrip?.id) {
-                const { user_id, ...updateData } = dataToSave; // No enviar user_id
-                updateData.updated_at = new Date();
-                result = await supabase.from('trips').update(updateData).eq('id', editingTrip.id).eq('user_id', userId);
+                const { error: uError } = await supabase.from('trips')
+                    .update({ ...dataToSave, updated_at: new Date() })
+                    .eq('id', editingTrip.id).eq('user_id', user.id); error = uError;
             } else {
-                result = await supabase.from('trips').insert([dataToSave]).select();
+                const { error: iError } = await supabase.from('trips')
+                    .insert([{ ...dataToSave, user_id: user.id }]); error = iError;
             }
-
-            const { error, data } = result;
             if (error) throw error;
-             if (tripModalMode === 'add' && (!data || data.length === 0)) {
-                throw new Error("La inserción no devolvió confirmación.");
-            }
 
-            alert(tripModalMode === 'edit' ? 'Viaje actualizado.' : 'Viaje creado.');
+            toast.success('¡Viaje guardado!', { id: toastId });
             handleCloseTripModal();
-            fetchInitialData(); // Recargar lista completa
+            fetchProfileAndTrips(user.id); // Recargar viajes y perfil
 
-        } catch (error) {
-            console.error('Error saving trip:', error);
-            setModalTripError(`Error: ${error.message}`);
-        } finally {
-            setIsSavingTrip(false);
-        }
-    }, [userId, tripModalMode, editingTrip, supabase, handleCloseTripModal, fetchInitialData]);
+        } catch (err) {
+            console.error('Error saving trip:', err);
+            setModalTripError(`Error: ${err.message}`);
+            toast.error(`Error: ${err.message}`, { id: toastId });
+        } finally { setIsSavingTrip(false); }
+      }, [user, tripModalMode, editingTrip, supabase, handleCloseTripModal, fetchProfileAndTrips]);
 
-    const handleDeleteTrip = useCallback(async (tripId) => {
-        if (!userId || !tripId) return;
-        const tripToDelete = trips.find(t => t.id === tripId);
-        if (!tripToDelete) return;
-
-        if (!window.confirm(`¿Eliminar viaje "${tripToDelete.name}" y TODOS sus gastos?\n¡No se puede deshacer!`)) return;
-
-        try {
-             // Usar RPC puede ser más seguro y eficiente si tienes CASCADE configurado
-             // O eliminar gastos primero como en el JS original
-             console.log(`Eliminando gastos para trip_id: ${tripId}`);
-             const { error: expenseError } = await supabase.from('trip_expenses').delete().eq('user_id', userId).eq('trip_id', tripId);
-             if (expenseError) console.warn("Error eliminando gastos (continuando):", expenseError);
-
-             console.log(`Eliminando viaje: ${tripId}`);
-             const { error: tripError } = await supabase.from('trips').delete().eq('user_id', userId).eq('id', tripId);
-             if (tripError) throw new Error(`Error eliminando el viaje: ${tripError.message}`);
-
-            alert('Viaje y gastos eliminados.');
-            fetchInitialData(); // Recargar lista
-
-        } catch (error) {
-            console.error("Error deleting trip:", error);
-            alert(`Error: ${error.message}`);
-        }
-    }, [userId, trips, supabase, fetchInitialData]);
+      const handleDeleteTrip = (tripId, tripName) => { // Abre modal confirmación
+        if (!tripId || !tripName) return;
+        setItemToDelete({ type: 'trip', id: tripId, name: tripName });
+        setIsConfirmModalOpen(true);
+      };
 
     // Gastos Viaje
-    const handleExpenseFormSubmit = useCallback(async (formData) => { // Recibe datos del modal
-        if (!userId || !selectedTrip?.id) return;
-        setIsSavingExpense(true);
-        setModalExpenseError('');
+    const handleExpenseFormSubmit = useCallback(async (submittedFormData) => {
+      if (!user?.id || !selectedTrip?.id) { toast.error("Error inesperado."); return; }
+      // Validación básica ya hecha en el modal
+      setIsSavingExpense(true); setModalExpenseError('');
+      const toastId = toast.loading(expenseModalMode === 'edit' ? 'Actualizando gasto...' : 'Añadiendo gasto...');
+      try {
+          const dataToSave = {
+              description: submittedFormData.description,
+              amount: parseFloat(submittedFormData.amount), // Ya validado como número > 0 en modal
+              expense_date: submittedFormData.expense_date,
+              category: submittedFormData.category || null,
+              notes: submittedFormData.notes || null
+          };
 
-        const dataToSave = {
-            user_id: userId,
-            trip_id: selectedTrip.id,
-            description: formData.description,
-            amount: parseFloat(formData.amount),
-            expense_date: formData.expense_date,
-            category: formData.category || null,
-            notes: formData.notes || null
-        };
+          let error;
+          if (expenseModalMode === 'edit' && editingExpense?.id) {
+              const { error: uError } = await supabase.from('trip_expenses')
+                  .update({ ...dataToSave, updated_at: new Date() })
+                  .eq('id', editingExpense.id).eq('user_id', user.id).eq('trip_id', selectedTrip.id); error = uError;
+          } else {
+              const { error: iError } = await supabase.from('trip_expenses')
+                  .insert([{ ...dataToSave, user_id: user.id, trip_id: selectedTrip.id }]); error = iError;
+          }
+          if (error) throw error;
 
-        try {
-            let result;
-            if (expenseModalMode === 'edit' && editingExpense?.id) {
-                 const { user_id, trip_id, ...updateData } = dataToSave;
-                 result = await supabase.from('trip_expenses').update(updateData).eq('id', editingExpense.id).eq('user_id', userId).eq('trip_id', selectedTrip.id);
-            } else {
-                result = await supabase.from('trip_expenses').insert([dataToSave]).select();
-            }
+          toast.success('¡Gasto guardado!', { id: toastId });
+          handleCloseExpenseModal();
+          fetchExpensesForTrip(user.id, selectedTrip.id); // Recargar solo gastos
 
-            const { error, data } = result;
-            if (error) throw error;
-             if (expenseModalMode === 'add' && (!data || data.length === 0)) {
-                 throw new Error("La inserción no devolvió confirmación.");
-             }
+      } catch (err) {
+          console.error('Error saving trip expense:', err);
+          setModalExpenseError(`Error: ${err.message}`);
+          toast.error(`Error: ${err.message}`, { id: toastId });
+      } finally { setIsSavingExpense(false); }
+      }, [user, selectedTrip, expenseModalMode, editingExpense, supabase, handleCloseExpenseModal, fetchExpensesForTrip]);
 
-            alert(expenseModalMode === 'edit' ? 'Gasto actualizado.' : 'Gasto añadido.');
-            handleCloseExpenseModal();
-            fetchTripExpenses(selectedTrip.id); // Recargar solo gastos del viaje actual
+      const handleDeleteTripExpense = (expenseId, expenseDescription = "Gasto") => { // Abre modal confirmación
+        if (!expenseId) return;
+        setItemToDelete({ type: 'expense', id: expenseId, name: expenseDescription });
+        setIsConfirmModalOpen(true);
+      };
 
-        } catch (error) {
-            console.error('Error saving trip expense:', error);
-            setModalExpenseError(`Error: ${error.message}`);
-        } finally {
-            setIsSavingExpense(false);
-        }
-    }, [userId, selectedTrip, expenseModalMode, editingExpense, supabase, handleCloseExpenseModal, fetchTripExpenses]);
+      // Handler Confirmación General
+    const confirmDeleteHandler = useCallback(async () => {
+      if (!itemToDelete || !user?.id) { toast.error("Error interno al eliminar."); return; }
 
-     const handleDeleteTripExpense = useCallback(async (expenseId) => {
-        if (!userId || !expenseId || !selectedTrip?.id) return;
-        if (!window.confirm("¿Eliminar este gasto del viaje?")) return;
+      const { type, id, name } = itemToDelete;
+      setIsConfirmModalOpen(false); // Cerrar modal
+      const toastId = toast.loading(`Eliminando ${type === 'trip' ? 'viaje' : 'gasto'} "${name}"...`);
 
-        try {
-            const { error } = await supabase.from('trip_expenses').delete().eq('user_id', userId).eq('id', expenseId);
-            if (error) throw error;
+      try {
+          let error;
+          if (type === 'trip') {
+              // Eliminar gastos asociados primero (opcional, depende de CASCADE o RPC)
+               console.warn("Eliminando gastos asociados al viaje:", id);
+               const { error: expenseDelError } = await supabase.from('trip_expenses').delete()
+                   .eq('user_id', user.id).eq('trip_id', id);
+               if (expenseDelError) console.error("Error eliminando gastos asociados:", expenseDelError); // No detener necesariamente
 
-            alert('Gasto eliminado.');
-            fetchTripExpenses(selectedTrip.id); // Recargar gastos del viaje actual
+               // Eliminar el viaje
+               const { error: tripDelError } = await supabase.from('trips').delete()
+                   .eq('user_id', user.id).eq('id', id);
+              error = tripDelError;
 
-        } catch (error) {
-            console.error("Error deleting expense:", error);
-            alert(`Error: ${error.message}`);
-        }
-    }, [userId, selectedTrip, supabase, fetchTripExpenses]);
+          } else if (type === 'expense') {
+              // Eliminar solo el gasto
+              const { error: expenseDelError } = await supabase.from('trip_expenses').delete()
+                  .eq('user_id', user.id).eq('id', id);
+              error = expenseDelError;
+          }
 
+          if (error) {
+               // Podría haber error FK si un gasto está enlazado a otra tabla? Poco probable.
+               throw error;
+          }
 
-    // --- Otros Manejadores ---
-    const handleLogout = useCallback(async () => {
-            setIsLoading(true); // Mostrar indicador mientras se cierra sesión
-            console.log('Cerrando sesión...');
-            try {
-                const { error } = await supabase.auth.signOut();
-                if (error) throw error;
-                // El listener de auth en App.js o similar debería detectar el cambio y redirigir
-                // Si no, se puede forzar aquí: navigate('/login');
-            } catch (error) {
-                console.error("Error al cerrar sesión:", error);
-                setMessage("Error al cerrar sesión.");
-                setMessageType("error");
-                setIsLoading(false); // Ocultar indicador si falla
-            }
-            // No poner setIsLoading(false) aquí, la redirección desmontará el componente
-     }, [navigate, supabase]); // Incluir supabase
+          toast.success(`${type === 'trip' ? 'Viaje' : 'Gasto'} eliminado.`, { id: toastId });
+          // Recargar datos apropiados
+          if (type === 'trip') {
+              fetchProfileAndTrips(user.id); // Recargar lista de viajes
+               if (selectedTrip?.id === id) handleViewTripList(); // Si borramos el viaje actual, volver a lista
+          } else {
+              fetchExpensesForTrip(user.id, selectedTrip.id); // Recargar gastos del viaje actual
+          }
+
+      } catch (err) {
+          console.error(`Error eliminando ${type}:`, err);
+          toast.error(`Error al eliminar: ${err.message}`, { id: toastId });
+      } finally {
+          setItemToDelete(null); // Limpiar estado
+      }
+    }, [user, itemToDelete, supabase, fetchProfileAndTrips, fetchExpensesForTrip, selectedTrip, handleViewTripList]); // Dependencia
+
     const handleBack = useCallback(() => {
-        if (viewMode === 'detail') handleViewTripList();
-        else navigate(-1);
+      if (viewMode === 'detail') handleViewTripList();
+      else navigate(-1);
     }, [viewMode, navigate, handleViewTripList]);
     const scrollToTop = useCallback(() => window.scrollTo({ top: 0, behavior: 'smooth' }), []);
 
@@ -462,77 +337,56 @@ function Trips() {
         <div style={{ display: 'flex' }}>
 
             {/* --- Sidebar --- */}
-            <aside className="sidebar">
-                            <div className="sidebar-logo"> <img src={finAiLogo} alt="FinAi Logo Small" /> </div>
-                            <nav className="sidebar-nav">
-                                {/* Usar NavLink para 'active' class automática si se configura */}
-                                <Link to="/dashboard" className="nav-button" title="Dashboard"><i className="fas fa-home"></i> <span>Dashboard</span></Link>
-                                <Link to="/accounts" className="nav-button" title="Cuentas"><i className="fas fa-wallet"></i> <span>Cuentas</span></Link>
-                                <Link to="/budgets" className="nav-button" title="Presupuestos"><i className="fas fa-chart-pie"></i> <span>Presupuestos</span></Link>
-                                <Link to="/categories" className="nav-button" title="Categorías"><i className="fas fa-tags"></i> <span>Categorías</span></Link>
-                                <Link to="/transactions" className="nav-button" title="Transacciones"><i className="fas fa-exchange-alt"></i> <span>Transacciones</span></Link>
-                                <Link to="/trips" className="nav-button" title="Viajes"><i className="fas fa-suitcase-rolling"></i> <span>Viajes</span></Link>
-                                <Link to="/evaluations" className="nav-button" title="Evaluación"><i className="fas fa-balance-scale"></i> <span>Evaluación</span></Link>
-                                <Link to="/reports" className="nav-button" title="Informes"><i className="fas fa-chart-bar"></i> <span>Informes</span></Link>
-                                <Link to="/profile" className="nav-button active" title="Perfil"><i className="fas fa-user-circle"></i> <span>Perfil</span></Link> {/* Active */}
-                                <Link to="/settings" className="nav-button" title="Configuración"><i className="fas fa-cog"></i> <span>Configuración</span></Link>
-                                <Link to="/debts" className="nav-button" title="Deudas"><i className="fas fa-credit-card"></i> <span>Deudas</span></Link>
-                                <Link to="/loans" className="nav-button" title="Préstamos"><i className="fas fa-hand-holding-usd"></i> <span>Préstamos</span></Link>
-                                <Link to="/fixed-expenses" className="nav-button" title="Gastos Fijos"><i className="fas fa-receipt"></i> <span>Gastos Fijos</span></Link>
-                                <Link to="/goals" className="nav-button" title="Metas"><i className="fas fa-bullseye"></i> <span>Metas</span></Link>
-                            </nav>
-                            <button className="nav-button logout-button" onClick={handleLogout} title="Cerrar Sesión" disabled={isLoading || isSaving}>
-                                {isLoading ? <><i className="fas fa-spinner fa-spin"></i> <span>Saliendo...</span></> : <><i className="fas fa-sign-out-alt"></i> <span>Salir</span></>}
-                            </button>
-                        </aside>
+            <Sidebar
+                // Pasar estado de carga/guardado si quieres deshabilitar botones mientras ocurre algo
+                isProcessing={isLoading || isSaving /* ...o el estado relevante */}
+            />
 
             {/* --- Contenido Principal --- */}
             <div className="page-container">
                 {/* --- Cabecera --- */}
                 <div className="page-header trips-header">
-                    <button onClick={handleBack} id="backButton" className="btn-icon" aria-label="Volver" disabled={isSavingTrip || isSavingExpense}><i className="fas fa-arrow-left"></i></button>
-                    <div className="header-title-group">
-                        <img id="userAvatarHeader" src={userAvatarUrl} alt="Avatar" className="header-avatar-small" />
-                        <h1>{viewMode === 'list' ? 'Mis Viajes' : (selectedTrip?.name || 'Detalle Viaje')}</h1>
-                    </div>
-                    {viewMode === 'list' && (
-                        <button onClick={() => handleOpenTripModal('add')} id="addTripBtn" className="btn btn-primary btn-add orange-btn" disabled={isLoadingTrips}>
-                            <i className="fas fa-plus"></i> Añadir Viaje
-                        </button>
-                    )}
-                     {viewMode === 'detail' && <div style={{ width: '60px' }}></div>} {/* Spacer */}
-                </div>
+                  <button onClick={handleBack} id="backButton" className="btn-icon" aria-label="Volver" disabled={isSavingTrip || isSavingExpense}><i className="fas fa-arrow-left"></i></button>
+                  <div className="header-title-group">
+                      <img id="userAvatarHeader" src={avatarUrl} alt="Avatar" className="header-avatar-small" />
+                      <h1>{viewMode === 'list' ? 'Mis Viajes' : (selectedTrip?.name || 'Detalle Viaje')}</h1>
+                  </div>
+                  {viewMode === 'list' && (
+                      <button onClick={() => handleOpenTripModal('add')} id="addTripBtn" className="btn btn-primary btn-add orange-btn" disabled={isLoadingTrips}>
+                          <i className="fas fa-plus"></i> Añadir Viaje
+                      </button>
+                  )}
+                   {viewMode === 'detail' && <div style={{ width: '60px' }}></div>} {/* Spacer */}
+              </div>
 
-                 {/* Mensaje General */}
-                 {message && (
-                    <p className={`message page-message ${messageType}`}>{message}</p>
-                 )}
+              {/* Mensaje General (Error de carga, etc.) */}
+              {error && !isLoadingTrips && !isLoadingExpenses && ( // Mostrar solo si no hay carga activa
+                  <p className={`message page-message error`}>{error}</p>
+              )}
 
                 {/* --- Vista Lista --- */}
                 {viewMode === 'list' && (
                     <div id="tripsListView" className="view active">
-                        <div id="tripListContainer" className="trip-list">
-                            {isLoadingTrips && <p id="loadingTripsMessage" style={{ textAlign: 'center', padding: '20px', color: '#666', gridColumn: '1 / -1' }}>Cargando viajes...</p>}
-                            {!isLoadingTrips && trips.length === 0 && (
-                                <div id="noTripsMessage" className="empty-list-message" style={{ gridColumn: '1 / -1' }}>
-                                    <img src={emptyMascot} alt="Mascota FinAi Viajera" className="empty-mascot" />
-                                    <p>¡A planificar la próxima aventura!</p>
-                                    <p>Registra tu primer viaje para llevar un control.</p>
-                                    <button onClick={() => handleOpenTripModal('add')} id="addTripFromEmptyBtn" className="btn btn-primary orange-btn">
-                                        <i className="fas fa-plus"></i> Registrar Mi Primer Viaje
-                                    </button>
-                                </div>
-                            )}
-                            {!isLoadingTrips && trips.map(trip => (
-                                <TripCard
-                                    key={trip.id}
-                                    trip={trip}
-                                    onViewDetail={() => handleViewTripDetail(trip)}
-                                    onEdit={() => handleOpenTripModal('edit', trip)}
-                                    onDelete={() => handleDeleteTrip(trip.id)}
-                                />
-                            ))}
-                        </div>
+                    <div id="tripListContainer" className="trip-list">
+                        {isLoadingTrips && <p id="loadingTripsMessage">Cargando viajes...</p>}
+                        {!isLoadingTrips && trips.length === 0 && !error && ( /* Mensaje Vacío */
+                            <div id="noTripsMessage" className="empty-list-message">
+                              <img src={emptyMascot} alt="Mascota FinAi Viajera" className="empty-mascot" />
+                              <p>¡A planificar la próxima aventura!</p>
+                              <button onClick={() => handleOpenTripModal('add')} id="addTripFromEmptyBtn" className="btn btn-primary orange-btn">
+                                  <i className="fas fa-plus"></i> Registrar Viaje
+                              </button>
+                            </div>
+                        )}
+                        {!isLoadingTrips && trips.map(trip => (
+                            <TripCard
+                                key={trip.id} trip={trip}
+                                onViewDetail={() => handleViewTripDetail(trip)}
+                                onEdit={() => handleOpenTripModal('edit', trip)}
+                                onDelete={() => handleDeleteTrip(trip.id, trip.name)} // Pasar nombre también
+                            />
+                        ))}
+                    </div>
                         {/* Footer Resumen Lista */}
                         {!isLoadingTrips && trips.length > 0 && (
                             <div id="summary-footer-list" className="summary-footer">
@@ -547,226 +401,74 @@ function Trips() {
                 {/* --- Vista Detalle --- */}
                 {viewMode === 'detail' && selectedTrip && (
                     <div id="tripDetailView" className="view active">
-                        <div id="tripDetailHeader" className="trip-detail-header">
-                            {/* Ya no necesitamos h2 aquí, está en la cabecera principal */}
-                            <p id="detailTripDates">{formatDate(selectedTrip.start_date)} - {formatDate(selectedTrip.end_date)}</p>
-                            <div className="detail-summary">
-                                <div><span>Presupuesto:</span> <strong id="detailTripBudget">{detailSummary.budget}</strong></div>
-                                <div><span>Gastado:</span> <strong id="detailTripSpent">{detailSummary.spent}</strong></div>
-                                <div><span>Restante:</span> <strong id="detailTripRemaining" className={detailSummary.remainingIsPositive ? 'positive' : 'negative'}>{detailSummary.remaining}</strong></div>
+                    {/* Cabecera Detalle */}
+                    <div id="tripDetailHeader" className="trip-detail-header">
+                         <p id="detailTripDates">{formatDate(selectedTrip.start_date)} - {formatDate(selectedTrip.end_date)}</p>
+                         <div className="detail-summary">
+                             <div><span>Presup.:</span> <strong id="detailTripBudget">{detailSummary.budget}</strong></div>
+                             <div><span>Gastado:</span> <strong id="detailTripSpent">{detailSummary.spent}</strong></div>
+                             <div><span>Restante:</span> <strong id="detailTripRemaining" className={detailSummary.remainingIsPositive ? 'positive' : 'negative'}>{detailSummary.remaining}</strong></div>
+                         </div>
+                    </div>
+                    {/* Botones Acción Detalle */}
+                    <div className="detail-actions-header">
+                         <button onClick={handleViewTripList} id="backToListBtn" className="btn btn-secondary btn-sm" disabled={isSavingExpense}><i className="fas fa-arrow-left"></i> Volver</button>
+                         <button onClick={() => handleOpenExpenseModal('add')} id="addTripExpenseBtn" className="btn btn-primary btn-add btn-sm" disabled={isSavingExpense}><i className="fas fa-plus"></i> Añadir Gasto</button>
+                    </div>
+                    {/* Tabla Gastos */}
+                    <div id="tripExpensesListContainer">
+                        {isLoadingExpenses && <p>Cargando gastos...</p>}
+                        {!isLoadingExpenses && tripExpenses.length === 0 && <p className="empty-list-message small-empty">Sin gastos registrados.</p>}
+                        {!isLoadingExpenses && tripExpenses.length > 0 && (
+                            <div id="tripExpensesTableWrapper">
+                                <table className="expenses-table">
+                                    <thead><tr><th>Fecha</th><th>Descripción</th><th>Categoría</th><th className="amount-col">Importe</th><th>Acciones</th></tr></thead>
+                                    <tbody id="tripExpensesTableBody">
+                                        {tripExpenses.map(exp => (
+                                            <TripExpenseRow
+                                                key={exp.id} expense={exp}
+                                                onEdit={() => handleOpenExpenseModal('edit', exp)}
+                                                // Pasar descripción para el mensaje de confirmación
+                                                onDelete={() => handleDeleteTripExpense(exp.id, exp.description)}
+                                            />
+                                        ))}
+                                    </tbody>
+                                </table>
                             </div>
-                        </div>
-
-                        <div className="detail-actions-header">
-                            <button onClick={handleViewTripList} id="backToListBtn" className="btn btn-secondary btn-sm" disabled={isSavingExpense}>
-                                <i className="fas fa-arrow-left"></i> Volver a Viajes
-                            </button>
-                            <button onClick={() => handleOpenExpenseModal('add')} id="addTripExpenseBtn" className="btn btn-primary btn-add btn-sm" disabled={isSavingExpense}>
-                                <i className="fas fa-plus"></i> Añadir Gasto
-                            </button>
-                        </div>
-
-                        <div id="tripExpensesListContainer">
-                            {isLoadingExpenses && <p id="loadingTripExpensesMessage" style={{ textAlign: 'center', padding: '20px', color: '#666' }}>Cargando gastos...</p>}
-                            {!isLoadingExpenses && tripExpenses.length === 0 && <p id="noTripExpensesMessage" className="empty-list-message small-empty">Aún no has registrado gastos para este viaje.</p>}
-                            {!isLoadingExpenses && tripExpenses.length > 0 && (
-                                <div id="tripExpensesTableWrapper">
-                                    <table className="expenses-table">
-                                        <thead>
-                                            <tr>
-                                                <th>Fecha</th><th>Descripción</th><th>Categoría</th><th className="amount-col">Importe</th><th>Acciones</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="tripExpensesTableBody">
-                                            {tripExpenses.map(exp => (
-                                                <TripExpenseRow
-                                                    key={exp.id}
-                                                    expense={exp}
-                                                    onEdit={() => handleOpenExpenseModal('edit', exp)}
-                                                    onDelete={() => handleDeleteTripExpense(exp.id)}
-                                                />
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            )}
-                        </div>
+                        )}
                     </div>
-                )}
-
-            </div> {/* Fin page-container */}
-
-            {/* --- Modales --- */}
-            {isTripModalOpen && (
-                <TripModal
-                    isOpen={isTripModalOpen}
-                    onClose={handleCloseTripModal}
-                    onSubmit={handleTripFormSubmit}
-                    mode={tripModalMode}
-                    initialData={editingTrip}
-                    isSaving={isSavingTrip}
-                    error={modalTripError}
-                />
-            )}
-            {isExpenseModalOpen && selectedTrip && ( // Asegurar que selectedTrip existe para pasar tripId
-                 <TripExpenseModal
-                    isOpen={isExpenseModalOpen}
-                    onClose={handleCloseExpenseModal}
-                    onSubmit={handleExpenseFormSubmit}
-                    mode={expenseModalMode}
-                    initialData={editingExpense}
-                    tripId={selectedTrip.id} // Pasar tripId al modal de gasto
-                    isSaving={isSavingExpense}
-                    error={modalExpenseError}
-                 />
+                </div>
             )}
 
+          </div> {/* Fin page-container */}
 
-            {/* --- Botón Scroll-Top --- */}
-            {showScrollTop && (
-                <button onClick={scrollToTop} id="scrollTopBtn" className="scroll-top-btn visible" title="Volver arriba">
-                    <i className="fas fa-arrow-up"></i>
-                </button>
-            )}
+          {/* Modales (usando componentes) */}
+          <TripModal
+              isOpen={isTripModalOpen} onClose={handleCloseTripModal} onSubmit={handleTripFormSubmit}
+              mode={tripModalMode} initialData={editingTrip} isSaving={isSavingTrip} error={modalTripError}
+          />
+          <TripExpenseModal
+              isOpen={isExpenseModalOpen} onClose={handleCloseExpenseModal} onSubmit={handleExpenseFormSubmit}
+              mode={expenseModalMode} initialData={editingExpense} tripId={selectedTrip?.id} // Pasa tripId si existe
+              isSaving={isSavingExpense} error={modalExpenseError}
+          />
+          <ConfirmationModal
+              isOpen={isConfirmModalOpen}
+              onClose={() => { setIsConfirmModalOpen(false); setItemToDelete(null); }}
+              onConfirm={confirmDeleteHandler}
+              title={`Confirmar Eliminación (${itemToDelete?.type === 'trip' ? 'Viaje' : 'Gasto'})`}
+              message={
+                  itemToDelete?.type === 'trip'
+                  ? `¿Seguro eliminar el viaje "${itemToDelete?.name || ''}" y TODOS sus gastos? ¡No se puede deshacer!`
+                  : `¿Seguro eliminar el gasto "${itemToDelete?.name || ''}"?`
+              }
+              confirmText="Eliminar" cancelText="Cancelar" isDanger={true}
+          />
 
-        </div> // Fin contenedor flex principal
-    );
+          {/* Botón Scroll-Top */}
+          {showScrollTop && ( <button onClick={scrollToTop} id="scrollTopBtn" className="scroll-top-btn visible" title="Volver arriba"> <i className="fas fa-arrow-up"></i> </button> )}
+      </div>
+  );
 }
-
-
-// --- Componente Modal Viaje (Ejemplo Básico) ---
-function TripModal({ isOpen, onClose, onSubmit, mode, initialData, isSaving, error }) {
-    const [formData, setFormData] = useState({
-        name: '', destination: '', start_date: '', end_date: '', budget: 0, saved_amount: 0, notes: ''
-    });
-
-    useEffect(() => {
-        if (mode === 'edit' && initialData) {
-            setFormData({
-                name: initialData.name || '',
-                destination: initialData.destination || '',
-                start_date: initialData.start_date || '',
-                end_date: initialData.end_date || '',
-                budget: initialData.budget || 0,
-                saved_amount: initialData.saved_amount || 0,
-                notes: initialData.notes || ''
-            });
-        } else {
-             // Resetear para modo 'add' o si no hay initialData
-             setFormData({ name: '', destination: '', start_date: '', end_date: '', budget: 0, saved_amount: 0, notes: '' });
-        }
-    }, [mode, initialData, isOpen]); // Recalcular al abrir o cambiar modo/datos
-
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
-    };
-
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        // Validaciones básicas (pueden mejorarse)
-        if (!formData.name.trim()) { alert("El nombre es obligatorio."); return; }
-        if (formData.start_date && formData.end_date && new Date(formData.end_date) < new Date(formData.start_date)) {
-             alert("La fecha fin no puede ser anterior a la fecha inicio."); return;
-        }
-        onSubmit(formData);
-    };
-
-    if (!isOpen) return null;
-
-    return (
-        <div className="modal-overlay active" style={{ display: 'flex' }} onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-            <div className="modal-content">
-                <h2>{mode === 'add' ? 'Añadir Nuevo Viaje' : 'Editar Viaje'}</h2>
-                <form onSubmit={handleSubmit}>
-                    {/* Campos del formulario (controlados) */}
-                    <div className="input-group"> <label htmlFor="modalTripName">Nombre</label> <input type="text" id="modalTripName" name="name" required value={formData.name} onChange={handleChange} disabled={isSaving}/> </div>
-                    <div className="input-group"> <label htmlFor="modalTripDestination">Destino</label> <input type="text" id="modalTripDestination" name="destination" value={formData.destination} onChange={handleChange} disabled={isSaving}/> </div>
-                    <div className="input-group"> <label htmlFor="modalTripStartDate">Fecha Inicio</label> <input type="date" id="modalTripStartDate" name="start_date" value={formData.start_date} onChange={handleChange} disabled={isSaving}/> </div>
-                    <div className="input-group"> <label htmlFor="modalTripEndDate">Fecha Fin</label> <input type="date" id="modalTripEndDate" name="end_date" value={formData.end_date} onChange={handleChange} disabled={isSaving}/> </div>
-                    <div className="input-group"> <label htmlFor="modalTripBudget">Presupuesto (€)</label> <input type="number" id="modalTripBudget" name="budget" step="0.01" min="0" value={formData.budget} onChange={handleChange} disabled={isSaving}/> </div>
-                    <div className="input-group"> <label htmlFor="modalTripSavedAmount">Ahorrado Específico (€)</label> <input type="number" id="modalTripSavedAmount" name="saved_amount" step="0.01" min="0" value={formData.saved_amount} onChange={handleChange} disabled={isSaving}/> <small>Dinero apartado.</small> </div>
-                    <div className="input-group"> <label htmlFor="modalTripNotes">Notas</label> <textarea id="modalTripNotes" name="notes" rows={2} value={formData.notes} onChange={handleChange} disabled={isSaving}></textarea> </div>
-
-                    {error && <p className="error-message">{error}</p>}
-
-                    <div className="modal-actions">
-                        <button type="button" onClick={onClose} className="btn btn-secondary" disabled={isSaving}>Cancelar</button>
-                        <button type="submit" className="btn btn-primary" disabled={isSaving}>
-                            {isSaving ? 'Guardando...' : (mode === 'add' ? 'Crear Viaje' : 'Guardar Cambios')}
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    );
-}
-
-// --- Componente Modal Gasto Viaje (Ejemplo Básico) ---
-function TripExpenseModal({ isOpen, onClose, onSubmit, mode, initialData, tripId, isSaving, error }) {
-     const [formData, setFormData] = useState({
-        description: '', amount: '', expense_date: '', category: '', notes: ''
-    });
-
-     useEffect(() => {
-        const today = new Date().toISOString().split('T')[0];
-        if (mode === 'edit' && initialData) {
-            setFormData({
-                description: initialData.description || '',
-                amount: initialData.amount || '',
-                expense_date: initialData.expense_date ? initialData.expense_date.split('T')[0] : today,
-                category: initialData.category || '',
-                notes: initialData.notes || ''
-            });
-        } else {
-            // Resetear para modo 'add'
-            setFormData({ description: '', amount: '', expense_date: today, category: '', notes: '' });
-        }
-    }, [mode, initialData, isOpen]); // Recalcular al abrir o cambiar modo/datos
-
-     const handleChange = (e) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
-    };
-
-     const handleSubmit = (e) => {
-        e.preventDefault();
-        // Validaciones básicas
-        if (!formData.description.trim()) { alert("La descripción es obligatoria."); return; }
-        const amount = parseFloat(formData.amount);
-        if (isNaN(amount) || amount <= 0) { alert("El importe debe ser un número positivo."); return; }
-        if (!formData.expense_date) { alert("La fecha es obligatoria."); return; }
-
-        onSubmit({ ...formData, amount: amount }); // Enviar amount como número
-    };
-
-     if (!isOpen) return null;
-
-     return (
-        <div className="modal-overlay active" style={{ display: 'flex' }} onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-            <div className="modal-content">
-                <h2>{mode === 'add' ? 'Añadir Gasto del Viaje' : 'Editar Gasto del Viaje'}</h2>
-                <form onSubmit={handleSubmit}>
-                     {/* Campos del formulario (controlados) */}
-                     <div className="input-group"> <label htmlFor="modalExpDesc">Descripción</label> <input type="text" id="modalExpDesc" name="description" required value={formData.description} onChange={handleChange} disabled={isSaving}/> </div>
-                     <div className="input-group"> <label htmlFor="modalExpAmount">Importe (€)</label> <input type="number" id="modalExpAmount" name="amount" required step="0.01" min="0.01" value={formData.amount} onChange={handleChange} disabled={isSaving}/> </div>
-                     <div className="input-group"> <label htmlFor="modalExpDate">Fecha</label> <input type="date" id="modalExpDate" name="expense_date" required value={formData.expense_date} onChange={handleChange} disabled={isSaving}/> </div>
-                     <div className="input-group"> <label htmlFor="modalExpCategory">Categoría</label> <input type="text" id="modalExpCategory" name="category" value={formData.category} onChange={handleChange} disabled={isSaving}/> </div>
-                     <div className="input-group"> <label htmlFor="modalExpNotes">Notas</label> <textarea id="modalExpNotes" name="notes" rows={2} value={formData.notes} onChange={handleChange} disabled={isSaving}></textarea> </div>
-
-                     {error && <p className="error-message">{error}</p>}
-
-                     <div className="modal-actions">
-                        <button type="button" onClick={onClose} className="btn btn-secondary" disabled={isSaving}>Cancelar</button>
-                        <button type="submit" className="btn btn-primary" disabled={isSaving}>
-                            {isSaving ? 'Guardando...' : (mode === 'add' ? 'Añadir Gasto' : 'Guardar Cambios')}
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    );
-}
-
 
 export default Trips;

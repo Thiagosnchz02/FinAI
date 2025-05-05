@@ -2,173 +2,85 @@
 Archivo: src/pages/Transactions.jsx
 Propósito: Componente para mostrar y gestionar la lista de transacciones.
 */
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { supabase } from '../services/supabaseClient'; // Asegúrate que la ruta sea correcta
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { supabase } from '../services/supabaseClient';
+import { useAuth } from '../contexts/AuthContext.jsx';
+import { formatDate } from '../utils/formatters.js';
+import Sidebar from '../components/layout/Sidebar.jsx'; 
+// getIconClass ahora se usa en TransactionRow
+import TransactionRow from '../components/Transactions/TransactionRow.jsx'; // Asume ruta src/components/
+import TransactionModal from '../components/Transactions/TransactionModal.jsx'; // Asume ruta src/components/
+import toast from 'react-hot-toast';
+import ConfirmationModal from '../components/ConfirmationModal.jsx';
 
 // Importa imágenes
-import finAiLogo from '../assets/Logo_FinAI_Oficial.png'; // Asegúrate que la ruta sea correcta
-import defaultAvatar from '../assets/avatar_predeterminado.png'; // Asegúrate que la ruta sea correcta
-// Importar mascota si se quiere usar en mensaje vacío
+import defaultAvatar from '../assets/avatar_predeterminado.png';
 // import emptyMascot from '../assets/monstruo_pixar.png';
 
-// --- Constantes y Opciones ---
-const TRANSFER_CATEGORY_ID_OUT = '2d55034c-0587-4d9c-9d93-5284d6880c76'; // REEMPLAZA con tu UUID real
-const TRANSFER_CATEGORY_ID_IN = '7547fdfa-f7b2-44f4-af01-f937bfcc5be3'; // REEMPLAZA con tu UUID real
-
-// --- Funciones de Utilidad (Mover a /utils si prefieres) ---
-const formatCurrency = (value, currency = 'EUR') => {
-    const numberValue = Number(value);
-    if (isNaN(numberValue) || value === null || value === undefined) return 'N/A';
-    try {
-        return new Intl.NumberFormat('es-ES', { style: 'currency', currency: currency, minimumFractionDigits: 2 }).format(numberValue);
-    } catch (e) {
-        console.error("Error formatting currency:", value, e);
-        return `${numberValue.toFixed(2)} ${currency}`;
-    }
-};
-
-const formatDate = (dateString, options = { day: '2-digit', month: '2-digit', year: 'numeric' }) => {
-    if (!dateString) return '--/--/----';
-    try {
-        // Intenta crear fecha, si es inválida, devuelve default
-        const date = new Date(dateString);
-        if (isNaN(date.getTime())) return '--/--/----';
-
-        // Ajustar por zona horaria para mostrar fecha local correcta del input YYYY-MM-DD
-        const offset = date.getTimezoneOffset();
-        const adjustedDate = new Date(date.getTime() + (offset * 60 * 1000));
-
-        return adjustedDate.toLocaleDateString('es-ES', options);
-    } catch (e) {
-        console.error("Error formatting date:", dateString, e);
-        return '--/--/----';
-    }
-};
-
-// Mapeo de iconos (simplificado, expandir según necesidad)
-const iconMap = {
-    comida: 'fas fa-utensils', restaurante: 'fas fa-utensils', supermercado: 'fas fa-shopping-cart',
-    transporte: 'fas fa-bus', coche: 'fas fa-car', gasolina: 'fas fa-gas-pump',
-    ocio: 'fas fa-film', entretenimiento: 'fas fa-film',
-    hogar: 'fas fa-home', facturas: 'fas fa-file-invoice-dollar',
-    ropa: 'fas fa-tshirt', compras: 'fas fa-shopping-bag',
-    salud: 'fas fa-heartbeat', farmacia: 'fas fa-pills',
-    educación: 'fas fa-graduation-cap', libros: 'fas fa-book',
-    viaje: 'fas fa-plane-departure', hotel: 'fas fa-hotel',
-    regalos: 'fas fa-gift',
-    salario: 'fas fa-money-bill-wave', ingresos: 'fas fa-dollar-sign',
-    transferencia: 'fas fa-exchange-alt', // Icono para transferencias
-    // Añade más mapeos aquí
-};
-const getIconClass = (categoryName, defaultIcon = 'fas fa-tag') => {
-    if (!categoryName) return defaultIcon;
-    const lowerCaseName = categoryName.toLowerCase();
-    // Buscar palabra clave en el nombre
-    for (const keyword in iconMap) {
-        if (lowerCaseName.includes(keyword)) {
-            return iconMap[keyword];
-        }
-    }
-    return defaultIcon; // Icono por defecto si no hay coincidencia
-};
-
+// --- Constantes (Asegúrate que estos IDs sean correctos) ---
+const TRANSFER_CATEGORY_ID_OUT = '2d55034c-0587-4d9c-9d93-5284d6880c76'; // REEMPLAZA
+const TRANSFER_CATEGORY_ID_IN = '7547fdfa-f7b2-44f4-af01-f937bfcc5be3'; // REEMPLAZA
 
 // --- Componente Principal ---
 function Transactions() {
     // --- Estado ---
-    const [userId, setUserId] = useState(null);
-    const [userAvatarUrl, setUserAvatarUrl] = useState(defaultAvatar);
+    const { user, loading: authLoading } = useAuth();
+    const [avatarUrl, setAvatarUrl] = useState(defaultAvatar);
     const [transactions, setTransactions] = useState([]);
     const [accounts, setAccounts] = useState([]);
     const [categories, setCategories] = useState([]);
-    const [isLoading, setIsLoading] = useState(true);
+    const [isLoading, setIsLoading] = useState(true); // Carga inicial y de transacciones
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [modalMode, setModalMode] = useState('add'); // 'add' o 'edit'
-    const [editingTransaction, setEditingTransaction] = useState(null); // Datos para editar
+    const [modalMode, setModalMode] = useState('add');
+    const [editingTransaction, setEditingTransaction] = useState(null);
     const [isSaving, setIsSaving] = useState(false);
     const [modalError, setModalError] = useState('');
-    const [filters, setFilters] = useState({
-        // year: 'all', // Filtrar por año puede ser complejo con paginación, empezar sin él
-        // dateRange: 'all',
-        dateFrom: '', // Formato YYYY-MM-DD
-        dateTo: '',   // Formato YYYY-MM-DD
-        type: 'all',
-        accountId: 'all',
-        categoryId: 'all', // 'all', 'none', o UUID
-    });
+    const [filters, setFilters] = useState({ dateFrom: '', dateTo: '', type: 'all', accountId: 'all', categoryId: 'all' });
     const [sort, setSort] = useState({ column: 'transaction_date', ascending: false });
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage, setItemsPerPage] = useState(50); // O 25, 100, etc.
+    const [totalItems, setTotalItems] = useState(0);
+    const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+    const [transactionToDelete, setTransactionToDelete] = useState(null); // { id, description, date }
     const [showScrollTop, setShowScrollTop] = useState(false);
-    const [message, setMessage] = useState(''); // Mensajes generales
-    const [messageType, setMessageType] = useState('');
 
     const navigate = useNavigate();
-    const isMounted = useRef(true);
+    const isMounted = useRef(true); // Para cleanup
 
     // --- Carga Inicial (Usuario, Avatar, Cuentas, Categorías, Transacciones) ---
-    const fetchInitialData = useCallback(async () => {
-        setIsLoading(true);
-        setMessage('');
+    const fetchData = useCallback(async (currentUserId, currentFilters, currentSort, page = 1, perPage = 50) => {
+        if (!currentUserId) { setIsLoading(false); return; }
+   
+        setIsLoading(true); setError(null);
+        console.log(`Transactions: Fetching Page ${page} for ${currentUserId}, Filters:`, currentFilters, "Sort:", currentSort);
+   
         try {
-            const { data: { user }, error: userError } = await supabase.auth.getUser();
-            if (userError || !user) {
-                console.error('Transactions: No user session.', userError);
-                if (isMounted.current) navigate('/login');
-                return;
-            }
-            if (!isMounted.current) return;
-            setUserId(user.id);
-
-            // Cargar avatar, cuentas y categorías en paralelo
+            // Cargar datos estáticos (perfil, cuentas, categorías)
             const [profileRes, accountsRes, categoriesRes] = await Promise.all([
-                supabase.from('profiles').select('avatar_url').eq('id', user.id).single(),
-                supabase.from('accounts').select('id, name').eq('user_id', user.id).order('name'),
-                supabase.from('categories').select('id, name, type').or(`user_id.eq.${user.id},is_default.eq.true`).order('name')
+                supabase.from('profiles').select('avatar_url').eq('id', currentUserId).single(),
+                supabase.from('accounts').select('id, name, currency').eq('user_id', currentUserId).order('name'),
+                supabase.from('categories').select('id, name, type, icon, color').or(`user_id.eq.${currentUserId},is_default.eq.true`).order('name')
             ]);
-
-             if (!isMounted.current) return;
-
-            // Procesar Avatar
-            if (profileRes.error && profileRes.error.code !== 'PGRST116') console.warn("Error loading avatar", profileRes.error);
-            setUserAvatarUrl(profileRes.data?.avatar_url || defaultAvatar);
-
-            // Procesar Cuentas
-            if (accountsRes.error) throw new Error(`Error cargando cuentas: ${accountsRes.error.message}`);
-            setAccounts(accountsRes.data || []);
-
-            // Procesar Categorías
-            if (categoriesRes.error) throw new Error(`Error cargando categorías: ${categoriesRes.error.message}`);
-            setCategories(categoriesRes.data || []);
-
-            // Cargar transacciones iniciales (después de tener cuentas/categorías)
-            await fetchTransactions(user.id, filters, sort); // Pasar filtros y sort iniciales
-
-        } catch (error) {
-            console.error("Error loading initial data:", error);
-             if (isMounted.current) {
-                setMessage(`Error cargando datos: ${error.message}`);
-                setMessageType('error');
-             }
-        } finally {
-            if (isMounted.current) setIsLoading(false);
-        }
-    }, [navigate]); // fetchTransactions se pasa como dependencia abajo
-
-    // --- Fetch Transacciones (con filtros y orden) ---
-    const fetchTransactions = useCallback(async (currentUserId, currentFilters, currentSort) => {
-        if (!currentUserId) return;
-        setIsLoading(true); // Indicar carga de transacciones
-        try {
-            let query = supabase
-                .from('transactions')
-                .select(`
-                    id, user_id, account_id, category_id, type, description, amount,
-                    transaction_date, notes, created_at,
-                    accounts ( name, currency ),
-                    categories ( name, icon, type )
-                `)
+   
+             if (!isMounted.current) return; // Usar isMounted.current si tienes esa ref
+   
+            // Procesar perfil, cuentas, categorías...
+            if (profileRes.error && profileRes.status !== 406) console.warn("Error loading avatar", profileRes.error);
+            setAvatarUrl(profileRes.data?.avatar_url || defaultAvatar); // Asume que tienes setAvatarUrl
+            if (accountsRes.error) throw new Error(`Cuentas: ${accountsRes.error.message}`);
+            setAccounts(accountsRes.data || []); // Asume setAccounts
+            if (categoriesRes.error) throw new Error(`Categorías: ${categoriesRes.error.message}`);
+            setCategories(categoriesRes.data || []); // Asume setCategories
+   
+            // --- Cargar Transacciones con Paginación ---
+            const rangeFrom = (page - 1) * perPage;
+            const rangeTo = rangeFrom + perPage - 1;
+   
+            let query = supabase.from('transactions')
+                .select(`*, accounts ( name, currency ), categories ( name, icon, type, color )`, { count: 'exact' }) // <-- Pedir count
                 .eq('user_id', currentUserId);
-
+   
             // Aplicar Filtros
             if (currentFilters.type !== 'all') query = query.eq('type', currentFilters.type);
             if (currentFilters.accountId !== 'all') query = query.eq('account_id', currentFilters.accountId);
@@ -178,49 +90,55 @@ function Transactions() {
             }
             if (currentFilters.dateFrom) query = query.gte('transaction_date', currentFilters.dateFrom);
             if (currentFilters.dateTo) query = query.lte('transaction_date', currentFilters.dateTo);
-
+   
             // Aplicar Ordenación
             query = query.order(currentSort.column, { ascending: currentSort.ascending });
-
-            // Aplicar Límite (implementar paginación si es necesario)
-            query = query.limit(100);
-
-            console.log("Fetching transactions with filters:", currentFilters, "and sort:", currentSort);
-            const { data, error } = await query;
-
-            if (error) throw error;
-
-             if (isMounted.current) {
-                 console.log("Transactions received:", data.length);
-                 setTransactions(data || []);
-             }
-
+   
+            // Aplicar Rango para paginación
+            query = query.range(rangeFrom, rangeTo);
+   
+            // Ejecutar Query
+            const { data, error: txError, count } = await query;
+            if (txError) throw txError;
+   
+            if (isMounted.current) { // Usar isMounted.current si tienes esa ref
+                setTransactions(data || []);
+                setTotalItems(count || 0); // Guardar el total de items
+                console.log(`Transactions: Page ${page} loaded (${data?.length || 0} items), Total matching: ${count}`);
+            }
+   
         } catch (error) {
-            console.error("Error fetching transactions:", error);
+            console.error("Error loading data (Transactions):", error);
              if (isMounted.current) {
-                 setMessage(`Error al cargar transacciones: ${error.message}`);
-                 setMessageType('error');
-                 setTransactions([]); // Limpiar en caso de error
+                 toast.error(`Error al cargar datos: ${error.message}`);
+                 setTransactions([]); setTotalItems(0); // Resetear en error
+                 setError(error.message); // Asume que tienes setError
              }
         } finally {
-             if (isMounted.current) setIsLoading(false);
+            if (isMounted.current) setIsLoading(false);
         }
-    }, [supabase]); // Dependencia de supabase
+    }, [supabase])  // fetchTransactions se pasa como dependencia abajo
 
-    // --- Efecto Principal de Carga y Recarga ---
+    // --- Efectos ---
     useEffect(() => {
-        isMounted.current = true;
-        fetchInitialData(); // Carga inicial
-        return () => { isMounted.current = false; };
-    }, [fetchInitialData]);
-
-    // Recargar transacciones cuando cambian filtros o sort (si no es la carga inicial)
+        if (authLoading) { setIsLoading(true); return; }
+        if (!user) { navigate('/login'); return; }
+   
+        // Llama a fetchData con la página actual
+        fetchData(user.id, filters, sort, currentPage, itemsPerPage);
+   
+    }, [user, authLoading, navigate, fetchData, filters, sort, currentPage, itemsPerPage]); // Añadir currentPage e itemsPerPage
+   
+    // Efecto adicional para resetear la página a 1 si cambian filtros o sort
     useEffect(() => {
-        // Evitar recarga si aún está en la carga inicial o no hay userId
-        if (!isLoading && userId) {
-            fetchTransactions(userId, filters, sort);
+        // Solo resetear si no es la carga inicial (isLoading es false)
+        // y si la página actual NO es ya la 1 (para evitar bucle)
+        if (!isLoading && currentPage !== 1) {
+             console.log("Filters/Sort changed, resetting to page 1");
+             setCurrentPage(1); // Vuelve a la primera página
+             // Esto disparará el useEffect anterior para recargar los datos de la página 1
         }
-    }, [filters, sort, userId, isLoading, fetchTransactions]); // Incluir fetchTransactions
+    }, [filters, sort]);
 
     // --- Scroll-Top ---
     useEffect(() => {
@@ -235,27 +153,17 @@ function Transactions() {
     // --- Manejadores UI ---
     const handleFilterChange = useCallback((e) => {
         const { id, value } = e.target;
-        // Extraer la clave del filtro del id (ej: filterAccountId -> accountId)
         const filterKey = id.replace('filter', '').charAt(0).toLowerCase() + id.replace('filter', '').slice(1);
-         setFilters(prev => ({ ...prev, [filterKey]: value }));
-        // No llamamos a fetchTransactions aquí, esperamos al botón "Filtrar"
+        setFilters(prev => ({ ...prev, [filterKey]: value }));
+        // No llamar a fetchData aquí, el useEffect [filters] lo hará
     }, []);
 
-    const handleApplyFilters = useCallback(() => {
-        // Ya no es necesario llamar a fetchTransactions aquí,
-        // el useEffect [filters, sort] lo hará automáticamente.
-        // Simplemente log para confirmar el intento.
-        console.log("Apply filters button clicked. Filters:", filters);
-        // Opcional: podrías forzar una recarga si el useEffect no se dispara por alguna razón
-        if (userId) fetchTransactions(userId, filters, sort);
-    }, [filters, sort, userId, fetchTransactions]); // Añadir dependencias
-
-     const handleSort = useCallback((column) => {
+    const handleSort = useCallback((column) => {
         setSort(prevSort => ({
             column: column,
-            ascending: prevSort.column === column ? !prevSort.ascending : false // Invertir si es la misma columna, si no, default a DESC
+            ascending: prevSort.column === column ? !prevSort.ascending : false
         }));
-        // El useEffect [filters, sort] recargará
+        // El useEffect [sort] recargará
     }, []);
 
 
@@ -263,145 +171,135 @@ function Transactions() {
     const handleOpenModal = useCallback((mode = 'add', transaction = null) => {
         setModalMode(mode);
         setEditingTransaction(mode === 'edit' ? transaction : null);
-        setModalError('');
+        setModalError(''); // Limpiar error modal
         setIsModalOpen(true);
     }, []);
 
     const handleCloseModal = useCallback(() => {
-        setIsModalOpen(false);
-        setEditingTransaction(null); // Limpiar datos de edición al cerrar
+        setIsModalOpen(false); setEditingTransaction(null); setModalError('');
     }, []);
 
-    const handleSaveTransaction = useCallback(async (formData) => {
-        if (!userId) return;
-        setIsSaving(true);
-        setModalError('');
-
-        const type = formData.type;
-        const amount = Math.abs(parseFloat(formData.amount) || 0);
-        const transaction_date = formData.transaction_date;
-        const description = formData.description;
-        const notes = formData.notes || null;
-
+    const handleSaveTransaction = useCallback(async (submittedFormData) => {
+        if (!user?.id) { toast.error("Usuario no identificado."); return; }
+        setIsSaving(true); setModalError(''); // Asume setModalError
+        const toastId = toast.loading(modalMode === 'edit' ? 'Actualizando...' : 'Guardando...');
+   
+        const type = submittedFormData.type;
+        const amount = Math.abs(parseFloat(submittedFormData.amount) || 0); // Validado en modal
+        const transaction_date = submittedFormData.transaction_date;
+        const description = submittedFormData.description;
+        const notes = submittedFormData.notes || null;
+   
         try {
-            let result = null;
-
+            let error = null; // Definir error fuera del if/else
+   
             if (type === 'transferencia') {
-                console.log("Processing TRANSFER...");
-                const sourceAccountId = formData.account_id;
-                const destinationAccountId = formData.account_destination_id;
-
+                // Lógica RPC para transferencia
+                console.log("Processing TRANSFER via RPC...");
+                const sourceAccountId = submittedFormData.account_id;
+                const destinationAccountId = submittedFormData.account_destination_id;
+   
+                // Validaciones básicas ya hechas en el modal, pero podemos repetir
                 if (!sourceAccountId || !destinationAccountId) throw new Error('Selecciona cuenta origen y destino.');
                 if (sourceAccountId === destinationAccountId) throw new Error('Las cuentas no pueden ser la misma.');
-                if (!TRANSFER_CATEGORY_ID_OUT || !TRANSFER_CATEGORY_ID_IN) throw new Error("IDs de categoría de transferencia no configurados.");
-
-                const gastoTransferencia = {
-                    user_id: userId, account_id: sourceAccountId, category_id: TRANSFER_CATEGORY_ID_OUT, type: 'gasto',
-                    description: `Transferencia a ${accounts.find(a => a.id === destinationAccountId)?.name || 'cuenta'}: ${description}`,
-                    amount: -amount, transaction_date, notes
-                };
-                const ingresoTransferencia = {
-                    user_id: userId, account_id: destinationAccountId, category_id: TRANSFER_CATEGORY_ID_IN, type: 'ingreso',
-                    description: `Transferencia desde ${accounts.find(a => a.id === sourceAccountId)?.name || 'cuenta'}: ${description}`,
-                    amount: amount, transaction_date, notes
-                };
-
-                // Solo se permite añadir transferencias, no editar (por simplicidad)
-                if (modalMode === 'edit') throw new Error("La edición de transferencias no está soportada actualmente.");
-
-                console.log("Inserting transfer (2 rows):", gastoTransferencia, ingresoTransferencia);
-                result = await supabase.from('transactions').insert([gastoTransferencia, ingresoTransferencia]);
-
+   
+                // Llamada RPC (asegúrate que la función SQL existe y los IDs de categoría son correctos en ella)
+                const { data: rpcSuccess, error: rpcError } = await supabase.rpc(
+                    'record_transfer_transaction',
+                    {
+                        user_id_param: user.id,
+                        source_account_id_param: sourceAccountId,
+                        destination_account_id_param: destinationAccountId,
+                        amount_param: amount,
+                        date_param: transaction_date,
+                        description_param: description,
+                        notes_param: notes
+                    }
+                );
+                error = rpcError; // Asigna el error de la RPC
+   
             } else { // Gasto o Ingreso
                 console.log(`Processing ${type.toUpperCase()}...`);
-                const account_id = formData.account_id;
-                const category_id = formData.category_id || null; // Permitir null
+                const account_id = submittedFormData.account_id;
+                const category_id = submittedFormData.category_id || null;
                 const signedAmount = type === 'gasto' ? -amount : amount;
-
                 if (!account_id) throw new Error('Debes seleccionar una cuenta.');
-
-                const transactionData = { user_id: userId, account_id, category_id, type, description, amount: signedAmount, transaction_date, notes };
-
+   
+                const transactionData = { /* ... (igual que antes, user_id NO es necesario si RLS está ok) ... */
+                     account_id, category_id, type, description, amount: signedAmount, transaction_date, notes
+                };
+   
+                let result;
                 if (modalMode === 'edit' && editingTransaction?.id) {
-                    console.log("Updating transaction:", editingTransaction.id);
-                    delete transactionData.user_id; // RLS se encarga
-                    // Importante: No permitir cambiar el tipo si era transferencia o viceversa en edición simple
-                    if (editingTransaction.type === 'transferencia' || type === 'transferencia') {
-                         throw new Error("No se puede cambiar el tipo a/desde transferencia en la edición.");
-                    }
-                    result = await supabase.from('transactions').update(transactionData).eq('id', editingTransaction.id).eq('user_id', userId);
+                     if (editingTransaction.type === 'transferencia' || type === 'transferencia') throw new Error("No se puede editar a/desde transferencia.");
+                     result = await supabase.from('transactions').update({...transactionData, updated_at: new Date()}).eq('id', editingTransaction.id).eq('user_id', user.id);
                 } else {
-                    console.log("Inserting single transaction:", transactionData);
-                    result = await supabase.from('transactions').insert([transactionData]);
+                     result = await supabase.from('transactions').insert([{...transactionData, user_id: user.id}]); // Incluir user_id en insert
                 }
+                error = result.error; // Asigna el error de insert/update
             }
-
-            // Verificar resultado
-            const { error } = result;
-            if (error) throw error;
-
-            alert(modalMode === 'edit' ? 'Transacción actualizada.' : 'Transacción guardada.');
-            handleCloseModal();
-            await fetchTransactions(userId, filters, sort); // Recargar con filtros/sort actuales
-
+   
+            // Verificar resultado final
+            if (error) {
+                 // Intenta extraer un mensaje más útil si es un error de RPC
+                 const message = error.message.includes(':') ? error.message.split(':').slice(-1)[0].trim() : error.message;
+                 throw new Error(message || 'Error desconocido al guardar.');
+            }
+   
+            toast.success('¡Transacción guardada!', { id: toastId });
+            handleCloseModal(); // Asume que tienes este handler
+            fetchData(user.id, filters, sort, currentPage, itemsPerPage); // Recargar datos CON paginación actual
+   
         } catch (error) {
             console.error(`Error saving transaction (${type}):`, error);
-            setModalError(`Error: ${error.message}`);
+            setModalError(`Error: ${error.message}`); // Error para el modal
+            toast.error(`Error: ${error.message}`, { id: toastId }); // Toast global
         } finally {
             setIsSaving(false);
         }
-    }, [userId, modalMode, editingTransaction, accounts, supabase, handleCloseModal, fetchTransactions, filters, sort]); // Añadir dependencias
+    // Asegúrate de incluir todas las dependencias externas usadas
+    }, [user, modalMode, editingTransaction, accounts, supabase, handleCloseModal, fetchData, filters, sort, currentPage, itemsPerPage]);
 
-    const handleDeleteTransaction = useCallback(async (transactionId) => {
-        if (!userId || !transactionId) return;
-        const txToDelete = transactions.find(tx => tx.id === transactionId);
-        if (!txToDelete) return;
+    const handleDeleteTransaction = (transactionId, description, date) => {
+        if (!transactionId) return;
+        setItemToDelete({ id: transactionId, name: description || 'Transacción', date: date });
+        setIsConfirmModalOpen(true);
+    };
 
-        // Manejar eliminación de transferencias (eliminar ambas partes)
-        let relatedTxId = null;
-        if (txToDelete.category_id === TRANSFER_CATEGORY_ID_IN || txToDelete.category_id === TRANSFER_CATEGORY_ID_OUT) {
-            // Buscar la transacción "hermana" (misma fecha, importe opuesto, descripción similar)
-            // Esto es complejo y propenso a errores. Una mejor solución es agrupar transferencias en la DB.
-            // Por ahora, advertimos al usuario.
-            if (!window.confirm(`Estás eliminando parte de una transferencia (${txToDelete.description}). ¿Eliminar de todas formas? (La otra parte quedará huérfana)`)) return;
-        } else {
-            if (!window.confirm(`¿Eliminar transacción "${txToDelete.description || 'Sin descripción'}" del ${formatDate(txToDelete.transaction_date)}?`)) return;
-        }
-
+    // Confirmación de eliminación
+    const confirmDeleteHandler = useCallback(async () => {
+        if (!transactionToDelete || !user?.id) { toast.error("Faltan datos."); return; }
+        const { id: transactionId, name: description, date } = transactionToDelete;
+        setIsConfirmModalOpen(false);
+        const toastId = toast.loading(`Eliminando "${description || 'transacción'}"...`);
 
         try {
-            console.log('Deleting transaction:', transactionId);
-            const { error } = await supabase.from('transactions').delete().eq('id', transactionId).eq('user_id', userId);
+            // ADVERTENCIA: Lógica simple, no maneja transferencias vinculadas automáticamente.
+            // Una RPC sería mejor para borrar ambas partes de una transferencia.
+             const tx = transactions.find(t => t.id === transactionId); // Encontrar datos originales
+             if (tx && (tx.category_id === TRANSFER_CATEGORY_ID_IN || tx.category_id === TRANSFER_CATEGORY_ID_OUT)) {
+                 toast.error('La eliminación de transferencias debe hacerse manualmente (borrar ambas partes) o con una función avanzada.', { id: toastId, duration: 6000 });
+                 // Alternativa: intentar buscar y borrar la hermana (complejo y frágil)
+                 // Alternativa 2: No permitir borrar aquí y añadir botón específico en modal de transferencia?
+                 setItemToDelete(null);
+                 return;
+             }
+
+            const { error } = await supabase.from('transactions').delete().eq('id', transactionId).eq('user_id', user.id);
             if (error) throw error;
 
-            // Intentar eliminar la transacción relacionada si es transferencia (simplificado)
-             if (relatedTxId) {
-                 await supabase.from('transactions').delete().eq('id', relatedTxId).eq('user_id', userId);
-            }
+            toast.success('Transacción eliminada.', { id: toastId });
+            fetchData(user.id, filters, sort); // Recargar
 
-            alert('Transacción eliminada.');
-            await fetchTransactions(userId, filters, sort); // Recargar
-
-        } catch (error) {
-            console.error('Error deleting transaction:', error);
-            alert(`Error al eliminar: ${error.message}`);
+        } catch (err) {
+            console.error('Error eliminando transacción:', err);
+            toast.error(`Error: ${err.message}`, { id: toastId });
+        } finally {
+            setItemToDelete(null);
         }
-    }, [userId, transactions, supabase, fetchTransactions, filters, sort]);
-
+    }, [user, transactionToDelete, supabase, fetchData, filters, sort, transactions]); // Incluir 'transactions' si se usa para check de transferencia
 
     // --- Otros ---
-    const handleLogout = useCallback(async () => {
-            if (isProcessing) return;
-            setIsProcessing(true);
-            try {
-                const { error } = await supabase.auth.signOut();
-                if (error) throw error;
-            } catch (error) {
-                console.error("Error logging out:", error);
-                alert("Error al cerrar sesión.");
-                setIsProcessing(false);
-            }
-        }, [isProcessing, supabase]);
     const handleBack = useCallback(() => navigate(-1), [navigate]);
     const scrollToTop = useCallback(() => window.scrollTo({ top: 0, behavior: 'smooth' }), []);
 
@@ -415,30 +313,10 @@ function Transactions() {
         <div style={{ display: 'flex' }}>
 
             {/* --- Sidebar --- */}
-             <aside className="sidebar">
-                             <div className="sidebar-logo"> <img src={finAiLogo} alt="FinAi Logo Small" /> </div>
-                             <nav className="sidebar-nav">
-                                 {/* Usar NavLink para 'active' class automática si se configura */}
-                                 <Link to="/dashboard" className="nav-button" title="Dashboard"><i className="fas fa-home"></i> <span>Dashboard</span></Link>
-                                 <Link to="/accounts" className="nav-button" title="Cuentas"><i className="fas fa-wallet"></i> <span>Cuentas</span></Link>
-                                 <Link to="/budgets" className="nav-button" title="Presupuestos"><i className="fas fa-chart-pie"></i> <span>Presupuestos</span></Link>
-                                 <Link to="/categories" className="nav-button" title="Categorías"><i className="fas fa-tags"></i> <span>Categorías</span></Link>
-                                 <Link to="/transactions" className="nav-button" title="Transacciones"><i className="fas fa-exchange-alt"></i> <span>Transacciones</span></Link>
-                                 <Link to="/trips" className="nav-button" title="Viajes"><i className="fas fa-suitcase-rolling"></i> <span>Viajes</span></Link>
-                                 <Link to="/evaluations" className="nav-button" title="Evaluación"><i className="fas fa-balance-scale"></i> <span>Evaluación</span></Link>
-                                 <Link to="/reports" className="nav-button" title="Informes"><i className="fas fa-chart-bar"></i> <span>Informes</span></Link>
-                                 <Link to="/profile" className="nav-button active" title="Perfil"><i className="fas fa-user-circle"></i> <span>Perfil</span></Link> {/* Active */}
-                                 <Link to="/settings" className="nav-button" title="Configuración"><i className="fas fa-cog"></i> <span>Configuración</span></Link>
-                                 <Link to="/debts" className="nav-button" title="Deudas"><i className="fas fa-credit-card"></i> <span>Deudas</span></Link>
-                                 <Link to="/loans" className="nav-button" title="Préstamos"><i className="fas fa-hand-holding-usd"></i> <span>Préstamos</span></Link>
-                                 <Link to="/fixed-expenses" className="nav-button" title="Gastos Fijos"><i className="fas fa-receipt"></i> <span>Gastos Fijos</span></Link>
-                                 <Link to="/goals" className="nav-button" title="Metas"><i className="fas fa-bullseye"></i> <span>Metas</span></Link>
-                             </nav>
-                             <button className="nav-button logout-button" onClick={handleLogout} title="Cerrar Sesión" disabled={isLoading || isSaving}>
-                                 {isLoading ? <><i className="fas fa-spinner fa-spin"></i> <span>Saliendo...</span></> : <><i className="fas fa-sign-out-alt"></i> <span>Salir</span></>}
-                             </button>
-                         </aside>
-
+            <Sidebar
+                // Pasar estado de carga/guardado si quieres deshabilitar botones mientras ocurre algo
+                isProcessing={isLoading || isSaving /* ...o el estado relevante */}
+            />
             {/* --- Contenido Principal --- */}
             <div className={`page-container ${isLoading ? 'content-loading' : ''}`}>
                 {/* --- Cabecera --- */}
@@ -518,24 +396,49 @@ function Transactions() {
                         </tbody>
                     </table>
                 </div>
+                {/* --- Controles de Paginación --- */}
+                {!isLoading && transactions.length > 0 && totalItems > itemsPerPage && ( // Mostrar solo si hay más de una página posible
+                    <div className="pagination-controls">
+                        <button
+                            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                            disabled={currentPage === 1 || isSaving}
+                        >
+                            &lt; Anterior
+                        </button>
+                        <span>
+                            Página {currentPage} de {Math.ceil(totalItems / itemsPerPage)} (Total: {totalItems})
+                        </span>
+                        <button
+                            onClick={() => setCurrentPage(prev => Math.min(prev + 1, Math.ceil(totalItems / itemsPerPage)))}
+                            disabled={currentPage * itemsPerPage >= totalItems || isSaving}
+                        >
+                            Siguiente &gt;
+                        </button>
+                        {/* Opcional: Select para cambiar itemsPerPage */}
+                        { <select value={itemsPerPage} onChange={(e) => { setItemsPerPage(Number(e.target.value)); setCurrentPage(1); }} disabled={isSaving}>
+                            <option value={25}>25</option>
+                            <option value={50}>50</option>
+                            <option value={100}>100</option>
+                        </select> }
+                    </div>
+                )}
 
             </div> {/* Fin page-container */}
 
             {/* --- Modal --- */}
-            {isModalOpen && (
-                <TransactionModal
-                    isOpen={isModalOpen}
-                    onClose={handleCloseModal}
-                    onSubmit={handleSaveTransaction}
-                    mode={modalMode}
-                    initialData={editingTransaction}
-                    accounts={accounts} // Pasar cuentas al modal
-                    categories={categories} // Pasar categorías al modal
-                    isSaving={isSaving}
-                    error={modalError}
-                    setError={setModalError} // Permitir al modal limpiar su error
-                />
-            )}
+            <TransactionModal // <<< USA COMPONENTE
+                isOpen={isModalOpen} onClose={handleCloseModal} onSubmit={handleSaveTransaction}
+                mode={modalMode} initialData={editingTransaction}
+                accounts={accounts} categories={categories} // Pasar listas
+                isSaving={isSaving} error={modalError} setError={setModalError}
+            />
+            <ConfirmationModal // <<< USA COMPONENTE
+                isOpen={isConfirmModalOpen}
+                onClose={() => { setIsConfirmModalOpen(false); setTransactionToDelete(null); }}
+                onConfirm={confirmDeleteHandler} title="Confirmar Eliminación"
+                message={`¿Seguro eliminar "${transactionToDelete?.name || 'transacción'}" del ${formatDate(transactionToDelete?.date)}?`}
+                confirmText="Eliminar" cancelText="Cancelar" isDanger={true}
+            />
 
             {/* --- Botón Scroll-Top --- */}
             {showScrollTop && (
@@ -547,190 +450,5 @@ function Transactions() {
         </div> // Fin contenedor flex principal
     );
 }
-
-
-// --- Componente Fila Transacción ---
-function TransactionRow({ transaction, onEdit, onDelete }) {
-    const { id, transaction_date, description, amount, type, accounts, categories } = transaction;
-
-    const formattedDate = useMemo(() => formatDate(transaction_date), [transaction_date]);
-    const accountName = accounts?.name || <span style={{color: '#aaa'}}>N/A</span>;
-    const categoryName = categories?.name || <span style={{color: '#aaa'}}>(Sin Cat.)</span>;
-    const categoryIcon = getIconClass(categories?.name); // Usar nombre para icono
-    const amountClass = type === 'ingreso' ? 'income' : (type === 'gasto' ? 'expense' : 'transfer');
-    const amountSign = type === 'ingreso' ? '+' : '-';
-    const formattedAmount = formatCurrency(Math.abs(amount), accounts?.currency || 'EUR');
-
-    return (
-        <tr data-id={id}>
-            <td><span className="trans-date">{formattedDate}</span></td>
-            <td><span className="trans-desc">{description || '-'}</span></td>
-            <td><span className="trans-cat"><i className={categoryIcon}></i> {categoryName}</span></td>
-            <td><span className="trans-acc">{accountName}</span></td>
-            <td className="amount-col"><span className={`trans-amount ${amountClass}`}>{amountSign}{formattedAmount}</span></td>
-            <td>
-                {type !== 'transferencia' && /* No permitir editar transferencias directamente */ (
-                    <button className="btn-icon btn-edit" aria-label="Editar" onClick={onEdit}><i className="fas fa-pencil-alt"></i></button>
-                )}
-                <button className="btn-icon btn-delete" aria-label="Eliminar" onClick={onDelete}><i className="fas fa-trash-alt"></i></button>
-            </td>
-        </tr>
-    );
-}
-
-
-// --- Componente Modal Transacción ---
-function TransactionModal({ isOpen, onClose, onSubmit, mode, initialData, accounts, categories, isSaving, error, setError }) {
-    const [formData, setFormData] = useState({});
-    const [transactionType, setTransactionType] = useState('gasto'); // Estado local para tipo
-
-    // Inicializar/Resetear formulario al abrir o cambiar modo/datos
-    useEffect(() => {
-        const today = new Date().toISOString().split('T')[0];
-        let defaultData = {
-            type: 'gasto', amount: '', transaction_date: today, description: '',
-            account_id: '', account_destination_id: '', category_id: '', notes: ''
-        };
-
-        if (mode === 'edit' && initialData && initialData.type !== 'transferencia') { // No editar transferencias
-            defaultData = {
-                type: initialData.type || 'gasto',
-                amount: Math.abs(initialData.amount || 0).toString(), // Usar valor absoluto
-                transaction_date: initialData.transaction_date ? initialData.transaction_date.split('T')[0] : today,
-                description: initialData.description || '',
-                account_id: initialData.account_id || '',
-                account_destination_id: '', // No aplica en edición simple
-                category_id: initialData.category_id || '',
-                notes: initialData.notes || ''
-            };
-        }
-        setFormData(defaultData);
-        setTransactionType(defaultData.type); // Sincronizar estado local del tipo
-        setError(''); // Limpiar error al abrir/cambiar
-    }, [isOpen, mode, initialData]);
-
-    const handleChange = (e) => {
-        const { name, value, type, checked } = e.target;
-        if (name === 'transactionType') {
-            setTransactionType(value); // Actualizar estado local del tipo
-            // Limpiar campos específicos al cambiar tipo? (Opcional)
-            // if (value === 'transferencia') setFormData(prev => ({ ...prev, category_id: '' }));
-            // else setFormData(prev => ({ ...prev, account_destination_id: '' }));
-        } else {
-            setFormData(prev => ({ ...prev, [name]: value }));
-        }
-         if (error) setError(''); // Limpiar error al cambiar cualquier campo
-    };
-
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        setError(''); // Limpiar error antes de validar/enviar
-
-        // Validaciones
-        const amount = parseFloat(formData.amount);
-        if (isNaN(amount) || amount <= 0) { setError('Importe debe ser mayor a cero.'); return; }
-        if (!formData.transaction_date) { setError('Fecha es obligatoria.'); return; }
-        if (!formData.description?.trim()) { setError('Descripción es obligatoria.'); return; }
-        if (!formData.account_id) { setError(transactionType === 'transferencia' ? 'Cuenta Origen es obligatoria.' : 'Cuenta es obligatoria.'); return; }
-
-        if (transactionType === 'transferencia') {
-            if (!formData.account_destination_id) { setError('Cuenta Destino es obligatoria.'); return; }
-            if (formData.account_id === formData.account_destination_id) { setError('Cuentas origen y destino no pueden ser iguales.'); return; }
-        } else {
-            // Categoría opcional, no necesita validación extra aquí (a menos que la quieras obligatoria)
-            // if (!formData.category_id) { setError('Categoría es obligatoria.'); return; }
-        }
-
-        // Pasar datos validados al onSubmit del padre
-        onSubmit({ ...formData, type: transactionType, amount: amount });
-    };
-
-    // Filtrar categorías según el tipo seleccionado
-    const filteredCategories = useMemo(() => {
-        if (transactionType === 'transferencia' || !categories) return [];
-        return categories.filter(cat => cat.type === transactionType);
-    }, [transactionType, categories]);
-
-    if (!isOpen) return null;
-
-    const isTransfer = transactionType === 'transferencia';
-
-    return (
-        <div className="modal-overlay active" style={{ display: 'flex' }} onClick={(e) => { if (e.target === e.currentTarget && !isSaving) onClose(); }}>
-            <div className="modal-content">
-                <h2>{mode === 'add' ? 'Añadir Movimiento' : 'Editar Transacción'}</h2>
-                <form onSubmit={handleSubmit}>
-                    {/* ID oculto para edición */}
-                    {mode === 'edit' && <input type="hidden" name="id" value={initialData?.id || ''} />}
-
-                    {/* Selector de Tipo */}
-                    <div className="input-group">
-                        <label>Tipo</label>
-                        <div className="radio-group type-toggle">
-                            <label className={`type-button expense-btn ${transactionType === 'gasto' ? 'active' : ''} ${mode === 'edit' ? 'disabled' : ''}`}>
-                                <input type="radio" name="transactionType" value="gasto" checked={transactionType === 'gasto'} onChange={handleChange} disabled={isSaving || mode === 'edit'}/> Gasto
-                            </label>
-                            <label className={`type-button income-btn ${transactionType === 'ingreso' ? 'active' : ''} ${mode === 'edit' ? 'disabled' : ''}`}>
-                                <input type="radio" name="transactionType" value="ingreso" checked={transactionType === 'ingreso'} onChange={handleChange} disabled={isSaving || mode === 'edit'}/> Ingreso
-                            </label>
-                            <label className={`type-button transfer-btn ${transactionType === 'transferencia' ? 'active' : ''} ${mode === 'edit' ? 'disabled' : ''}`}>
-                                <input type="radio" name="transactionType" value="transferencia" checked={transactionType === 'transferencia'} onChange={handleChange} disabled={isSaving || mode === 'edit'}/> Transferencia
-                            </label>
-                        </div>
-                    </div>
-
-                    {/* Campos Comunes */}
-                    <div className="input-group"> <label htmlFor="modalAmount">Importe</label> <input type="number" id="modalAmount" name="amount" required step="0.01" min="0.01" value={formData.amount} onChange={handleChange} disabled={isSaving}/> </div>
-                    <div className="input-group"> <label htmlFor="modalDate">Fecha</label> <input type="date" id="modalDate" name="transaction_date" required value={formData.transaction_date} onChange={handleChange} disabled={isSaving}/> </div>
-                    <div className="input-group"> <label htmlFor="modalDescription">Descripción</label> <input type="text" id="modalDescription" name="description" required value={formData.description} onChange={handleChange} disabled={isSaving}/> </div>
-
-                    {/* Cuenta Origen / Cuenta Principal */}
-                    <div className="input-group">
-                        <label htmlFor="modalAccountId">{isTransfer ? 'Cuenta Origen' : 'Cuenta'}</label>
-                        <select id="modalAccountId" name="account_id" required value={formData.account_id} onChange={handleChange} disabled={isSaving || accounts.length === 0}>
-                            <option value="" disabled>{accounts.length === 0 ? 'No hay cuentas' : 'Selecciona...'}</option>
-                            {accounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
-                        </select>
-                    </div>
-
-                    {/* Cuenta Destino (Solo Transferencias) */}
-                    {isTransfer && (
-                        <div className="input-group">
-                            <label htmlFor="modalAccountDestinationId">Cuenta Destino</label>
-                            <select id="modalAccountDestinationId" name="account_destination_id" required={isTransfer} value={formData.account_destination_id} onChange={handleChange} disabled={isSaving || accounts.length === 0}>
-                                <option value="" disabled>{accounts.length === 0 ? 'No hay cuentas' : 'Selecciona...'}</option>
-                                {accounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
-                            </select>
-                        </div>
-                    )}
-
-                    {/* Categoría (No para Transferencias) */}
-                    {!isTransfer && (
-                        <div className="input-group">
-                            <label htmlFor="modalCategoryId">Categoría</label>
-                            <select id="modalCategoryId" name="category_id" value={formData.category_id} onChange={handleChange} disabled={isSaving || filteredCategories.length === 0}>
-                                <option value="">(Sin categoría)</option>
-                                {filteredCategories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                            </select>
-                        </div>
-                    )}
-
-                    {/* Notas */}
-                    <div className="input-group"> <label htmlFor="modalNotes">Notas</label> <textarea id="modalNotes" name="notes" rows={2} value={formData.notes} onChange={handleChange} disabled={isSaving}></textarea> </div>
-
-                    {/* Error y Acciones */}
-                    {error && <p className="error-message">{error}</p>}
-                    <div className="modal-actions">
-                        <button type="button" onClick={onClose} className="btn btn-secondary" disabled={isSaving}>Cancelar</button>
-                        <button type="submit" className="btn btn-primary" disabled={isSaving}>
-                            {isSaving ? 'Guardando...' : (mode === 'add' ? 'Guardar' : 'Guardar Cambios')}
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    );
-}
-
 
 export default Transactions;

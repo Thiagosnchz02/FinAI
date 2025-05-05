@@ -2,134 +2,95 @@
 Archivo: src/pages/Reports.jsx
 Propósito: Componente para la página de generación de informes exportables.
 */
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { supabase } from '../services/supabaseClient'; // Asegúrate que la ruta sea correcta
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { supabase } from '../services/supabaseClient';
+import { useAuth } from '../contexts/AuthContext.jsx';
+import Sidebar from '../components/layout/Sidebar.jsx'; 
+//import { formatCurrency, formatDate } from '../utils/formatters.js'; // Importar utils
+import toast from 'react-hot-toast'; // Importar toast
+import SelectionModal from '../components/common/SelectionModal.jsx'; // Asume componente genérico
+import InfoModal from '../components/common/InfoModal.jsx'; 
 
 // Importa imágenes
-import finAiLogo from '../assets/Logo_FinAI_Oficial.png'; // Asegúrate que la ruta sea correcta
-import defaultAvatar from '../assets/avatar_predeterminado.png'; // Asegúrate que la ruta sea correcta
+import defaultAvatar from '../assets/avatar_predeterminado.png';
 
 function Reports() {
     // --- Estado del Componente ---
-    const [userId, setUserId] = useState(null);
-    const [userAvatarUrl, setUserAvatarUrl] = useState(defaultAvatar);
-    const [selectedReportType, setSelectedReportType] = useState('transactions'); // 'transactions' o 'trip_expenses'
-    const [selectedFormat, setSelectedFormat] = useState('csv'); // 'csv' (pdf deshabilitado)
+    const { user, loading: authLoading } = useAuth();
+    const [avatarUrl, setAvatarUrl] = useState(defaultAvatar);
+    const [selectedReportType, setSelectedReportType] = useState('transactions');
+    const [selectedFormat, setSelectedFormat] = useState('csv');
 
     // Filtros Transacciones
-    const [transactionFilters, setTransactionFilters] = useState({
-        dateFrom: '',
-        dateTo: '',
-        type: 'all', // 'all', 'ingreso', 'gasto'
-        accountId: 'all', // 'all' o ID específico
-        categoryId: 'all' // 'all', 'none', o ID específico
-    });
+    const [transactionFilters, setTransactionFilters] = useState({ dateFrom: '', dateTo: '', type: 'all', accountId: 'all', categoryId: 'all' });
+    // Estados para mostrar nombre seleccionado (alternativa: buscar en listas al renderizar)
     const [selectedAccountName, setSelectedAccountName] = useState('Todas las cuentas');
     const [selectedCategoryName, setSelectedCategoryName] = useState('Todas las categorías');
 
     // Filtros Viajes
-    const [tripFilters, setTripFilters] = useState({
-        tripId: '', // ID específico
-        dateFrom: '', // Opcional
-        dateTo: '' // Opcional
-    });
+    const [tripFilters, setTripFilters] = useState({ tripId: '', dateFrom: '', dateTo: '' });
 
-    // Datos para Selectores/Modales
+    // Datos para Selectores
     const [accounts, setAccounts] = useState([]);
     const [categories, setCategories] = useState([]);
     const [trips, setTrips] = useState([]);
 
-    // Estado Modales
+    // Estados Modales
     const [isSelectionModalOpen, setIsSelectionModalOpen] = useState(false);
     const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
-    const [selectionModalConfig, setSelectionModalConfig] = useState({
-        title: '',
-        options: [],
-        settingKey: '', // 'accountId' o 'categoryId'
-        currentValue: 'all',
-        isLoading: false
-    });
+    const [selectionModalConfig, setSelectionModalConfig] = useState({ title: '', options: [], settingKey: '', currentValue: 'all' });
     const [infoModalConfig, setInfoModalConfig] = useState({ title: 'Información', message: '' });
 
     // Otros estados UI
-    const [isLoading, setIsLoading] = useState(false); // Carga inicial o generación reporte
-    const [isGenerating, setIsGenerating] = useState(false); // Específico para generación
-    const [message, setMessage] = useState('');
-    const [messageType, setMessageType] = useState(''); // 'success', 'error', 'info'
+    const [isLoading, setIsLoading] = useState(true); // Carga inicial
+    const [isGenerating, setIsGenerating] = useState(false); // Generación reporte
     const [showScrollTop, setShowScrollTop] = useState(false);
+    const [error, setError] = useState(null); // Error general de carga
 
-    const navigate = useNavigate();
-    const isMounted = useRef(true); // Para evitar setear estado en componente desmontado
+    const navigate = useNavigate(); // Para evitar setear estado en componente desmontado
+
+    const fetchData = useCallback(async (currentUserId) => {
+        setIsLoading(true); setError(null);
+        setAccounts([]); setCategories([]); setTrips([]); // Resetear listas
+        console.log(`Reports: Cargando datos iniciales para ${currentUserId}`);
+        try {
+            const [profileRes, accountsRes, categoriesRes, tripsRes] = await Promise.all([
+                supabase.from('profiles').select('avatar_url').eq('id', currentUserId).single(),
+                supabase.from('accounts').select('id, name').eq('user_id', currentUserId).order('name'),
+                supabase.from('categories').select('id, name').or(`user_id.eq.${currentUserId},is_default.eq.true`).order('name'),
+                supabase.from('trips').select('id, name').eq('user_id', currentUserId).order('start_date', { ascending: false })
+            ]);
+
+            if (profileRes.error && profileRes.status !== 406) console.warn("Error loading avatar", profileRes.error); // No lanzar error fatal por avatar
+            setAvatarUrl(profileRes.data?.avatar_url || defaultAvatar);
+
+            if (accountsRes.error) throw new Error(`Cuentas: ${accountsRes.error.message}`);
+            setAccounts(accountsRes.data || []);
+
+            if (categoriesRes.error) throw new Error(`Categorías: ${categoriesRes.error.message}`);
+            setCategories(categoriesRes.data || []);
+
+            if (tripsRes.error) throw new Error(`Viajes: ${tripsRes.error.message}`);
+            setTrips(tripsRes.data || []);
+
+        } catch (err) {
+            console.error("Error loading initial data (Reports):", err);
+            setError(err.message || "Error al cargar datos necesarios.");
+        } finally {
+            setIsLoading(false);
+        }
+    }, [supabase]);
 
     // --- Efecto: Carga Inicial (Usuario y Datos Filtros) ---
-    useEffect(() => {
-        isMounted.current = true; // Marcar como montado
+    useEffect(() => { // Carga inicial
+        if (authLoading) { setIsLoading(true); return; }
+        if (!user) { navigate('/login'); return; }
+        fetchData(user.id);
+    }, [user, authLoading, navigate, fetchData]);
 
-        const loadInitialData = async () => {
-            setIsLoading(true);
-            setMessage('');
-            try {
-                // 1. Obtener usuario
-                const { data: { user }, error: userError } = await supabase.auth.getUser();
-                if (userError || !user) {
-                    console.error('Reports: No user session.', userError);
-                    if (isMounted.current) navigate('/login');
-                    return;
-                }
-                if (!isMounted.current) return;
-                setUserId(user.id);
-
-                // 2. Obtener avatar y datos para filtros en paralelo
-                const [profileRes, accountsRes, categoriesRes, tripsRes] = await Promise.all([
-                    supabase.from('profiles').select('avatar_url').eq('id', user.id).single(),
-                    supabase.from('accounts').select('id, name').eq('user_id', user.id).order('name'),
-                    supabase.from('categories').select('id, name').or(`user_id.eq.${user.id},is_default.eq.true`).order('name'),
-                    supabase.from('trips').select('id, name').eq('user_id', user.id).order('start_date', { ascending: false })
-                ]);
-
-                if (!isMounted.current) return; // Verificar de nuevo antes de setear estado
-
-                // Procesar avatar
-                if (profileRes.error && profileRes.error.code !== 'PGRST116') console.warn("Error loading avatar", profileRes.error);
-                setUserAvatarUrl(profileRes.data?.avatar_url || defaultAvatar);
-
-                // Procesar cuentas
-                if (accountsRes.error) throw new Error(`Error cargando cuentas: ${accountsRes.error.message}`);
-                setAccounts(accountsRes.data || []);
-
-                // Procesar categorías
-                if (categoriesRes.error) throw new Error(`Error cargando categorías: ${categoriesRes.error.message}`);
-                setCategories(categoriesRes.data || []);
-
-                // Procesar viajes
-                if (tripsRes.error) throw new Error(`Error cargando viajes: ${tripsRes.error.message}`);
-                setTrips(tripsRes.data || []);
-
-            } catch (error) {
-                console.error("Error loading initial data:", error);
-                if (isMounted.current) {
-                    setMessage(`Error cargando datos: ${error.message}`);
-                    setMessageType('error');
-                }
-            } finally {
-                if (isMounted.current) setIsLoading(false);
-            }
-        };
-
-        loadInitialData();
-
-        // Limpieza al desmontar
-        return () => {
-            isMounted.current = false;
-        };
-    }, [navigate]);
-
-    // --- Efecto: Scroll-Top ---
-    useEffect(() => {
-        const handleScroll = () => {
-            if (isMounted.current) setShowScrollTop(window.scrollY > 300);
-        };
+    useEffect(() => { // Scroll listener
+        const handleScroll = () => setShowScrollTop(window.scrollY > 300);
         window.addEventListener('scroll', handleScroll);
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
@@ -141,8 +102,8 @@ function Reports() {
         setSelectedReportType(type);
         setMessage(''); // Limpiar mensajes al cambiar
         // Opcional: Resetear filtros si se desea
-        // setTransactionFilters({ dateFrom: '', dateTo: '', type: 'all', accountId: 'all', categoryId: 'all' });
-        // setTripFilters({ tripId: '', dateFrom: '', dateTo: '' });
+        setTransactionFilters({ dateFrom: '', dateTo: '', type: 'all', accountId: 'all', categoryId: 'all' });
+        setTripFilters({ tripId: '', dateFrom: '', dateTo: '' });
     }, [isLoading, isGenerating]);
 
     const handleFormatChange = useCallback((format) => {
@@ -173,59 +134,31 @@ function Reports() {
     // Abrir Modal de Selección (Cuentas o Categorías)
     const handleOpenSelectionModal = useCallback((settingKey) => {
         if (isLoading || isGenerating) return;
-
-        let title = '';
-        let options = [];
-        let currentValue = 'all';
-
+        let title = ''; let options = []; let currentValue = 'all';
         if (settingKey === 'accountId') {
             title = 'Seleccionar Cuenta';
-            options = [
-                { id: 'all', name: 'Todas las cuentas' }, // Usar 'all' como ID
-                ...accounts.map(acc => ({ id: acc.id, name: acc.name }))
-            ];
+            options = [{ id: 'all', name: 'Todas las cuentas' }, ...accounts.map(a => ({ id: a.id, name: a.name }))];
             currentValue = transactionFilters.accountId;
         } else if (settingKey === 'categoryId') {
             title = 'Seleccionar Categoría';
-            options = [
-                { id: 'all', name: 'Todas las categorías' },
-                { id: 'none', name: '(Sin Categoría)' }, // Opción para sin categoría
-                ...categories.map(cat => ({ id: cat.id, name: cat.name }))
-            ];
+            options = [{ id: 'all', name: 'Todas las categorías' }, { id: 'none', name: '(Sin Categoría)' }, ...categories.map(c => ({ id: c.id, name: c.name }))];
             currentValue = transactionFilters.categoryId;
-        } else {
-            console.error("Invalid settingKey for selection modal:", settingKey);
-            return;
-        }
-
-        setSelectionModalConfig({
-            title: title,
-            options: options,
-            settingKey: settingKey,
-            currentValue: currentValue,
-            isLoading: false // Ya no cargamos async aquí
-        });
+        } else return;
+        setSelectionModalConfig({ title, options, settingKey, currentValue, isLoading: false });
         setIsSelectionModalOpen(true);
     }, [isLoading, isGenerating, accounts, categories, transactionFilters]);
 
     const handleCloseSelectionModal = useCallback(() => setIsSelectionModalOpen(false), []);
 
-    // Guardar selección del modal
     const handleSaveSelection = useCallback((selectedOption) => {
-        if (!selectedOption) return; // Seguridad
-
+        if (!selectedOption) return;
         const { settingKey } = selectionModalConfig;
-        const selectedId = selectedOption.id; // 'all', 'none', o un UUID
-        const selectedName = selectedOption.name;
-
-        console.log(`Selección guardada para ${settingKey}:`, selectedOption);
-
         if (settingKey === 'accountId') {
-            setTransactionFilters(prev => ({ ...prev, accountId: selectedId }));
-            setSelectedAccountName(selectedName);
+            setTransactionFilters(prev => ({ ...prev, accountId: selectedOption.id }));
+            setSelectedAccountName(selectedOption.name);
         } else if (settingKey === 'categoryId') {
-            setTransactionFilters(prev => ({ ...prev, categoryId: selectedId }));
-            setSelectedCategoryName(selectedName);
+            setTransactionFilters(prev => ({ ...prev, categoryId: selectedOption.id }));
+            setSelectedCategoryName(selectedOption.name);
         }
         handleCloseSelectionModal();
     }, [selectionModalConfig, handleCloseSelectionModal]);
@@ -234,9 +167,10 @@ function Reports() {
 
     // --- Generación del Informe ---
     const handleGenerateReport = useCallback(async () => {
-        if (isGenerating || !supabase || !userId) return;
-        hideMessage();
+        if (isGenerating || !supabase || !user?.id) return;
+        setError(null); // Limpiar error previo
         setIsGenerating(true);
+        const toastId = toast.loading('Generando informe...');
 
         try {
             // 1. Recopilar filtros activos
@@ -269,33 +203,20 @@ function Reports() {
             }
 
             // 2. Preparar payload para la Edge Function
-            const payload = {
-                reportType: selectedReportType,
-                filters: finalFilters,
-                format: selectedFormat // Actualmente siempre 'csv'
-            };
-
+            const payload = { reportType: selectedReportType, filters: finalFilters, format: selectedFormat };
             console.log("Generando informe con payload:", payload);
 
-            // 3. Llamar a la Edge Function usando fetch (como en el JS original)
-            // Asegúrate que estas variables de entorno o constantes sean correctas
-            const supabaseUrl = import.meta.env.VITE_SUPABASE_URL; // O tu URL directa
-            const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY; // O tu key directa
-            const functionUrl = `${supabaseUrl}/functions/v1/generate_filtered_report`;
+            const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+            const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+            const functionUrl = `${supabaseUrl}/functions/v1/generate_filtered_report`; // Asegúrate que el nombre sea correcto
+            if (!supabaseUrl || !anonKey) throw new Error("Configuración de Supabase incompleta.");
 
             const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-            if (sessionError || !session) throw new Error("No se pudo obtener la sesión de usuario.");
-            const accessToken = session.access_token;
-
-            if (!supabaseUrl || !anonKey) throw new Error("URL o Clave Anon de Supabase no configuradas.");
+            if (sessionError || !session) throw new Error("No se pudo obtener la sesión.");
 
             const response = await fetch(functionUrl, {
                 method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${accessToken}`,
-                    'apikey': anonKey, // La anon key es necesaria para funciones con auth
-                    'Content-Type': 'application/json'
-                },
+                headers: { 'Authorization': `Bearer ${session.access_token}`, 'apikey': anonKey, 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             });
 
@@ -312,78 +233,34 @@ function Reports() {
             }
 
             const contentType = response.headers.get('content-type');
-
             if (contentType && contentType.includes('text/csv')) {
-                // Descarga CSV manejada por el navegador (gracias a Content-Disposition)
-                // Pero necesitamos iniciarla explícitamente en algunos casos
-                const blob = await response.blob();
-                const downloadUrl = window.URL.createObjectURL(blob);
-                const link = document.createElement('a');
-                link.href = downloadUrl;
-                // Extraer nombre del header o poner uno por defecto
-                const disposition = response.headers.get('content-disposition');
-                let filename = 'reporte.csv';
-                if (disposition && disposition.indexOf('attachment') !== -1) {
-                    const filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
-                    const matches = filenameRegex.exec(disposition);
-                    if (matches != null && matches[1]) {
-                        filename = matches[1].replace(/['"]/g, '');
-                    }
-                }
-                link.setAttribute('download', filename);
-                document.body.appendChild(link);
-                link.click();
-                link.remove();
-                window.URL.revokeObjectURL(downloadUrl); // Limpiar URL del objeto
-
-                setMessage('Informe generado. Descarga iniciada.');
-                setMessageType('success');
-                setTimeout(hideMessage, 4000);
+                // Descarga CSV
+                const blob = await response.blob(); const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a'); a.href = url;
+                // Extraer nombre archivo o default
+                const disposition = response.headers.get('content-disposition'); let filename = 'reporte.csv'; if (disposition?.includes('attachment')) { const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(disposition); if (matches?.[1]) filename = matches[1].replace(/['"]/g, ''); }
+                a.download = filename; document.body.appendChild(a); a.click(); a.remove(); window.URL.revokeObjectURL(url);
+                toast.success('Informe generado. Descarga iniciada.', { id: toastId });
 
             } else if (contentType && contentType.includes('application/json')) {
+                 // Informe vacío
                 const data = await response.json();
-                if (data && data.status === 'empty') {
-                    console.log("Generación completada, no había datos.");
-                    setInfoModalConfig({ title: 'Informe Vacío', message: data.message || "No se encontraron datos con los filtros seleccionados." });
+                 if (data?.status === 'empty') {
+                    toast.dismiss(toastId); // Quitar toast de carga
+                    setInfoModalConfig({ title: 'Informe Vacío', message: data.message || "No hay datos con esos filtros." });
                     setIsInfoModalOpen(true);
-                } else {
-                    console.warn("Respuesta JSON inesperada:", data);
-                    throw new Error("Se recibió una respuesta inesperada de la función.");
-                }
-            } else {
-                console.warn("Respuesta con Content-Type desconocido:", contentType);
-                setMessage(`Respuesta recibida (${response.status}), pero formato no reconocido.`);
-                setMessageType('info');
-            }
+                 } else { throw new Error("Respuesta inesperada."); }
+            } else { throw new Error("Formato de respuesta no reconocido."); }
 
         } catch (error) {
             console.error('Error generando informe:', error);
-            setMessage(`Error al generar el informe: ${error.message}`);
-            setMessageType('error');
+            toast.error(`Error: ${error.message}`, { id: toastId });
         } finally {
             setIsGenerating(false);
         }
-    }, [isGenerating, supabase, userId, selectedReportType, transactionFilters, tripFilters, selectedFormat]);
-
-    const showMessage = (type, text) => {
-        setMessage(text);
-        setMessageType(type);
-    };
-    const hideMessage = () => setMessage('');
+    }, [isGenerating, supabase, user, selectedReportType, transactionFilters, tripFilters, selectedFormat]); // Faltaba user
 
     // Reutilizar handleLogout, handleBack, scrollToTop
-    const handleLogout = useCallback(async () => {
-         if (isGenerating) return; // No cerrar sesión mientras se genera
-         setIsLoading(true); // Mostrar indicador general
-         try {
-             const { error } = await supabase.auth.signOut();
-             if (error) throw error;
-             // El listener global debería redirigir
-         } catch (error) {
-             console.error("Error al cerrar sesión:", error);
-             setMessage("Error al cerrar sesión."); setMessageType("error"); setIsLoading(false);
-         }
-     }, [isGenerating, supabase]); // Incluir supabase
     const handleBack = useCallback(() => navigate(-1), [navigate]);
     const scrollToTop = useCallback(() => window.scrollTo({ top: 0, behavior: 'smooth' }), []);
 
@@ -396,20 +273,10 @@ function Reports() {
         <div style={{ display: 'flex' }}>
 
             {/* --- Sidebar --- */}
-            <aside className="sidebar">
-                <div className="sidebar-logo"> <img src={finAiLogo} alt="FinAi Logo Small" /> </div>
-                <nav className="sidebar-nav">
-                    <Link to="/dashboard" className="nav-button" title="Dashboard"><i className="fas fa-home"></i> <span>Dashboard</span></Link>
-                    {/* ... otros links ... */}
-                    <Link to="/reports" className="nav-button active" title="Informes"><i className="fas fa-chart-bar"></i> <span>Informes</span></Link>
-                    <Link to="/profile" className="nav-button" title="Perfil"><i className="fas fa-user-circle"></i> <span>Perfil</span></Link>
-                    <Link to="/settings" className="nav-button" title="Configuración"><i className="fas fa-cog"></i> <span>Configuración</span></Link>
-                    {/* ... otros links ... */}
-                </nav>
-                <button className="nav-button logout-button" onClick={handleLogout} title="Cerrar Sesión" disabled={isLoading || isGenerating}>
-                    {(isLoading || isGenerating) ? <><i className="fas fa-spinner fa-spin"></i> <span>...</span></> : <><i className="fas fa-sign-out-alt"></i> <span>Salir</span></>}
-                </button>
-            </aside>
+            <Sidebar
+                // Pasar estado de carga/guardado si quieres deshabilitar botones mientras ocurre algo
+                isProcessing={isLoading || isSaving /* ...o el estado relevante */}
+            />
 
             {/* --- Contenido Principal --- */}
             <div className="page-container">
@@ -550,48 +417,17 @@ function Reports() {
             </div> {/* Fin page-container */}
 
             {/* --- Modal de Selección (Genérico - Adaptado) --- */}
-            {isSelectionModalOpen && (
-                <div id="selectionModal" className="modal-overlay small active" style={{ display: 'flex' }} onClick={(e) => { if (e.target === e.currentTarget) handleCloseSelectionModal(); }}>
-                    <div className="modal-content">
-                        <h2 id="selectionModalTitle">{selectionModalConfig.title}</h2>
-                        {/* No necesitamos form si la selección es directa con botones */}
-                        <div id="selectionOptionsContainer" className="selection-options list-options"> {/* Añadida clase list-options */}
-                            {selectionModalConfig.isLoading && <p>Cargando opciones...</p>}
-                            {!selectionModalConfig.isLoading && selectionModalConfig.options.length === 0 && <p>No hay opciones disponibles.</p>}
-                            {!selectionModalConfig.isLoading && selectionModalConfig.options.map(option => (
-                                <button
-                                    type="button"
-                                    key={option.id} // Usar ID como key
-                                    onClick={() => handleSaveSelection(option)}
-                                    // Marcar visualmente el activo (opcional)
-                                    className={`btn btn-option ${option.id === selectionModalConfig.currentValue ? 'active' : ''}`}
-                                >
-                                    {option.name}
-                                </button>
-                            ))}
-                        </div>
-                        <div className="modal-actions">
-                            <button type="button" onClick={handleCloseSelectionModal} className="btn btn-secondary">Cancelar</button>
-                        </div>
-                        {/* <p id="modalSelectionError" className="error-message" style={{ display: 'none' }}></p> */}
-                    </div>
-                </div>
-            )}
-
-            {/* --- Modal de Información (Genérico) --- */}
-            {isInfoModalOpen && (
-                <div id="infoModal" className="modal-overlay small active" style={{ display: 'flex' }} onClick={(e) => { if (e.target === e.currentTarget) handleCloseInfoModal(); }}>
-                    <div className="modal-content info-modal-content">
-                        <h2 id="infoModalTitle"><i className="fas fa-info-circle"></i> {infoModalConfig.title}</h2>
-                        <p id="infoModalMessage" className="modal-instructions" style={{ textAlign: 'center', margin: '25px 0', lineHeight: '1.6' }}>
-                            {infoModalConfig.message}
-                        </p>
-                        <div className="modal-actions" style={{ justifyContent: 'center' }}>
-                            <button type="button" onClick={handleCloseInfoModal} id="infoModalCloseBtn" className="btn btn-primary">Aceptar</button>
-                        </div>
-                    </div>
-                </div>
-            )}
+            <SelectionModal
+                isOpen={isSelectionModalOpen}
+                onClose={handleCloseSelectionModal}
+                onSave={handleSaveSelection} // Pasa la función correcta
+                config={selectionModalConfig} // Pasa la configuración completa
+            />
+            <InfoModal
+                isOpen={isInfoModalOpen}
+                onClose={handleCloseInfoModal}
+                config={infoModalConfig} // Pasa la configuración
+            />
 
             {/* --- Botón Scroll-Top --- */}
             {showScrollTop && (

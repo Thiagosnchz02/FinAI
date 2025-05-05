@@ -4,18 +4,18 @@ Propósito: Componente para la página de gestión de cuentas de usuario,
           incluyendo carga de datos, modal y acciones CRUD.
 */
 import React, { useState, useEffect, useCallback  } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '../services/supabaseClient'; // Importa cliente Supabase
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { formatCurrency } from '../utils/formatters.js';
 //import { getIconForAccountType } from '../utils/iconUtils.js';
-import AccountCard from '../components/AccountCard.jsx';
-import AccountModal from '../components/AccountModal.jsx';
+import AccountCard from '../components/Accounts/AccountCard.jsx';
+import AccountModal from '../components/Accounts/AccountModal.jsx';
 import toast from 'react-hot-toast';
 import ConfirmationModal from '../components/ConfirmationModal.jsx';
+import Sidebar from '../components/layout/Sidebar.jsx'; // Asegúrate que la ruta sea correcta
 
 // Importa imágenes
-import finAiLogo from '../assets/Logo_FinAI_Oficial.png';
 import defaultAvatar from '../assets/avatar_predeterminado.png';
 import emptyMascot from '../assets/monstruo_pixar.png';
 
@@ -37,13 +37,6 @@ function Accounts() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState('add'); // 'add' o 'edit'
   const [selectedAccount, setSelectedAccount] = useState(null); // Cuenta a editar
-  //const [formData, setFormData] = useState({ // Datos del formulario modal
-  //  accountName: '',
-  //  accountBank: '',
-  //  accountType: '',
-  //  accountBalance: '0.00', // Saldo inicial solo para 'add'
-  //  accountCurrency: 'EUR',
-  //});
   const [isSaving, setIsSaving] = useState(false); // Estado de carga del modal
   const [modalError, setModalError] = useState(''); // Mensaje de error del modal
 
@@ -297,39 +290,13 @@ function Accounts() {
   // Reutilizar handleBack, scrollToTop
   const handleBack = () => navigate(-1);
   const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
-  const handleLogout = async () => { // Añadir async y try/catch
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-        toast.error('Error al cerrar sesión.');
-        console.error('Error logout:', error);
-    } else {
-        navigate('/login'); // Redirigir explícitamente
-    }
-  };
   // --- Renderizado ---
   return (
     <div style={{ display: 'flex' }}>
-        {/* Sidebar */}
-        <aside className="sidebar">
-            <div className="sidebar-logo"> <img src={finAiLogo} alt="FinAi Logo Small" /> </div>
-            <nav className="sidebar-nav">
-                <Link to="/dashboard" className="nav-button" title="Dashboard"><i className="fas fa-home"></i> <span>Dashboard</span></Link>
-                <Link to="/accounts" className="nav-button active" title="Cuentas"><i className="fas fa-wallet"></i> <span>Cuentas</span></Link>
-                <Link to="/budgets" className="nav-button" title="Presupuestos"><i className="fas fa-chart-pie"></i> <span>Presupuestos</span></Link>
-                <Link to="/categories" className="nav-button" title="Categorías"><i className="fas fa-tags"></i> <span>Categorías</span></Link>
-                <Link to="/transactions" className="nav-button" title="Transacciones"><i className="fas fa-exchange-alt"></i> <span>Transacciones</span></Link>
-                <Link to="/trips" className="nav-button" title="Viajes"><i className="fas fa-suitcase-rolling"></i> <span>Viajes</span></Link>
-                <Link to="/evaluations" className="nav-button" title="Evaluación"><i className="fas fa-balance-scale"></i> <span>Evaluación</span></Link>
-                <Link to="/reports" className="nav-button" title="Informes"><i className="fas fa-chart-bar"></i> <span>Informes</span></Link>
-                <Link to="/profile" className="nav-button" title="Perfil"><i className="fas fa-user-circle"></i> <span>Perfil</span></Link>
-                <Link to="/settings" className="nav-button" title="Configuración"><i className="fas fa-cog"></i> <span>Configuración</span></Link>
-                <Link to="/debts" className="nav-button" title="Deudas"><i className="fas fa-credit-card"></i> <span>Deudas</span></Link>
-                <Link to="/loans" className="nav-button" title="Préstamos"><i className="fas fa-hand-holding-usd"></i> <span>Préstamos</span></Link>
-                <Link to="/fixed-expenses" className="nav-button" title="Gastos Fijos"><i className="fas fa-receipt"></i> <span>Gastos Fijos</span></Link>
-                <Link to="/goals" className="nav-button" title="Metas"><i className="fas fa-bullseye"></i> <span>Metas</span></Link>
-            </nav>
-            <button className="nav-button logout-button" onClick={handleLogout} title="Cerrar Sesión"><i className="fas fa-sign-out-alt"></i> <span>Salir</span></button>
-        </aside>
+         <Sidebar
+             // Pasar estado de carga/guardado si quieres deshabilitar botones mientras ocurre algo
+             isProcessing={isLoading || isSaving /* ...o el estado relevante */}
+          />
 
         {/* Contenido Principal */}
         <div className="page-container">

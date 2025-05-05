@@ -1,0 +1,28 @@
+/* Añadir en tu archivo SCSS/CSS global (ej: src/styles/global.scss) */
+
+.spinner-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px; // Espacio alrededor
+  }
+  
+  .loading-spinner {
+    // Tamaño definido por props, pero necesitamos el borde y la animación
+    border-width: 4px; // Grosor del borde
+    border-style: solid;
+    border-radius: 50%; // Círculo perfecto
+    animation: spinner-spin 1s linear infinite; // Nombre y duración de la animación
+  }
+  
+  // Definición de la animación
+  @keyframes spinner-spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  
+  /* Fin de estilos del Spinner */
