@@ -1,0 +1,75 @@
+// src/styles/_base.scss
+
+
+@import 'mixins'; // Para usar mixins si es necesario aquí
+
+// Importar fuente de Google (colocar aquí una vez eliminada de otros archivos)
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800&display=swap');
+
+// Reset básico (opcional, puedes usar normalize.css o similar si prefieres)
+/* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}*/
+
+body {
+    font-family: $font-family-base;
+    background-color: $color-primary-blue; // Color de fondo general
+    margin: 0;
+    padding: 0; // El padding lo manejará .page-container
+
+    color: $color-text-dark; // Color de texto por defecto
+
+    //min-height: 100vh;
+    //box-sizing: border-box;
+
+    // Si quieres que el body sea flexbox para ayudar a alinear el .page-container
+    display: flex;
+    //justify-content: center; // Centra horizontalmente el contenido principal
+    align-items: flex-start; // Alinea el contenido principal al inicio verticalmente
+    padding: $spacing-lg $spacing-md; // Padding base en los bordes del body
+
+    @include mobile-only {
+         padding: $spacing-md $spacing-sm; // Menos padding en móvil
+    }
+}
+
+// Estilos base para otros elementos si son consistentes
+h1, h2, h3, h4, h5, h6 {
+    color: $color-text-dark;
+    font-weight: 800; // Ejemplo, ajusta según tu diseño
+    margin-bottom: $spacing-md; // Espacio debajo de los títulos
+}
+
+p {
+    color: $color-text-dark;
+    line-height: 1.6;
+    margin-bottom: $spacing-sm; // Espacio debajo de párrafos
+}
+
+a {
+    color: $color-accent-purple; // Color de links por defecto
+    text-decoration: none;
+    //@include quick-transition(color);
+    &:hover { text-decoration: underline; color: darken($color-accent-purple, 10%); }
+}
+
+// Estilos base para inputs, selects, textareas (si no están en _modals)
+/*
+input, select, textarea {
+    font-family: $font-family-base;
+    font-size: $base-font-size;
+    padding: $spacing-sm $spacing-md;
+    border: 1px solid $color-border;
+    border-radius: $border-radius-sm;
+    color: $color-text-dark;
+    background-color: $color-panel-bg;
+    @include transition-smooth((border-color, box-shadow, background-color));
+    &:focus {
+        border-color: $color-accent-purple;
+        box-shadow: 0 0 0 2px rgba(lighten($color-accent-purple, 15%), 0.2);
+        outline: none;
+    }
+}
+*/

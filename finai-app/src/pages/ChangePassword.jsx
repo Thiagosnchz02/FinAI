@@ -8,6 +8,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../services/supabaseClient';
 import { useAuth } from '../contexts/AuthContext.jsx'; // Importar useAuth
 import toast from 'react-hot-toast'; // Importar toast
+import '../styles/Change_Password.scss';
 
 function ChangePassword() {
   const { user } = useAuth(); // Obtener usuario del contexto

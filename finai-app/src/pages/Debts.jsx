@@ -8,6 +8,7 @@ import { supabase } from '../services/supabaseClient';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { formatCurrency, formatDate } from '../utils/formatters.js';
 import Sidebar from '../components/layout/Sidebar.jsx'; 
+import '../styles/Debts.scss';
 // getIconForDebt ahora se usa en DebtCard
 // getStatusBadgeClass, getStatusText ahora se usan en DebtCard
 import DebtCard from '../components/Debts/DebtCard.jsx'; // Importar componente
@@ -15,6 +16,7 @@ import DebtModal from '../components/Debts/DebtModal.jsx'; // Importar component
 import PaymentModal from '../components/PaymentModal.jsx'; // Importar componente
 import toast from 'react-hot-toast'; // Importar toast
 import ConfirmationModal from '../components/ConfirmationModal.jsx'; // Importar componente
+import PageHeader from '../components/layout/PageHeader.jsx';
 
 // Importa imágenes
 import defaultAvatar from '../assets/avatar_predeterminado.png';
@@ -59,8 +61,14 @@ function Debts() {
             const [profileRes, debtsRes, accountsRes, categoriesRes] = await Promise.all([
                 supabase.from('profiles').select('avatar_url').eq('id', currentUserId).single(),
                 supabase.from('debts').select('*').eq('user_id', currentUserId).order('status').order('due_date'),
-                supabase.from('accounts').select('id, name').eq('user_id', currentUserId).order('name'),
-                supabase.from('categories').select('id, name').eq('user_id', currentUserId).eq('type', 'gasto').order('name') // Solo gasto
+                supabase.from('accounts')
+                .select('id, name, type, currency')
+                .eq('user_id', currentUserId)
+                .eq('is_archived', false)
+                .order('name'),
+                supabase.from('categories').select('id, name, type, parent_category_id, is_default, is_archived') // Seleccionar categorías de INGRESO
+                                    .or(`user_id.eq.${currentUserId},is_default.eq.true`) // Del usuario o default
+                                    .order('name')
             ]);
 
             if (profileRes.error && profileRes.status !== 406) throw profileRes.error;
@@ -96,6 +104,44 @@ function Debts() {
         window.addEventListener('scroll', handleScroll);
         return () => window.removeEventListener('scroll', handleScroll);
     }, [user, authLoading, navigate, fetchData]); // Dependencias correctas
+
+    const formattedExpenseCategoriesForPaymentModal = useMemo(() => {
+        console.log("[Debts.jsx useMemo] Formateando categorías de GASTO para PaymentModal. 'expenseCategories'.length:", expenseCategories ? expenseCategories.length : 0);
+        if (!expenseCategories || expenseCategories.length === 0) {
+            return [];
+        }
+        
+        const activeExpenseCategories = expenseCategories.filter(
+            cat => cat.type === 'gasto' && !cat.is_archived
+        );
+
+        const categoryIdsInExpenseType = new Set(activeExpenseCategories.map(cat => cat.id));
+
+        const topLevelExpenseCategories = activeExpenseCategories.filter(
+            cat => !cat.parent_category_id || !categoryIdsInExpenseType.has(cat.parent_category_id)
+        ).sort((a, b) => a.name.localeCompare(b.name));
+        
+        const subExpenseCategories = activeExpenseCategories.filter(
+            cat => cat.parent_category_id && categoryIdsInExpenseType.has(cat.parent_category_id)
+        ).sort((a, b) => a.name.localeCompare(b.name));
+
+        const options = [];
+        topLevelExpenseCategories.forEach(parent => {
+            options.push({ 
+                id: parent.id, 
+                name: `${parent.name}${parent.is_default ? '' : ''}`
+            });
+            const children = subExpenseCategories.filter(sub => sub.parent_category_id === parent.id);
+            children.forEach(child => {
+                options.push({ 
+                    id: child.id, 
+                    name: `  ↳ ${child.name}`
+                });
+            });
+        });
+        console.log("[Debts.jsx useMemo] Opciones finales de GASTO para PaymentModal:", options.length);
+        return options;
+    }, [expenseCategories]);
 
     // --- Cálculo Resumen Footer ---
     const summary = useMemo(() => {
@@ -148,6 +194,10 @@ function Debts() {
           nextDueDate: nextDue ? formatDate(nextDue.toISOString().split('T')[0]) : '--/--/----'
       };
     }, [debts]);
+
+    const openEditDebtModal = (debtToEdit) => {
+        handleOpenDebtModal('edit', debtToEdit); // Llama a la original con 'edit' y el objeto deuda
+    };
 
     // --- Manejadores Modales ---
     const handleOpenDebtModal = useCallback((mode = 'add', debt = null) => {
@@ -304,6 +354,19 @@ function Debts() {
     const handleBack = useCallback(() => navigate(-1), [navigate]);
     const scrollToTop = useCallback(() => window.scrollTo({ top: 0, behavior: 'smooth' }), []);
 
+    const debtPageAction = (
+        <button 
+            onClick={() => handleOpenDebtModal('add')} 
+            id="addDebtBtn" 
+            className="btn btn-primary btn-add" // Tus clases existentes
+            // disabled se maneja por isProcessingPage en PageHeader,
+            // o puedes añadir lógica específica aquí si es necesario
+            // disabled={isLoading || isSaving} 
+        >
+            <i className="fas fa-plus"></i> Añadir Deuda
+        </button>
+    );
+
     // --- Renderizado ---
     return (
         <div style={{ display: 'flex' }}>
@@ -316,11 +379,13 @@ function Debts() {
             {/* Contenido Principal */}
             <div className="page-container">
               {/* ... Cabecera ... */}
-               <div className="page-header debts-header">
-                  <button onClick={handleBack} id="backButton" className="btn-icon" aria-label="Volver"><i className="fas fa-arrow-left"></i></button>
-                  <div className="header-title-group"> <img id="userAvatarHeader" src={avatarUrl} alt="Avatar" className="header-avatar-small" /> <h1>Mis Deudas</h1> </div>
-                  <button onClick={() => handleOpenDebtModal('add')} id="addDebtBtn" className="btn btn-primary btn-add"> <i className="fas fa-plus"></i> Añadir Deuda </button>
-              </div>
+               <PageHeader 
+                    pageTitle="Mis Deudas"
+                    headerClassName="debts-header" // Tu clase específica si la necesitas
+                    showSettingsButton={false}     // No mostrar botón de settings aquí
+                    isProcessingPage={isLoading || isSaving} // Para deshabilitar botones de PageHeader si es necesario
+                    actionButton={debtPageAction}    // <-- Pasar el botón "Añadir Deuda"
+                />
               {/* Lista de Deudas (usando DebtCard) */}
               <div id="debtList" className="debt-list-grid">
                   {isLoading && !debts.length && <p>Cargando...</p>}
@@ -332,7 +397,7 @@ function Debts() {
                       <DebtCard
                           key={debt.id}
                           debt={debt}
-                          onEdit={handleOpenDebtModal}
+                          onEdit={openEditDebtModal}
                           onDelete={handleDeleteDebt} // Pasa la función que abre el confirm modal
                           onAddPayment={handleOpenPaymentModal}
                       />
@@ -364,7 +429,7 @@ function Debts() {
                 onSubmit={handlePaymentFormSubmit}
                 selectedDebt={selectedDebt} // Pasa la deuda completa
                 accounts={accounts} // Pasa lista de cuentas
-                expenseCategories={expenseCategories} // Pasa lista de categorías de GASTO
+                expenseCategories={formattedExpenseCategoriesForPaymentModal} // Pasa lista de categorías de GASTO
                 isSaving={isSaving}
                 error={modalError}
             />
@@ -373,7 +438,7 @@ function Debts() {
                 onClose={() => { setIsConfirmModalOpen(false); setDebtToDelete(null); }}
                 onConfirm={confirmDeleteHandler}
                 title="Confirmar Eliminación"
-                message={`¿Seguro eliminar la deuda con "${debtToDelete?.name || ''}"? No se puede deshacer.`}
+                message={`¿Estas Seguro que quiere eliminar la deuda con "${debtToDelete?.name || ''}"? No se puede deshacer.`}
                 confirmText="Eliminar"
                 cancelText="Cancelar"
                 isDanger={true}

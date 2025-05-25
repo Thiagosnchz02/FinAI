@@ -3,11 +3,13 @@ Archivo: src/pages/Goals.jsx
 Propósito: Componente para la página de gestión de metas financieras.
 */
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation  } from 'react-router-dom';
 import { supabase } from '../services/supabaseClient';
 import { useAuth } from '../contexts/AuthContext.jsx';
 //import { formatCurrency, formatDate } from '../utils/formatters.js';
 import Sidebar from '../components/layout/Sidebar.jsx'; 
+import PageHeader from '../components/layout/PageHeader.jsx';
+import '../styles/Goals.scss';
 // getIconClass se usa ahora dentro de GoalCard
 import GoalCard from '../components/Goals/GoalCard.jsx';
 import GoalModal from '../components/Goals/GoalModal.jsx';
@@ -19,6 +21,8 @@ import ConfirmationModal from '../components/ConfirmationModal.jsx';
 import defaultAvatar from '../assets/avatar_predeterminado.png';
 import emptyMascot from '../assets/monstruo_pixar.png';
 
+const CATEGORY_ID_TRANSFER_OUT = '2d55034c-0587-4d9c-9d93-5284d6880c76'; 
+const CATEGORY_ID_TRANSFER_IN = '7547fdfa-f7b2-44f4-af01-f937bfcc5be3';
 
 function Goals() {
     // --- Estado del Componente ---
@@ -36,14 +40,17 @@ function Goals() {
     const [selectedGoal, setSelectedGoal] = useState(null); // Para editar o añadir ahorro
     const [isSaving, setIsSaving] = useState(false); // Común para ambos modales
     const [modalError, setModalError] = useState('');
+    const [showArchivedGoals, setShowArchivedGoals] = useState(false);
 
     // Estado Confirmación
     const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
-    const [goalToDelete, setGoalToDelete] = useState(null); // { id, name }
+    const [goalToProcess, setGoalToProcess] = useState(null);
+    const [goalToDelete, setGoalToDelete] = useState(null);
     // UI
     const [showScrollTop, setShowScrollTop] = useState(false);
 
     const navigate = useNavigate();
+    const location = useLocation();
 
     // --- Carga de Datos ---
     const fetchData = useCallback(async (currentUserId) => {
@@ -53,8 +60,9 @@ function Goals() {
         try {
             const [profileRes, accountsRes, goalsRes] = await Promise.all([
                 supabase.from('profiles').select('avatar_url').eq('id', currentUserId).single(),
-                supabase.from('accounts').select('id, name').eq('user_id', currentUserId).order('name'),
-                supabase.from('goals').select('*').eq('user_id', currentUserId).order('target_date')
+                supabase.from('accounts').select('id, name, type, currency, balance').eq('user_id', currentUserId).eq('is_archived', false)
+            .order('name'),
+                supabase.from('goals').select('*, related_account_id (id, name)').eq('user_id', currentUserId).order('target_date')
             ]);
 
             if (profileRes.error && profileRes.status !== 406) throw profileRes.error;
@@ -85,11 +93,43 @@ function Goals() {
         return () => window.removeEventListener('scroll', handleScroll);
     }, [user, authLoading, navigate, fetchData]);
 
+    const openEditModal = (goalToEdit) => {
+        handleOpenGoalModal('edit', goalToEdit); // Llama a la original con los parámetros correctos
+    };
+
     // --- Manejadores Modales ---
     const handleOpenGoalModal = useCallback((mode = 'add', goal = null) => {
+        console.log("handleOpenGoalModal: mode=", mode, "goal=", goal);
         setModalMode(mode); setSelectedGoal(goal); setModalError('');
         setIsSaving(false); setIsGoalModalOpen(true);
     }, []);
+
+    // --- NUEVO useEffect PARA MANEJAR LA NAVEGACIÓN DESDE VIAJES ---
+    useEffect(() => {
+        if (location.state?.action === 'createFromTrip' && location.state?.tripName) {
+            console.log("Goals: Acción 'createFromTrip' detectada con datos:", location.state);
+            const { tripName, tripBudget, tripStartDate, tripRelatedAccountId } = location.state;
+            
+            // Preparamos los datos iniciales para GoalModal
+            const goalDataFromTrip = {
+                name: `Ahorro para ${tripName}`, // Nombre de la meta
+                target_amount: tripBudget,        // Presupuesto del viaje como objetivo
+                current_amount: '0.00',           // Ahorrado inicial 0 para la nueva meta
+                target_date: tripStartDate,       // Fecha de inicio del viaje como fecha objetivo
+                icon: 'fas fa-plane-departure',   // Icono por defecto para metas de viaje (puedes cambiarlo)
+                related_account_id: tripRelatedAccountId || '', // Cuenta asociada si viene del viaje
+                notes: `Meta de ahorro para el viaje: ${tripName}.`
+            };
+
+            // Abrir el modal en modo 'add' pero con estos datos iniciales
+            handleOpenGoalModal('add', goalDataFromTrip);
+
+            // Limpiar el estado de la navegación para que no se vuelva a ejecutar
+            navigate(location.pathname, { replace: true, state: {} });
+        }
+    }, [location.state, navigate, handleOpenGoalModal]); // Depende de location.state y las funciones que llama
+    // --- FIN NUEVO useEffect ---
+
     const handleCloseGoalModal = useCallback(() => { setIsGoalModalOpen(false); setSelectedGoal(null); setModalError(''); }, []);
 
     const handleOpenSavingsModal = useCallback((goal) => {
@@ -142,62 +182,158 @@ function Goals() {
 
     // Submit Modal Añadir Ahorro
     const handleAddSavingsSubmit = useCallback(async (submittedSavingsData) => {
-        if (!user?.id || !selectedGoal) { toast.error("Error inesperado."); return; }
-        setModalError(''); setIsSaving(true);
+        if (!user?.id || !selectedGoal?.id) 
+            { toast.error("Error: No se pudo identificar al usuario o la meta."); 
+            setModalError("Error: Usuario o meta no identificados.");
+            return; 
+        }
+
+        setModalError(''); 
+        setIsSaving(true);
         const toastId = toast.loading('Añadiendo ahorro...');
+
         try {
-            const amountToAdd = submittedSavingsData.amount; // Ya validado en modal
-            // 1. Obtener importe actual (más seguro)
-            const { data: currentGoalData, error: fetchError } = await supabase
-                .from('goals').select('current_amount')
-                .eq('id', selectedGoal.id).eq('user_id', user.id).single();
-            if (fetchError) throw new Error(`Meta no encontrada: ${fetchError.message}`);
+            const { error: rpcError } = await supabase.rpc('record_goal_saving_contribution', {
+                p_user_id: user.id,
+                p_goal_id: selectedGoal.id,
+                p_amount: parseFloat(submittedSavingsData.amount),
+                p_payment_date: submittedSavingsData.date,
+                p_source_account_id: submittedSavingsData.source_account_id || null, // Pasar null si no hay cuenta origen
+                p_notes: submittedSavingsData.notes || null,
+                p_transfer_out_category_id: CATEGORY_ID_TRANSFER_OUT, // ID de tu categoría de gasto para transferencias
+                p_transfer_in_category_id: CATEGORY_ID_TRANSFER_IN    // ID de tu categoría de ingreso para transferencias
+            });
 
-            // 2. Calcular y actualizar
-            const currentAmount = Number(currentGoalData.current_amount) || 0;
-            const newAmount = currentAmount + amountToAdd;
-            const { error: updateError } = await supabase.from('goals')
-                .update({ current_amount: newAmount, updated_at: new Date() }) // Añadir updated_at
-                .eq('id', selectedGoal.id).eq('user_id', user.id);
-            if (updateError) throw updateError;
+            if (rpcError) {
+                console.error("Error RPC record_goal_saving_contribution:", rpcError);
+                throw new Error(rpcError.message || "Error al registrar la aportación.");
+            }
 
-            toast.success('¡Ahorro añadido!', { id: toastId });
+            toast.success('¡Ahorro añadido con éxito!', { id: toastId });
             handleCloseSavingsModal();
-            fetchData(user.id); // Recargar
+            fetchData(user.id); // Recargar datos de metas (y cuentas si se afectaron)
+
+            // Lógica de celebración si se alcanzó la meta (obtener meta actualizada)
+            const { data: updatedGoalData } = await supabase
+                .from('goals')
+                .select('current_amount, target_amount, name')
+                .eq('id', selectedGoal.id)
+                .single();
+            
+            if (updatedGoalData && (Number(updatedGoalData.current_amount) >= (Number(updatedGoalData.target_amount) || Infinity))) {
+                toast.success(`¡Felicidades! Has alcanzado tu meta "${updatedGoalData.name || ''}" 🎉`, { duration: 5000, icon: '🥳' });
+            }
+
         } catch (error) {
             console.error('Error añadiendo ahorro:', error);
             setModalError(`Error: ${error.message}`);
             toast.error(`Error: ${error.message}`, { id: toastId });
         } finally { setIsSaving(false); }
-    }, [user, selectedGoal, supabase, handleCloseSavingsModal, fetchData]);
+    }, [user, selectedGoal, supabase, handleCloseSavingsModal, fetchData, setModalError, setIsSaving]);
 
-    // Manejador Eliminación
-    const handleDeleteGoal = (goalId, goalName) => {
-        if (!goalId || !goalName) return;
-        setGoalToDelete({ id: goalId, name: goalName });
+    // Manejador Archivar
+
+    const handleAttemptArchiveGoal = (goalId, goalName) => {
+        setGoalToDelete({ id: goalId, name: goalName, action: 'archive' }); // Añadir action
         setIsConfirmModalOpen(true);
     };
-    const confirmDeleteHandler = useCallback(async () => {
-        if (!goalToDelete || !user?.id) { toast.error("Faltan datos."); return; }
-        const { id: goalId, name: goalName } = goalToDelete;
-        setIsConfirmModalOpen(false);
-        const toastId = toast.loading(`Eliminando meta "${goalName}"...`);
+    const handleUnarchiveGoal = (goalId, goalName) => {
+        setGoalToDelete({ id: goalId, name: goalName, action: 'unarchive' }); // Añadir action
+        setIsConfirmModalOpen(true);
+    };
+
+    const confirmProcessGoalHandler = useCallback(async () => {
+        if (!goalToDelete || !goalToDelete.id || !user?.id) {
+            toast.error("Acción no válida o datos incompletos.");
+            setIsConfirmModalOpen(false); 
+            setGoalToDelete(null); 
+            return;
+        }
+
+        const { id: goalId, name: goalName, action } = goalToDelete;
+        setIsConfirmModalOpen(false); // Cerrar modal
+        const toastActionText = action === 'archive' ? 'Archivando' : 'Restaurando';
+        const toastId = toast.loading(`${toastActionText} meta "${goalName}"...`);
+
         try {
-            const { error } = await supabase.from('goals').delete()
-                .eq('id', goalId).eq('user_id', user.id);
-            if (error) throw error;
-            toast.success('Meta eliminada.', { id: toastId });
-            fetchData(user.id); // Recargar
+            let updateData;
+            if (action === 'archive') {
+                updateData = { 
+                    is_archived: true, 
+                    archived_at: new Date().toISOString() 
+                };
+                console.log(`[Goals.jsx] Archivando meta ID: ${goalId}`, updateData);
+            } else if (action === 'unarchive') {
+                updateData = { 
+                    is_archived: false, 
+                    archived_at: null // Asegurarse de poner archived_at a null
+                };
+                console.log(`[Goals.jsx] Desarchivando meta ID: ${goalId}`, updateData);
+            } else {
+                throw new Error("Acción desconocida para procesar meta.");
+            }
+
+            const { error: dbError } = await supabase
+                .from('goals')
+                .update(updateData)
+                .eq('id', goalId)
+                .eq('user_id', user.id);
+
+            if (dbError) {
+                console.error(`[Goals.jsx] Error en Supabase al ${action} meta:`, dbError);
+                throw dbError;
+            }
+
+            toast.success(`Meta "${goalName}" ${action === 'archive' ? 'archivada' : 'restaurada con éxito'}.`, { id: toastId });
+            
+            console.log(`[Goals.jsx] Meta ${action}da. Llamando a fetchData para refrescar...`);
+            await fetchData(user.id); // <-- ASEGÚRATE QUE ESTA LLAMADA SE HAGA Y SEA AWAIT
+                                    // Y que fetchData realmente obtenga los datos frescos y actualice el estado 'goals'.
+
         } catch (err) {
-            console.error('Error eliminando meta:', err);
+            console.error(`[Goals.jsx] Error al ${action} meta:`, err);
             toast.error(`Error: ${err.message}`, { id: toastId });
-        } finally { setGoalToDelete(null); }
-    }, [user, goalToDelete, supabase, fetchData]);
+        } finally {
+            setGoalToDelete(null); // Limpiar goalToDelete
+        }
+    }, [user, goalToDelete, supabase, fetchData, setIsConfirmModalOpen, setGoalToDelete]);
 
     // Otros manejadores
     
     const handleBack = useCallback(() => navigate(-1), [navigate]);
     const scrollToTop = useCallback(() => window.scrollTo({ top: 0, behavior: 'smooth' }), []);
+
+    const goalPageAction = (
+        <button 
+            onClick={() => handleOpenGoalModal('add')} 
+            id="addGoalBtn" 
+            className="btn btn-primary btn-add" // Tus clases existentes
+            // disabled se maneja por isProcessingPage en PageHeader,
+            // o puedes añadir lógica específica aquí si es necesario
+            // disabled={isLoading || isSaving} 
+        >
+            <i className="fas fa-plus"></i> Añadir Meta
+        </button>
+    );
+
+    const { activeGoals, archivedGoals } = useMemo(() => {
+        const active = goals.filter(goal => !goal.is_archived);
+        const archived = goals.filter(goal => goal.is_archived);
+        active.sort((a, b) => (new Date(a.target_date || 0)) - (new Date(b.target_date || 0)));
+        archived.sort((a, b) => (new Date(b.archived_at || 0)) - (new Date(a.archived_at || 0)));
+        return { activeGoals: active, archivedGoals: archived };
+    }, [goals]);
+
+    const accountsForSavingsModal = useMemo(() => {
+    if (!selectedGoal) { // Si no hay meta seleccionada para el ahorro, filtra solo por tipo
+        return accounts.filter(acc => acc.type !== 'tarjeta_credito');
+    }
+    // Si hay meta seleccionada, filtra por tipo Y para no incluir la cuenta destino de la meta
+    return accounts.filter(acc => 
+        acc.type !== 'tarjeta_credito' && 
+        acc.id !== selectedGoal.related_account_id 
+    );
+}, [accounts, selectedGoal]);
 
     return (
         <div style={{ display: 'flex' }}>
@@ -210,34 +346,70 @@ function Goals() {
             {/* Contenido Principal */}
             <div className="page-container">
                 {/* Cabecera */}
-                <div className="page-header goals-header">
-                   {/* ... Cabecera JSX ... */}
-                   <button onClick={handleBack} id="backButton" className="btn-icon" aria-label="Volver"><i className="fas fa-arrow-left"></i></button>
-                   <div className="header-title-group"> <img id="userAvatarHeader" src={avatarUrl} alt="Avatar" className="header-avatar-small" /> <h1>Mis Metas</h1> </div>
-                   <button onClick={() => handleOpenGoalModal('add')} id="addGoalBtn" className="btn btn-primary btn-add"> <i className="fas fa-plus"></i> Añadir Meta </button>
-                </div>
+                <PageHeader 
+                    pageTitle="Mis Metas"
+                    headerClassName="goals-header" // Tu clase específica si la necesitas
+                    showSettingsButton={false}     // No mostrar botón de settings aquí
+                    isProcessingPage={isLoading || isSaving} // Para deshabilitar botones de PageHeader si es necesario
+                    actionButton={goalPageAction}    // <-- Pasar el botón "Añadir Meta"
+                />
 
-                {/* Lista de Metas */}
-                <div id="goalList" className="goal-list-grid">
-                    {isLoading && <p>Cargando metas...</p>}
-                    {error && <p style={{ color: 'red' }}>{error}</p>}
-                    {!isLoading && goals.length === 0 && !error && ( /* Mensaje vacío */
-                        <div className="empty-list-message">
-                           <img src={emptyMascot} alt="Mascota FinAi" className="empty-mascot"/>
-                           <p>¡Define tu primera meta de ahorro!</p>
-                            <button onClick={() => handleOpenGoalModal('add')} className="btn btn-primary"> <i className="fas fa-plus"></i> Crear Meta </button>
-                        </div>
-                    )}
-                    {!isLoading && goals.map(goal => (
+                {/* --- BOTÓN PARA MOSTRAR/OCULTAR ARCHIVADAS --- */}
+                <div className="view-controls-bar goals-controls">
+                    <div>{/* Espacio para futuros filtros */}</div>
+                    <button
+                        onClick={() => setShowArchivedGoals(prev => !prev)}
+                        className="btn btn-secondary btn-sm"
+                        disabled={isLoading}
+                    >
+                        {showArchivedGoals ? 'Ocultar Archivadas' : 'Mostrar Archivadas'} 
+                        ({archivedGoals.length})
+                    </button>
+                </div>
+                {/* ------------------------------------------ */}
+
+                {isLoading && <p className="loading-message">Cargando metas...</p>}
+                {error && <p className="error-message">{error}</p>}
+
+                {!isLoading && !error && activeGoals.length === 0 && !showArchivedGoals && (
+                    <div className="empty-list-message welcome-options"> {/* Usar tus clases */}
+                        <img src={emptyMascot} alt="Mascota FinAi" className="empty-mascot large" />
+                        <h2>¡Define tu primera meta de ahorro!</h2>
+                        <button onClick={() => handleOpenGoalModal('add')} className="btn btn-primary">
+                            <i className="fas fa-plus"></i> Crear Meta
+                        </button>
+                    </div>
+                )}
+                <div id="goalListActive" className="goal-list-grid">
+                    {!isLoading && activeGoals.map(g => ( // Cambiado goal a g para evitar conflicto con estado
                         <GoalCard
-                            key={goal.id}
-                            goal={goal}
+                            key={g.id}
+                            goal={g}
                             onAddSavings={handleOpenSavingsModal}
-                            onEdit={handleOpenGoalModal} // Pasará ('edit', goal)
-                            onDelete={handleDeleteGoal} // Pasará (goal.id, goal.name)
+                            onEdit={() => handleOpenGoalModal('edit', g)}
+                            onArchive={() => handleAttemptArchiveGoal(g.id, g.name)} // Pasar para archivar
+                            // onDelete ya no se pasa directamente
                         />
                     ))}
                 </div>
+
+                {showArchivedGoals && (
+                    <>
+                        <h2 className="content-section-header">Metas Archivadas</h2>
+                        {!isLoading && archivedGoals.length === 0 && !error && (
+                            <p className="empty-list-message small-empty">No tienes metas archivadas.</p>
+                        )}
+                        <div id="goalListArchived" className="goal-list-grid archived-list">
+                            {!isLoading && archivedGoals.map(g => ( // Cambiado goal a g
+                                <GoalCard
+                                    key={g.id}
+                                    goal={g}
+                                    onUnarchive={() => handleUnarchiveGoal(g.id, g.name)} // Pasar para desarchivar
+                                />
+                            ))}
+                        </div>
+                    </>
+                )}
             </div> {/* Fin page-container */}
 
             {/* Modales */}
@@ -246,16 +418,32 @@ function Goals() {
                 mode={modalMode} initialData={selectedGoal} accounts={accounts}
                 isSaving={isSaving} error={modalError}
             />
+            
             <SavingsModal
-                isOpen={isSavingsModalOpen} onClose={handleCloseSavingsModal} onSubmit={handleAddSavingsSubmit}
-                selectedGoal={selectedGoal} isSaving={isSaving} error={modalError}
+                isOpen={isSavingsModalOpen} 
+                onClose={handleCloseSavingsModal} 
+                onSubmit={handleAddSavingsSubmit}
+                accounts={accountsForSavingsModal}
+                selectedGoal={selectedGoal} 
+                isSaving={isSaving} 
+                error={modalError}
             />
             <ConfirmationModal
                 isOpen={isConfirmModalOpen}
-                onClose={() => { setIsConfirmModalOpen(false); setGoalToDelete(null); }}
-                onConfirm={confirmDeleteHandler} title="Confirmar Eliminación"
-                message={`¿Seguro eliminar la meta "${goalToDelete?.name || ''}"? Se perderá el progreso.`}
-                confirmText="Eliminar" cancelText="Cancelar" isDanger={true}
+                onClose={() => { 
+                    setIsConfirmModalOpen(false); 
+                    setGoalToDelete(null); // Usar setGoalToDelete consistentemente
+                }}
+                onConfirm={confirmProcessGoalHandler}
+                title={goalToDelete?.action === 'archive' ? "Archivar Meta" : "Restaurar Meta"}
+                message={
+                    goalToDelete?.action === 'archive' 
+                    ? `¿Seguro que quieres archivar la meta "${goalToDelete?.name || ''}"? Podrás verla y restaurarla más tarde.`
+                    : `¿Seguro que quieres restaurar la meta "${goalToDelete?.name || ''}" a tu lista activa?`
+                }
+                confirmText={goalToDelete?.action === 'archive' ? "Sí, Archivar" : "Sí, Restaurar"}
+                cancelText="Cancelar"
+                isDanger={goalToDelete?.action === 'archive'} // Usar goalToDelete para la condición de 'isDanger'
             />
 
             {/* Botón Scroll-Top */}

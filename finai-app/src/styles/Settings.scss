@@ -1,0 +1,648 @@
+// Refactorizado y con Responsividad
+.settings-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); // Base
+    gap: $spacing-xl; // Usar variable
+
+    // Media Queries anidadas para ajustar el grid
+    @include md-up {
+        // En tabletas o más grandes
+        // grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); // Ajustar min-width
+        gap: $spacing-xl;
+    }
+
+    @include mobile-only {
+        // En móviles pequeños
+        grid-template-columns: 1fr; // Una columna
+        gap: $spacing-md; // Menos espacio
+    }
+}
+
+
+/* --- Tarjeta de Sección (.settings-card) --- */
+// Este estilo base (.settings-card) debería estar en un partial común (ej. _components.scss).
+// Aquí solo refactorizamos los overrides específicos y sus contenidos.
+.settings-card {
+    // Usar esta clase para aplicar overrides a la base
+    background-color: $color-panel-bg; // Base en partial
+    border-radius: $border-radius-lg; // Usar variable (original 20px)
+    padding: $spacing-xl $spacing-xxl; // Usar variables (original 25px 30px)
+    box-shadow: 0 8px 25px rgba(100, 110, 140, 0.15), 0 2px 6px rgba(100, 110, 140, 0.1); // Base en partial
+    border: 1px solid transparent; // Base en partial
+    transition: transform 0.25s ease, box-shadow 0.25s ease, background-color 0.3s ease; // Base en partial
+
+    &:hover {
+        // Estado hover (override de la base)
+        transform: translateY(-6px) scale(1.01); // Ligero levantamiento y escala
+        // box-shadow se define por ID en hover específico
+    }
+
+    /* Título de Sección (Anidado) */
+    h2 {
+        // Título dentro de la tarjeta (usará estilos base si están en partial)
+        font-size: 1.2em; // Usar variable si aplica
+        font-weight: 700; // Usar variable
+        color: $color-text-dark; // Usar variable (original #334)
+        margin: 0 0 $spacing-lg 0; // Usar variable (original 20px)
+        padding-bottom: $spacing-sm; // Usar variable (original 10px)
+        border-bottom: 1px solid lighten($color-border, 10%); // Usar variable y función (original rgba(0, 0, 0, 0.08))
+        display: flex;
+        align-items: center;
+        gap: $spacing-sm; // Usar variable (original 10px)
+
+        .icon-prefix {
+            // Icono antes del título
+            font-size: 1.1em; // Usar variable si aplica
+            color: $color-accent-purple; // Usar variable (original #8a82d5)
+        }
+    }
+
+
+    /* --- Elemento de Configuración Individual (.setting-item) --- */
+    // Este estilo base (.setting-item y sus elementos internos) DEBERÍA estar en un partial común (ej. _components.scss).
+    // Aquí solo overrides si son específicos de Settings.
+    
+                .setting-item {
+                    // Base en partial
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: $spacing-md; // Usar variable
+                    padding: $spacing-sm $spacing-xs; // Usar variables
+                    border-bottom: 1px solid lighten($color-border, 10%); // Usar variable y función
+                    cursor: pointer; // Si es clickeable
+        
+                    &:last-child {
+                        margin-bottom: 0;
+                        border-bottom: none;
+                    }
+        
+                    &:hover {
+                        background-color: rgba($color-shadow, 0.03);
+                    }
+        
+                    // Usar rgba y variable
+        
+                    span:first-child {
+                        // Etiqueta
+                        font-weight: 600;
+                        color: $color-text-dark;
+                        font-size: 0.95em;
+                        display: flex;
+                        align-items: center;
+                        gap: $spacing-sm;
+                    }
+        
+                    .icon-inline {
+                        font-size: 1em;
+                        color: $color-text-muted;
+                    }
+        
+                    // Icono inline
+        
+                    .setting-value {
+                        // Valor estático
+                        font-weight: 700;
+                        color: $color-text-dark;
+                    }
+        
+                    .setting-value-editable {
+                        // Valor que parece editable
+                        font-weight: 600;
+                        color: $color-accent-blue;
+                        cursor: pointer;
+                        display: flex;
+                        align-items: center;
+                        gap: $spacing-xs;
+        
+                        i {
+                            font-size: 0.8em;
+                        }
+                    }
+        
+                    &.clickable {
+                        cursor: pointer;
+                        @include transition-smooth(background-color);
+                    }
+        
+                    &.clickable:hover .setting-value-editable {
+                        color: darken($color-accent-blue, 10%);
+                    }
+        
+                    // Usar función
+                }
+        
+
+
+    /* --- Controles Específicos (Anidados) --- */
+
+    /* Botones dentro de tarjeta */
+    // Estos botones usarán estilos base de _buttons.scss.
+    // Aquí solo overrides si son específicos de Settings.
+    .btn-full-width {
+        // Botón ancho completo (usará estilos base de _buttons.scss)
+        // width: 100%; justify-content: center; // Heredado
+        margin-top: $spacing-sm; // Usar variable (original 10px)
+        padding: $spacing-sm $spacing-md; // Usar variables (original 10px 15px)
+        font-size: 0.9em; // Usar variable (original 0.9em)
+    }
+
+    // .btn-danger { ... } // Heredado de _buttons.scss
+    // .btn-secondary { ... } // Heredado de _buttons.scss
+
+
+    /* Selector de Tema (.theme-selector) */
+    .theme-selector {
+        // Contenedor de opciones de tema
+        display: flex;
+        gap: $spacing-sm; // Usar variable (original 10px)
+        flex-wrap: wrap; // Para móvil
+
+        .theme-option {
+            // Cada opción de tema
+            background-color: lighten($color-border, 10%); // Usar variable y función (original #e2e8f0)
+            border: 2px solid transparent;
+            border-radius: $border-radius-sm; // Usar variable (original 10px)
+            padding: $spacing-xs $spacing-sm; // Usar variables (original 8px 12px)
+            cursor: pointer;
+            @include transition-smooth(all); // Usar mixin
+            color: $color-text-muted; // Usar variable (original #718096)
+            // text-align: center; // Si quieres centrar texto
+
+            &:hover {
+                border-color: $color-text-muted;
+            }
+
+            // Usar variable (original #a0aec0)
+            &.active {
+                // Estado activo
+                border-color: $color-accent-purple; // Usar variable
+                background-color: lighten($color-accent-purple, 20%); // Usar variable y función (original #e3dffc)
+                color: $color-accent-purple; // Usar variable (original #8a82d5)
+                box-shadow: 0 0 5px rgba($color-accent-purple, 0.3); // Usar variable y rgba
+            }
+
+            i {
+                font-size: 1.2em;
+            }
+
+            // Icono
+        }
+
+        // Responsive para el selector de tema (flex-wrap ya ayuda, ajustar gap si es necesario)
+        @include mobile-only {
+            gap: $spacing-xs;
+        }
+    }
+
+    /* Toggle Switch */
+    .toggle-switch {
+        position: relative;
+        display: inline-block;
+        width: 44px; height: 24px; // Usar variables si aplicables globalmente
+        input { opacity: 0; width: 0; height: 0; }
+    
+        .toggle-slider {
+            position: absolute; cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: $color-border; // Usar variable
+            transition: $transition-speed-normal; // Usar variable
+            border-radius: 24px; // Usar variable si aplicable globalmente
+    
+            &:before {
+                position: absolute; content: "";
+                height: 18px; width: 18px; // Usar variables si aplicables globalmente
+                left: 3px; bottom: 3px; // Usar variables si aplicables globalmente
+                background-color: $color-panel-bg; // Usar variable (blanco)
+                transition: $transition-speed-normal; // Usar variable
+                border-radius: 50%;
+            }
+        }
+    
+        input:checked + .toggle-slider { background-color: $color-accent-green; } // Usar variable (Verde)
+        input:checked + .toggle-slider:before { transform: translateX(20px); } // Usar variable si aplicable globalmente
+    
+        // Modo Oscuro para Toggle Switch (Incluido aquí según tu solicitud, podría ser genérico)
+        body.dark-mode & { // & se refiere al .toggle-switch
+            .toggle-slider { background-color: $color-text-muted; } // Usar variable
+            input:checked + .toggle-slider { background-color: lighten($color-accent-green, 10%); } // Usar variable y función
+            .toggle-slider:before { background-color: darken($color-panel-bg, 50%); } // Usar variable y función
+        }
+    }
+    /* Notas pequeñas (.setting-note) */
+    .setting-note {
+        font-size: 0.8em; // Usar variable
+        color: $color-text-dark; // Usar variable (original #555)
+        display: block;
+        margin-top: -$spacing-sm; // Usar variable (original -10px)
+        margin-bottom: $spacing-md; // Usar variable (original 15px)
+        text-align: right;
+
+        // Responsive si es necesario
+        @include mobile-only {
+            text-align: left;
+            margin-top: $spacing-xs;
+            margin-bottom: $spacing-sm;
+        }
+    }
+
+    /* Enlaces de Ayuda (.setting-link) */
+    .setting-link {
+        display: block;
+        color: $color-accent-blue; // Usar variable (original #0b7bc1)
+        text-decoration: none;
+        font-size: 0.95em; // Usar variable
+        padding: $spacing-xs * 1.5 0; // Usar variables (original 8px 0)
+        @include transition_smooth(color); // Usar mixin
+        display: flex;
+        align-items: center;
+        gap: $spacing-sm; // Usar variable (original 8px)
+        font-weight: 600; // Usar variable
+
+        &:hover {
+            color: darken($color-accent-blue, 15%);
+            text-decoration: underline;
+        }
+
+        // Usar función
+        i {
+            color: $color-text-muted;
+        }
+
+        // Usar variable (original #777)
+        // Responsive si es necesario
+        @include mobile-only {
+            font-size: 0.9em;
+            gap: $spacing-xs;
+        }
+    }
+}
+
+/* Colores de fondo específicos por tarjeta (Paleta Pastel Suave) - Anidado en .settings-card */
+.settings-card {
+
+    // Usar esta clase para aplicar overrides a la base
+    &#generalCard {
+        background-color: lighten($color-accent-blue, 25%);
+    }
+
+    // Usar variable y función
+    &#appearanceCard {
+        background-color: lighten($color-accent-orange, 25%);
+    }
+
+    // Usar variable y función
+    &#securityCard {
+        background-color: lighten($color-accent-red, 25%);
+    }
+
+    // Usar variable y función
+    &#notificationsCard {
+        background-color: lighten($color-accent-green, 25%);
+    }
+
+    // Usar variable y función
+    &#accountCard {
+        background-color: lighten($color-accent-blue, 30%);
+    }
+
+    // Usar variable y función
+    &#helpCard {
+        background-color: lighten($color-accent-purple, 25%);
+    }
+
+    // Usar variable y función
+
+    // Hover específicos por tarjeta (override del hover base)
+    &#generalCard:hover {
+        box-shadow: 0 0px 25px rgba($color-accent-blue, 0.4);
+    }
+
+    &#appearanceCard:hover {
+        box-shadow: 0 0px 25px rgba($color-accent-orange, 0.4);
+    }
+
+    &#securityCard:hover {
+        box-shadow: 0 0px 25px rgba($color-accent-red, 0.4);
+    }
+
+    &#notificationsCard:hover {
+        box-shadow: 0 0px 25px rgba($color-accent-green, 0.4);
+    }
+
+    &#accountCard:hover {
+        box-shadow: 0 0px 25px rgba($color-accent-blue, 0.5);
+    }
+
+    &#helpCard:hover {
+        box-shadow: 0 0px 25px rgba($color-accent-purple, 0.4);
+    }
+}
+
+
+/* Footer Versión (.app-version) */
+.app-version {
+    text-align: center;
+    margin-top: $spacing-xxxl; // Usar variable
+    color: $color-text-muted; // Usar variable (original #a0aec0)
+    font-size: 0.85em; // Usar variable
+
+    // Responsive si es necesario
+    @include mobile-only {
+        margin-top: $spacing-xl;
+        font-size: 0.8em;
+    }
+}
+
+/* --- ESTILOS PARA DARK MODE (AÑADIR AL FINAL) --- */
+// Estos estilos de modo oscuro para elementos comunes DEBERÍAN estar en sus partials correspondientes.
+// Aquí solo los overrides para elementos específicos de Settings.
+
+body.dark-mode {
+     background-color: darken($color-primary-blue, 50%); // Base en _base.scss
+     color: $color-text-light; // Base en _base.scss
+}
+
+body.dark-mode .page-container {
+    background-color: darken($color-panel-bg, 50%); // En _layout.scss
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5); // En _layout.scss
+}
+
+body.dark-mode .page-header h1 {
+    color: darken($color-sidebar-bg, 10%);
+}
+
+// En _header.scss
+body.dark-mode .header-avatar-small {
+    border-color: darken($color-text-muted, 10%);
+}
+
+// En _header.scss
+
+/* Tarjetas en modo oscuro */
+body.dark-mode .settings-card {
+    // Usar esta clase para aplicar overrides a la base
+     background-color: darken($color-panel-bg, 50%); // Base en partial
+    border-color: rgba($color-text-light, 0.1); // Usar variable y rgba
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3), 0 2px 6px rgba(0, 0, 0, 0.2); // Usar variable y rgba
+}
+
+/* Colores oscuros específicos por tarjeta (Anidado en .settings-card) */
+body.dark-mode .settings-card {
+
+    // Usar esta clase para aplicar overrides a la base
+    &#generalCard {
+        background-color: darken($color-accent-blue, 40%);
+    }
+
+    // Usar variable y función
+    &#appearanceCard {
+        background-color: darken($color-accent-orange, 40%);
+    }
+
+    // Usar variable y función
+    &#securityCard {
+        background-color: darken($color-accent-red, 40%);
+    }
+
+    // Usar variable y función
+    &#notificationsCard {
+        background-color: darken($color-accent-green, 40%);
+    }
+
+    // Usar variable y función
+    &#accountCard {
+        background-color: darken($color-accent-blue, 45%);
+    }
+
+    // Usar variable y función
+    &#helpCard {
+        background-color: darken($color-accent-purple, 40%);
+    }
+
+    // Usar variable y función
+
+    // Hover específicos por tarjeta en modo oscuro
+    &#generalCard:hover {
+        box-shadow: 0 0px 25px rgba(lighten($color-accent-blue, 10%), 0.4);
+    }
+
+    &#appearanceCard:hover {
+        box-shadow: 0 0px 25px rgba(lighten($color-accent-orange, 10%), 0.4);
+    }
+
+    &#securityCard:hover {
+        box-shadow: 0 0px 25px rgba(lighten($color-accent-red, 10%), 0.4);
+    }
+
+    &#notificationsCard:hover {
+        box-shadow: 0 0px 25px rgba(lighten($color-accent-green, 10%), 0.4);
+    }
+
+    &#accountCard:hover {
+        box-shadow: 0 0px 25px rgba(lighten($color-accent-blue, 15%), 0.4);
+    }
+
+    &#helpCard:hover {
+        box-shadow: 0 0px 25px rgba(lighten($color-accent-purple, 10%), 0.4);
+    }
+}
+
+
+body.dark-mode .settings-card h2 {
+    color: $color-text-light;
+    border-bottom-color: rgba($color-text-light, 0.15);
+}
+
+// Título oscuro
+body.dark-mode .icon-prefix {
+    color: lighten($color-accent-purple, 10%);
+}
+
+// Icono prefijo oscuro
+
+/* Items de configuración en modo oscuro */
+body.dark-mode .setting-item {
+    border-bottom-color: rgba($color-text-light, 0.08);
+}
+
+// Separador oscuro
+body.dark-mode .setting-item span:first-child {
+    color: lighten($color-text-muted, 10%);
+}
+
+// Texto etiqueta más claro
+body.dark-mode .icon-inline {
+    color: lighten($color-text-muted, 10%);
+}
+
+// Iconos gris claro
+body.dark-mode .setting-value {
+    color: $color-text-light;
+}
+
+// Valor estático blanco
+body.dark-mode .setting-value-editable {
+    color: lighten($color-accent-blue, 10%);
+}
+
+// Valor editable azul claro
+body.dark-mode .setting-item.clickable:hover {
+    background-color: rgba($color-text-light, 0.05);
+}
+
+// Fondo hover oscuro
+body.dark-mode .setting-item.clickable:hover .setting-value-editable {
+    color: $color-text-light;
+}
+
+// Color hover oscuro
+
+/* Controles en modo oscuro */
+body.dark-mode {
+    .btn-secondary {
+        background-color: darken($color-text-muted, 10%); // Usar variable y función
+        color: $color-text-light; // Usar variable
+        border-color: $color-text-muted; // Usar variable
+        &:hover { background-color: darken($color-text-muted, 20%); border-color: darken($color-text-muted, 15%); } // Usar variable y función
+    }
+    .btn-danger {
+        background-color: lighten($color-accent-red, 10%); // Usar variable y función
+        color: $color-text-dark; // Usar variable
+        &:hover { background-color: $color-accent-red; } // Usar variable
+    }
+}
+
+body.dark-mode .theme-selector .theme-option {
+    background-color: darken($color-border, 20%);
+    color: lighten($color-text-muted, 10%);
+}
+
+// Opciones tema oscuro
+body.dark-mode .theme-selector .theme-option:hover {
+    border-color: $color-text-muted;
+    background-color: darken($color-border, 25%);
+}
+
+body.dark-mode .theme-selector .theme-option.active {
+    border-color: lighten($color-accent-purple, 10%);
+    background-color: darken($color-accent-purple, 20%);
+    color: lighten($color-accent-purple, 10%);
+    box-shadow: 0 0 5px rgba(lighten($color-accent-purple, 10%), 0.4);
+}
+
+// Tema activo oscuro
+
+// Toggle Switch en modo oscuro DEBERÍA estar en su partial.
+
+    body.dark-mode .toggle-slider { background-color: $color-text-muted; }
+    body.dark-mode input:checked + .toggle-slider { background-color: lighten($color-accent-green, 10%); }
+    body.dark-mode .toggle-slider:before { background-color: darken($color-panel-bg, 50%); }
+    
+
+body.dark-mode .setting-note {
+    color: lighten($color-text-muted, 10%);
+}
+
+// Notas oscuras
+body.dark-mode .setting-link {
+    color: lighten($color-accent-blue, 10%);
+}
+
+// Enlaces ayuda oscuros
+body.dark-mode .setting-link:hover {
+    color: $color-text-light;
+}
+
+body.dark-mode .setting-link i {
+    color: lighten($color-text-muted, 10%);
+}
+
+body.dark-mode .app-version {
+    color: darken($color-text-muted, 10%);
+}
+
+// Versión oscura
+
+// Modales en modo oscuro DEBERÍAN estar en _modals.scss
+body.dark-mode {
+    .modal-content { // Estilo base del contenido modal en modo oscuro
+        background-color: darken($color-panel-bg, 50%); // Usar variable y función
+        color: $color-text-light; // Usar variable
+        h2 { color: lighten($color-accent-purple, 10%); } // Usar variable y función (Título claro)
+        .modal-actions { border-top-color: darken($color-border, 30%); } // Usar variable y función
+
+        // Ajustar estilos de inputs/selects/textareas en modo oscuro si es necesario
+        .input-group {
+             label { color: lighten($color-text-muted, 10%); } // Usar variable y función
+             input, select, textarea {
+                 background-color: darken($color-panel-bg, 60%); // Usar variable y función
+                 border-color: darken($color-border, 30%); // Usar variable y función
+                 color: $color-text-light; // Usar variable
+             }
+             input:focus, select:focus, textarea:focus {
+                 border-color: lighten($color-accent-purple, 10%); // Usar variable y función
+                 box-shadow: 0 0 0 2px rgba(lighten($color-accent-purple, 10%), 0.3); // Usar variable y rgba
+             }
+        }
+    }
+
+    // Modo Oscuro para Modal 2FA
+    #setup2faModal .modal-content { // & se refiere a #setup2faModal .modal-content
+        background-color: darken($color-panel-bg, 50%); // Usar variable y función
+        color: $color-text-light; // Usar variable
+    }
+    .modal-instructions { color: lighten($color-text-muted, 10%); } // Usar variable y función
+    .qr-code-container { background-color: $color-panel-bg; } // Mantener QR en fondo claro
+    .secret-key-container label { color: lighten($color-text-muted, 10%); } // Usar variable y función
+    #secretCodeDisplay {
+        background-color: darken($color-panel-bg, 60%); // Usar variable y función
+        border-color: darken($color-border, 30%); // Usar variable y función
+        color: $color-text-light; // Usar variable
+    }
+    .btn-icon { color: lighten($color-accent-blue, 10%); } // Usar variable y función (Iconos en modal 2FA oscuro)
+
+
+    // Modo Oscuro para Modal Eliminar
+    .modal-content.danger-modal { // & se refiere a .modal-content.danger-modal
+        border-left-color: lighten($color-accent-red, 10%); // Usar variable y función
+    }
+    #modalTitleDelete { color: lighten($color-accent-red, 10%); } // Usar variable y función
+    .modal-instructions.danger-text {
+        background-color: darken($color-accent-red, 20%); // Usar variable y función
+        color: lighten($color-accent-red, 20%); // Usar variable y función
+        border-color: lighten($color-accent-red, 10%); // Usar variable y función
+    }
+    #deleteUserEmail { color: $color-text-light; } // Usar variable
+    #confirmDeleteButton {
+        background-color: lighten($color-accent-red, 10%); // Usar variable y función
+        color: $color-text-dark; // Usar variable
+    }
+    #confirmDeleteButton:hover { background-color: $color-accent-red; } // Usar variable
+
+
+    // Modo Oscuro para Modal Info
+    .modal-content.info-modal-content { // & se refiere a .modal-content.info-modal-content
+        border-left-color: lighten($color-accent-blue, 10%); // Usar variable y función
+        background-color: darken($color-panel-bg, 50%); // Usar variable y función
+    }
+    #infoModalTitle { color: lighten($color-accent-blue, 10%); } // Usar variable y función
+    #infoModalMessage { color: $color-text-light; } // Usar variable
+
+
+    // Modo Oscuro para Modal Selección
+    .selection-options label { // & se refiere a .selection-options label
+        background-color: darken($color-border, 20%); // Usar variable y función
+        border-color: darken($color-border, 10%); // Usar variable y función
+        color: $color-text-light; // Usar variable
+    }
+    .selection-options label:hover {
+        background-color: darken($color-border, 30%); // Usar variable y función
+        border-color: $color-text-muted; // Usar variable
+    }
+    .selection-options input[type="radio"]:checked + span { color: lighten($color-accent-purple, 10%); } // Usar variable y función
+    .selection-options label.selected-option { // & se refiere a .selection-options label.selected-option
+        border-color: lighten($color-accent-purple, 10%); // Usar variable y función
+        background-color: darken($color-accent-purple, 20%); // Usar variable y función
+    }
+}

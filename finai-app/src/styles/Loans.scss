@@ -1,0 +1,430 @@
+// Refactorizado y con Responsividad
+// El layout original es flex-direction: column, lo cual es responsive por defecto.
+.loan-list {
+    display: flex; // Mantener flexbox columna si es el diseño deseado
+    flex-direction: column;
+    gap: $spacing-lg; // Usar variable
+    margin-top: $spacing-lg; // Usar variable
+
+    // Si quieres cambiar a grid en pantallas más grandes:
+    @include md-up {
+        // display: grid;
+        // grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); // Ejemplo de grid
+        // gap: $spacing-xl; // Ejemplo de espacio
+    }
+
+    // Responsive para el layout de columna (si necesitas ajustar el gap, etc.)
+    @include mobile-only {
+        gap: $spacing-md; // Menos espacio en móvil
+        margin-top: $spacing-md;
+    }
+}
+
+/* --- Tarjeta de Préstamo (.loan-card) --- */
+// Refactorizado y Anidado
+.loan-card {
+    background-color: $color-panel-bg; // Usar variable
+    border-radius: $border-radius-lg; // Usar variable
+    padding: $spacing-md $spacing-lg; // Usar variables
+    box-shadow: $box-shadow-md; // Usar variable
+    display: flex;
+    align-items: center;
+    gap: $spacing-md; // Usar variable
+    @include transition-smooth((transform, box-shadow)); // Usar mixin
+    position: relative;
+
+    &:hover {
+        // Estado hover
+        transform: translateY(-5px);
+        box-shadow: 0 0px 25px rgba($color-accent-orange, 0.4); // Usar variable y rgba
+        // Puedes añadir un borde de color al pasar el ratón
+        // border-color: $color-accent-orange;
+    }
+
+    .loan-icon-status {
+        // Contenedor icono y badge de estado (anidado)
+        flex-shrink: 0;
+        text-align: center;
+    }
+
+    .loan-icon-bg {
+        // Fondo del icono (anidado)
+        width: 70px;
+        height: 70px; // Usar variable
+        border-radius: $border-radius-md; // Usar variable
+        @include flex-center; // Usar mixin
+        margin-bottom: $spacing-xs * 1.5; // Usar variable
+        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05); // Usar variable
+
+        i {
+            // Icono (anidado)
+            font-size: 2.2em; // Usar variable
+            color: $color-text-light; // Usar variable (icono blanco por defecto)
+        }
+    }
+
+    // Colores del fondo del icono por estado (anidado en el padre .loan-card)
+    &[data-status="cobrado"] .loan-icon-bg {
+        background-color: $color-accent-green;
+    }
+
+    &[data-status="pendiente"] .loan-icon-bg {
+        background-color: $color-accent-orange;
+    }
+
+    &[data-status="parcial"] .loan-icon-bg {
+        background-color: $color-accent-blue;
+    }
+
+    // Ajustar color del icono si el fondo es muy claro (como en el original)
+    &[data-status="pendiente"] .loan-icon-bg i {
+        color: $color-text-dark;
+    }
+
+    // Ejemplo
+
+    .loan-status-badge {
+        // Badge de estado (anidado)
+        display: inline-block;
+        padding: $spacing-xs $spacing-sm; // Usar variables
+        @include pill-shape; // Usar mixin
+        font-size: 0.8em; // Usar variable
+        font-weight: 700; // Usar variable
+        color: $color-text-light; // Usar variable
+        // background-color definido por JS o estado en el padre (.loan-card)
+    }
+
+    // Clases de color para el badge de estado (anidado en el padre .loan-card)
+    & .status-collected {
+        background-color: $color-accent-green;
+    }
+
+    & .status-pending-loan {
+        background-color: $color-accent-orange;
+    }
+
+    & .status-partial-loan {
+        background-color: $color-accent-blue;
+    }
+
+
+    .loan-info {
+        // Contenedor de información (anidado)
+        flex-grow: 1;
+        display: grid; // Usar grid para organizar items
+        grid-template-columns: auto 1fr auto; // Col1: Deudor/Desc/Fecha | Col2: Spacer | Col3: Cantidad/Estado
+        grid-template-rows: auto auto auto; // Tres filas
+        gap: $spacing-xs/2 $spacing-sm; // Espacio entre items (usar variables)
+        align-items: center;
+
+        .loan-debtor {
+            // Deudor (anidado)
+            grid-column: 1 / 2;
+            grid-row: 1 / 2; // Posición en grid
+            font-size: 1.2em;
+            font-weight: 800;
+            color: $color-text-dark; // Usar variable
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            @include text-ellipsis; // Usar mixin
+        }
+
+        .loan-description {
+            // Descripción (anidado)
+            grid-column: 1 / 2;
+            grid-row: 2 / 3;
+            font-size: 0.85em;
+            color: $color-text-muted; // Usar variable
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            @include text-ellipsis; // Usar mixin
+        }
+
+        .loan-date {
+            // Fecha de vencimiento (anidado)
+            grid-column: 1 / 2;
+            grid-row: 3 / 4;
+            font-size: 0.85em;
+            color: $color-text-muted; // Usar variable
+        }
+
+        .loan-amount {
+            // Monto pendiente (anidado)
+            grid-column: 3 / 4;
+            grid-row: 1 / 2;
+            font-size: 1.4em;
+            font-weight: 800;
+            color: $color-accent-green; // Color (verde a cobrar) (usar variable)
+            text-align: right;
+            white-space: nowrap;
+        }
+
+        .loan-status-text {
+            // Texto de estado (anidado)
+            grid-column: 3 / 4;
+            grid-row: 2 / 3;
+            font-size: 0.9em;
+            font-weight: 700;
+            text-align: right;
+            // Color definido por estado en el padre (ya cubierto por status-paid/pending/partial)
+        }
+
+        // Color del monto y texto de estado si está cobrado (anidado en el padre .loan-card)
+        &[data-status="cobrado"] {
+            .loan-amount {
+                color: $color-text-muted;
+                text-decoration: line-through;
+            }
+
+            // Gris tachado
+            .loan-status-text {
+                color: $color-accent-green;
+            }
+
+            // Verde
+        }
+
+        &[data-status="pendiente"] .loan-status-text {
+            color: $color-accent-orange;
+        }
+
+        // Naranja
+        &[data-status="parcial"] .loan-status-text {
+            color: $color-accent-blue;
+        }
+
+        // Azul
+    }
+
+    /* Estilos Botones Acción Tarjeta (.loan-actions) */
+    .loan-actions {
+        // Contenedor de acciones (anidado)
+        display: flex;
+        flex-direction: column; // Apilados por defecto
+        gap: $spacing-sm; // Usar variable
+        align-items: center;
+        margin-left: $spacing-md; // Usar variable
+
+        .btn-icon {
+            // Botones icono dentro de acciones (usarán estilos base de _buttons.scss)
+            background-color: lighten($color-border, 5%); // Fondo ligero
+            color: $color-text-dark; // Color icono
+            border-radius: 50%; // Redondo
+            width: 38px;
+            height: 38px; // Tamaño
+            @include flex-center; // Centrar contenido
+            font-size: 1.1em; // Tamaño icono
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); // Sombra
+            @include transition-smooth((background-color, color, transform)); // Transición
+
+            &:hover {
+                transform: scale(1.1);
+            }
+
+            // Hover
+        }
+
+        // Colores específicos de los botones de acción (usarán estilos base de _buttons.scss)
+        // & .btn-add-collection { ... } // Se usan las clases genéricas en _buttons.scss
+        // & .btn-edit-loan { ... }
+        // & .btn-delete-loan { ... }
+        // Los hover específicos con sombra que tenías también pueden ir aquí, anidados:
+        & .btn-add-collection:hover {
+            background-color: lighten($color-accent-green, 15%);
+            box-shadow: 0 0px 15px rgba($color-accent-green, 0.4);
+        }
+
+        & .btn-edit-loan:hover {
+            background-color: lighten($color-accent-purple, 15%);
+            box-shadow: 0 0px 15px rgba($color-accent-purple, 0.4);
+        }
+
+        & .btn-delete-loan:hover {
+            background-color: lighten($color-accent-red, 15%);
+            box-shadow: 0 0px 15px rgba($color-accent-red, 0.4);
+        }
+    }
+
+    // Responsive para la tarjeta de préstamo individual
+    @include md-up {
+        // En tabletas y más grandes (si cambiaste a grid)
+        // Si cambiaste .loan-list a grid, ajusta aquí el layout interno de la tarjeta si es necesario
+        // flex-direction: row; // Ejemplo: poner icono/info al lado
+        // align-items: center;
+    }
+
+    @include mobile-only {
+        // En pantallas pequeñas (móvil)
+        flex-direction: column; // Apilar icono/estado, info, acciones
+        align-items: stretch; // Estirar a ancho completo
+        gap: $spacing-md; // Espacio entre secciones
+        padding: $spacing-md; // Ajustar padding
+
+        .loan-icon-status {
+            // Anidado
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: $spacing-sm;
+
+            .loan-icon-bg {
+                width: 60px;
+                height: 60px;
+                margin-bottom: 0;
+
+                i {
+                    font-size: 2em;
+                }
+            }
+
+        }
+
+        .loan-info {
+            // Anidado
+            grid-template-columns: 1fr; // Una sola columna para la info
+            gap: $spacing-xs $spacing-sm; // Ajustar espacio
+
+            .loan-debtor {
+                grid-column: 1 / 2;
+                grid-row: 1 / 2;
+                font-size: 1.1em;
+            }
+
+            // Ajustar tamaño/pos
+            .loan-amount {
+                grid-column: 1 / 2;
+                grid-row: 2 / 3;
+                font-size: 1.2em;
+                text-align: left;
+            }
+
+            // Ajustar tamaño/pos/alineación
+            .loan-description {
+                grid-column: 1 / 2;
+                grid-row: 3 / 4;
+                font-size: 0.8em;
+            }
+
+            // Ajustar tamaño/pos
+            .loan-date {
+                grid-column: 1 / 2;
+                grid-row: 4 / 5;
+                font-size: 0.8em;
+            }
+
+            // Ajustar tamaño/pos
+            .loan-status-text {
+                grid-column: 1 / 2;
+                grid-row: 5 / 6;
+                font-size: 0.8em;
+                text-align: left;
+            }
+
+            // Ajustar tamaño/pos/alineación
+        }
+
+        .loan-actions {
+            // Anidado
+            flex-direction: row; // Poner acciones lado a lado
+            justify-content: flex-end; // Alinear a la derecha
+            margin-top: $spacing-sm;
+            padding-top: $spacing-sm;
+            border-top: 1px solid $color-border;
+            gap: $spacing-xs;
+
+            .btn-icon {
+                width: 35px;
+                height: 35px;
+                font-size: 1em;
+                padding: 2px;
+            }
+
+            // Reducir tamaño botones
+            .btn-add-collection {
+                order: -1;
+            }
+
+            // Poner el botón de añadir cobro primero
+        }
+    }
+}
+
+
+/* --- Sección Resumen Inferior (.summary-footer) --- */
+// Este estilo base ya debería estar en _layout.scss o _components.scss si es común.
+// Si lo está, ignora este bloque y solo añade la media query responsiva si es específica de esta página.
+.summary-footer {
+    display: grid; // Usar grid (el original es grid)
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); // Usar variables
+    gap: $spacing-md; // Usar variable
+    margin-top: $spacing-xxxl; // Usar variable
+    padding-top: $spacing-lg; // Usar variable
+    border-top: 1px solid $color-border; // Usar variable
+
+    .summary-box {
+        // Caja de resumen individual (usará estilos base de .panel o _components.scss)
+        background-color: $color-panel-bg; // Usar variable
+        border-radius: $border-radius-lg; // Usar variable
+        padding: $spacing-md $spacing-lg; // Usar variables
+        text-align: center;
+        box-shadow: $box-shadow-sm; // Usar variable
+
+        // Colores de borde según tipo (Loans)
+        &.blue {
+            background-color: lighten($color-accent-blue, 20%);
+            border-left: 5px solid $color-accent-blue;
+        }
+
+        &.purple {
+            background-color: lighten($color-accent-purple, 20%);
+            border-left: 5px solid $color-accent-purple;
+        }
+
+        &.orange {
+            background-color: lighten($color-accent-orange, 20%);
+            border-left: 5px solid $color-accent-orange;
+        }
+
+
+        .summary-label {
+            display: block;
+            font-size: 0.85em;
+            color: $color-text-muted;
+            margin-bottom: $spacing-xs;
+        }
+
+        strong {
+            font-size: 1.4em;
+            font-weight: 800;
+            color: $color-text-dark;
+            display: block;
+        }
+
+        small {
+            font-size: 0.75em;
+            color: $color-text-muted;
+            display: block;
+            margin-top: $spacing-xs/2;
+        }
+    }
+
+    // Responsive para el summary footer
+    @include mobile-only {
+        // En móviles
+        grid-template-columns: 1fr; // Apilar cajas en una columna
+        gap: $spacing-sm; // Menos espacio
+
+        .summary-box {
+            padding: $spacing-sm $spacing-md;
+        }
+
+        // Ajustar padding
+        .summary-box strong {
+            font-size: 1.2em;
+        }
+
+        // Ajustar tamaño fuente
+    }
+}

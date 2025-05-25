@@ -73,32 +73,65 @@ function TransactionModal({
 
   // Manejador de submit interno
   const handleSubmit = (e) => {
-    e.preventDefault();
-    setLocalError(''); // Limpiar error local antes de validar
-
-    // Validaciones internas
-    const amount = parseFloat(formData.amount);
-    if (isNaN(amount) || amount <= 0) { setLocalError('Importe debe ser positivo.'); return; }
-    if (!formData.transaction_date) { setLocalError('Fecha es obligatoria.'); return; }
-    if (!formData.description?.trim()) { setLocalError('Descripción es obligatoria.'); return; }
-    if (!formData.account_id) { setLocalError(transactionType === 'transferencia' ? 'Cuenta Origen es obligatoria.' : 'Cuenta es obligatoria.'); return; }
-
-    if (transactionType === 'transferencia') {
-      if (!formData.account_destination_id) { setLocalError('Cuenta Destino es obligatoria.'); return; }
-      if (formData.account_id === formData.account_destination_id) { setLocalError('Cuentas origen y destino deben ser diferentes.'); return; }
-       // No necesitamos categoría para transferencia (se usan las fijas)
-    }
-     // Categoría es opcional para gasto/ingreso, no validar aquí a menos que sea requisito
-
-    // Llamar a la función onSubmit del padre con los datos validados
-    onSubmit({ ...formData, type: transactionType, amount: amount });
-  };
+        // ... (tu handleSubmit sin cambios en su lógica interna,
+        // pero asegúrate que 'category_id' se envíe correctamente) ...
+        e.preventDefault();
+        setLocalError(''); 
+        const amount = parseFloat(formData.amount);
+        if (isNaN(amount) || amount <= 0) { setLocalError('Importe debe ser positivo.'); return; }
+        if (!formData.transaction_date) { setLocalError('Fecha es obligatoria.'); return; }
+        if (!formData.description?.trim()) { setLocalError('Descripción es obligatoria.'); return; }
+        if (!formData.account_id) { setLocalError(transactionType === 'transferencia' ? 'Cuenta Origen es obligatoria.' : 'Cuenta es obligatoria.'); return; }
+        if (transactionType === 'transferencia') {
+            if (!formData.account_destination_id) { setLocalError('Cuenta Destino es obligatoria.'); return; }
+            if (formData.account_id === formData.account_destination_id) { setLocalError('Cuentas origen y destino deben ser diferentes.'); return; }
+        } else { // Gasto o Ingreso
+            if (!formData.category_id) { // Hacer categoría obligatoria para gasto/ingreso
+                setLocalError('Selecciona una categoría.'); return;
+            }
+        }
+        onSubmit({ ...formData, type: transactionType, amount: amount });
+    };
 
   // Filtrar categorías según el tipo seleccionado (gasto o ingreso)
-  const filteredCategories = useMemo(() => {
-    if (transactionType === 'transferencia' || !categories) return [];
-    return categories.filter(cat => cat.type === transactionType);
-  }, [transactionType, categories]);
+  const formattedAndFilteredCategories = useMemo(() => {
+        if (transactionType === 'transferencia' || !categories || categories.length === 0) {
+            return [];
+        }
+        
+        // 1. Filtrar por el tipo de transacción actual (ingreso o gasto)
+        const relevantTypeCategories = categories.filter(cat => cat.type === transactionType && !cat.is_archived); // Excluir archivadas
+
+        // 2. Construir la jerarquía
+        const allCategoryIdsInType = new Set(relevantTypeCategories.map(cat => cat.id));
+
+        const topLevelCategories = relevantTypeCategories.filter(
+            cat => !cat.parent_category_id || !allCategoryIdsInType.has(cat.parent_category_id) // Es padre si no tiene padre O su padre no es del mismo tipo/lista
+        ).sort((a, b) => a.name.localeCompare(b.name));
+        
+        const subCategories = relevantTypeCategories.filter(
+            cat => cat.parent_category_id && allCategoryIdsInType.has(cat.parent_category_id)
+        ).sort((a, b) => a.name.localeCompare(b.name));
+
+        const options = [];
+        topLevelCategories.forEach(parent => {
+            options.push({ 
+                id: parent.id, 
+                name: parent.name, 
+                // Podrías añadir un indicador si es default:
+                // displayName: `${parent.name}${parent.is_default ? ' (Default)' : ''}`
+            });
+            const children = subCategories.filter(sub => sub.parent_category_id === parent.id);
+            children.forEach(child => {
+                options.push({ 
+                    id: child.id, 
+                    name: `  ↳ ${child.name}` // Indentación con prefijo
+                });
+            });
+        });
+        console.log(`TransactionModal: Categorías formateadas para tipo '${transactionType}':`, options);
+        return options;
+    }, [transactionType, categories]);
 
   if (!isOpen) return null;
 
@@ -158,10 +191,23 @@ function TransactionModal({
           {!isTransfer && (
             <div className="input-group">
               <label htmlFor="modalCategoryId">Categoría</label>
-              <select id="modalCategoryId" name="category_id" value={formData.category_id} onChange={handleChange} disabled={isSaving || filteredCategories.length === 0}>
-                  <option value="">(Sin categoría)</option>
-                  {filteredCategories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                  {transactionType !== '' && filteredCategories.length === 0 && <option disabled>No hay categorías de {transactionType}</option>}
+                <select 
+                  id="modalCategoryId" 
+                  name="category_id" // El name debe ser category_id para que handleChange lo actualice
+                  required // Hacerlo obligatorio para gasto/ingreso
+                  value={formData.category_id} 
+                  onChange={handleChange} 
+                  disabled={isSaving || formattedAndFilteredCategories.length === 0}
+                >
+                  <option value="">Selecciona una categoría...</option> {/* Opción para "sin categoría" o placeholder */}
+                    {formattedAndFilteredCategories.map(c => (
+                  <option key={c.id} value={c.id}>
+                    {c.name} {/* El 'name' ya viene con "↳ " si es subcategoría */}
+                  </option>
+                  ))}
+                  {transactionType !== '' && formattedAndFilteredCategories.length === 0 && (
+                  <option disabled>No hay categorías de {transactionType}</option>
+                  )}
               </select>
             </div>
           )}

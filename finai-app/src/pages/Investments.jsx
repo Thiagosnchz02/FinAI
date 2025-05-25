@@ -8,6 +8,8 @@ import { supabase } from '../services/supabaseClient';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { formatCurrency, formatDate } from '../utils/formatters.js';
 import Sidebar from '../components/layout/Sidebar.jsx'; 
+import PageHeader from '../components/layout/PageHeader.jsx';
+import '../styles/Investments.scss';
 // Icono ahora se usa en InvestmentCard
 import InvestmentCard from '../components/Investments/InvestmentCard.jsx'; // Asume ruta src/components/
 import InvestmentModal from '../components/Investments/InvestmentModal.jsx'; // Asume ruta src/components/
@@ -173,6 +175,19 @@ function Investments() {
     const handleBack = useCallback(() => navigate('/dashboard'), [navigate]); // Volver siempre a dashboard?
     const scrollToTop = useCallback(() => window.scrollTo({ top: 0, behavior: 'smooth' }), []);
 
+    const investmentPageAction = (
+        <button 
+            onClick={() => handleOpenInvestmentModal('add')} 
+            id="addInvestmentBtn" 
+            className="btn btn-primary btn-add green-btn" // Tus clases existentes
+            // disabled se maneja por isProcessingPage en PageHeader,
+            // o puedes añadir lógica específica aquí si es necesario
+            // disabled={isLoading || isSaving} 
+        >
+            <i className="fas fa-plus"></i> Añadir
+        </button>
+    );
+
     // --- Renderizado ---
     // ... (JSX completo similar al anterior, SIN sidebar) ...
     return (
@@ -184,12 +199,13 @@ function Investments() {
             />
             <div className="page-container">
                 {/* Cabecera */}
-                <div className="page-header investments-header">
-                   {/* ... Cabecera JSX ... */}
-                   <button onClick={handleBack} id="backButton" className="btn-icon" aria-label="Volver"><i className="fas fa-arrow-left"></i></button>
-                   <div className="header-title-group"> <img id="userAvatarHeader" src={avatarUrl} alt="Avatar" className="header-avatar-small" /> <h1>Mis Inversiones</h1> </div>
-                   <button onClick={() => handleOpenInvestmentModal('add')} id="addInvestmentBtn" className="btn btn-primary btn-add green-btn"> <i className="fas fa-plus"></i> Añadir </button>
-                </div>
+                <PageHeader 
+                    pageTitle="Mis Inversiones"
+                    headerClassName="investments-header" // Tu clase específica si la necesitas
+                    showSettingsButton={false}          // No mostrar botón de settings aquí
+                    isProcessingPage={isLoading || isSaving} // Para deshabilitar botones de PageHeader si es necesario
+                    actionButton={investmentPageAction}   // <-- Pasar el botón "Añadir"
+                />
 
                 {/* Lista Inversiones */}
                 <div id="investmentListContainer" className="investment-list-grid">

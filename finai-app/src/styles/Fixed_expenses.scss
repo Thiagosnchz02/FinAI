@@ -1,0 +1,413 @@
+// Refactorizado y con Variables
+.total-summary.fixed-expense-total-summary {
+    text-align: center;
+    margin-bottom: $spacing-xl; // Usar variable
+    padding: $spacing-md; // Usar variable
+    background-color: lighten($color-accent-green, 20%); // Usar variable y función
+    border: 1px solid lighten($color-accent-green, 10%); // Usar variable y función
+    border-radius: $border-radius-md; // Usar variable
+    font-size: 1.3em; // Usar variable
+    font-weight: 700; // Usar variable
+    color: darken($color-accent-green, 20%); // Usar variable y función
+
+    span {
+        font-weight: 800;
+        color: darken($color-accent-green, 15%); // Usar variable y función
+        margin-left: $spacing-sm; // Usar variable
+    }
+
+    .summary-amount {
+        //font-size: 1.3em;
+        //font-weight: 700;
+        //color: $color-accent-orange; // Color naranja para el monto
+        margin-left: $spacing-md;
+    }
+
+    // Responsive para el resumen total
+    @include mobile-only {
+        font-size: 1.1em; // Ajustar tamaño fuente
+        padding: $spacing-sm; // Ajustar padding
+
+        span {
+            font-size: 1.4em;
+        }
+
+        // Ajustar tamaño monto
+    }
+}
+
+/* --- Selector de Vista (.view-toggle) --- */
+// Refactorizado y con Variables
+.view-controls-bar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between; // Para que los grupos de vista y sort se separen
+  align-items: center;
+  padding: $spacing-xs 0; // Un padding ligero arriba/abajo
+  margin-bottom: $spacing-lg;
+  border-bottom: 1px solid $color-text-light; // Un separador
+  gap: $spacing-lg; // Espacio entre el toggle de vista y el sort
+
+  .view-mode-toggle {
+    display: flex;
+    gap: $spacing-sm; // Espacio entre botones de Lista/Calendario
+    justify-content: center;
+    margin-bottom: $spacing-xl;
+    
+    .btn-view {
+        // Botones del selector de vista (usarán estilos base de _buttons.scss)
+        padding: $spacing-sm $spacing-md; // Usar variables
+        border: 1px solid $color-border; // Usar variable
+        background-color: $color-panel-bg; // Usar variable
+        color: $color-text-muted; // Usar variable
+        @include pill-shape; // Usar mixin
+        cursor: pointer;
+        font-weight: 700;
+        font-size: 0.9em; // Usar variable
+        display: inline-flex;
+        align-items: center;
+        gap: $spacing-sm;
+        @include transition-smooth((background-color, color, border-color, box-shadow)); // Usar mixin
+
+        &:hover {
+            background-color: lighten($color-border, 5%); // Usar variable y función
+            border-color: darken($color-border, 10%); // Usar variable y función
+        }
+
+        &.active {
+            // Estado activo
+            background-color: $color-accent-purple; // Usar variable
+            color: $color-text-light; // Usar variable
+            border-color: $color-accent-purple; // Usar variable
+            box-shadow: 0 2px 5px rgba($color-accent-purple, 0.3); // Usar variable y rgba
+        }
+    }
+
+  }
+
+  .sort-control.fixed-expense-sort {
+    display: flex;
+    align-items: center;
+    gap: $spacing-sm;
+
+    label {
+      font-weight: 500;
+      font-size: 0.9em;
+      color: $color-text-muted;
+    }
+
+    select {
+      padding: $spacing-xs $spacing-sm;
+      border: 1px solid $color-border;
+      border-radius: $border-radius-sm;
+      background-color: $color-panel-bg;
+      font-size: 0.9em;
+      min-width: 220px; // Ajusta según los textos de tus opciones
+      cursor: pointer;
+
+      &:focus {
+        border-color: $color-accent-purple;
+        box-shadow: 0 0 0 2px rgba($color-accent-purple, 0.2);
+        outline: none;
+      }
+      &:disabled {
+        background-color: lighten($color-border, 5%);
+        cursor: not-allowed;
+      }
+    }
+  }
+
+  @include mobile-only {
+    flex-direction: column;
+    align-items: stretch; // Que los controles ocupen el ancho
+    .view-mode-toggle {
+      justify-content: center; // Centrar botones de vista
+      margin-bottom: $spacing-sm;
+    }
+    .sort-control.fixed-expense-sort {
+      label {
+        margin-bottom: $spacing-xs / 2; // Espacio si se apila
+      }
+      select {
+        width: 100%; // Select a ancho completo
+        min-width: 0;
+      }
+    }
+  }
+}
+
+
+/* --- Contenedor Tabla (.table-container) y Tabla (.data-table) --- */
+// Si tienes estilos de tabla base en un partial (ej. _tables.scss), este bloque solo contendrá overrides.
+// Si no, estos estilos pueden quedarse aquí y ser refactorizados y anidados.
+.table-container {
+    background-color: $color-panel-bg; // Usar variable
+    border-radius: $border-radius-md; // Usar variable
+    box-shadow: 0 6px 15px rgba($color-shadow, 0.07); // Usar variable y rgba
+    overflow-x: auto; // Scroll horizontal si la tabla es muy ancha
+    padding: $spacing-sm 0; // Padding vertical
+    // Quitar el background-color: $primary-blue; que estaba antes si _layout maneja el fondo general
+}
+
+.data-table {
+    // La tabla en sí
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.95em; // Usar variable si aplica
+
+    th,
+    td {
+        // Celdas de encabezado y datos
+        padding: $spacing-sm $spacing-md; // Usar variables
+        text-align: left;
+        border-bottom: 1px solid $color-border; // Separador de filas (usar variable)
+        white-space: nowrap; // Evitar que el texto se rompa
+
+        .payment-status-icon {
+            font-size: 0.9em; // Ajusta según necesites
+            //margin-left: $spacing-xs; // Ya está inline, pero puedes definirlo aquí
+            &.fa-check-circle {
+                color: $color-accent-green; // El color se aplica inline
+            }
+            &.fa-hourglass-half {
+                color: $color-accent-orange; // El color se aplica inline
+            }
+        }
+
+        .due-today {
+            color: $color-accent-orange; // O un color que indique urgencia
+            font-weight: 600;
+        }
+        .due-tomorrow {
+            color: darken($color-accent-yellow, 10%); // Un amarillo/naranja más suave
+            font-weight: 500;
+        }
+        .due-soon { // Para fechas en los próximos 7 días
+            color: $color-accent-blue; // O un color ligeramente diferente al normal
+            font-style: italic; // Opcional
+            font-weight: 550;
+        }
+        .due-past {
+            color: $color-accent-red; // Rojo para vencido
+            font-weight: 600;
+        }
+        .due-normal {
+            color: inherit; // Color normal del texto de la tabla
+        }
+    }
+
+    thead th {
+        // Encabezados de columna
+        background-color: $color-panel-bg; // Fondo de encabezado (usar variable) - Puede ser un color diferente al fondo de la tabla
+        font-weight: 700;
+        color: $color-text-dark; // Usar variable
+        position: sticky; // Cabecera fija al hacer scroll
+        top: 0;
+    }
+
+    tbody tr:hover {
+        // Fila al pasar el ratón
+        background-color: lighten($color-border, 5%); // Usar variable y función
+    }
+
+    /* Alineación columnas específicas */
+    th:nth-child(2),
+    td:nth-child(2),
+    /* Importe */
+    th:last-child,
+    td:last-child
+
+    /* Acciones */
+        {
+        text-align: right;
+    }
+
+    td:nth-child(6),
+    /* Activo */
+    td:nth-child(7)
+
+    /* Recordatorio */
+        {
+        text-align: center;
+    }
+
+    /* Estilos de elementos internos de la tabla (.data-table td ...) */
+    td {
+
+        // Anidar selectores dentro de td si son específicos de la tabla
+        .btn-icon {
+            // Botones icono dentro de las celdas
+            font-size: 1.1em; // Usar variable
+            color: $color-text-muted; // Usar variable
+            padding: $spacing-xs/2 $spacing-xs; // Usar variables
+            @include transition-smooth((color, transform)); // Usar mixin
+
+            &:hover {
+                color: $color-accent-purple;
+            }
+
+            // Usar variable
+            &.btn-delete:hover {
+                color: $color-accent-red;
+            }
+
+            // Usar variable
+        }
+
+        .trans-cat {
+            // Icono y nombre de categoría (si aplica en la tabla)
+            display: flex;
+            align-items: center;
+            gap: $spacing-sm; // Usar variable
+
+            i {
+                font-size: 1.2em;
+                width: 20px;
+                text-align: center;
+                opacity: 0.7;
+                color: $color-accent-purple;
+            }
+
+            // Usar variables (color base)
+        }
+
+        .amount-col {
+            // Columna de importe (si aplica en la tabla)
+            font-weight: 700;
+            color: $color-accent-red; // Gasto fijo por defecto rojo (usar variable)
+            // Puede tener variaciones como .income/.expense si la tabla las usa
+        }
+    }
+
+
+    // Responsive para la tabla
+    @include md-up {
+        // En tabletas y más grandes
+        // Ajustes específicos de columnas si es necesario mostrar/ocultar
+    }
+
+    @include mobile-only {
+        // En móviles
+        font-size: 0.9em; // Reducir tamaño fuente
+
+        th,
+        td {
+            padding: $spacing-xs $spacing-sm;
+            white-space: normal;
+        }
+
+        // Ajustar padding y permitir salto de línea
+        // Ocultar columnas menos importantes
+        th:nth-child(4),
+        td:nth-child(4),
+        /* Cuenta de Cargo */
+        th:nth-child(6),
+        td:nth-child(6),
+        /* Activo */
+        th:nth-child(7),
+        td:nth-child(7)
+
+        /* Recordatorio */
+            {
+            display: none;
+        }
+
+        td {
+
+            // Anidar si los selectores de td son específicos de la tabla
+            .btn-icon {
+                font-size: 1em;
+                padding: $spacing-xs/2;
+            }
+
+            // Ajustar tamaño botones
+        }
+    }
+}
+
+// Estilo para el botón de historial en la fila
+.data-table td.actions-col {
+  .btn-history-fixed-expense {
+    color: $color-accent-blue; // Elige un color
+    
+        &:hover {
+            color: darken($color-accent-blue, 10%);
+        }
+  }
+}
+
+
+/* --- Toggle Switches (para Activo/Recordatorio) --- */
+// Si estos estilos son genéricos de toggle switches, muévelos a un partial (_forms.scss o _components.scss).
+// Si solo aplican aquí, anidarlos si es necesario (ej. dentro de td si están en la tabla).
+// Asumimos que se quedan aquí y se aplican a labels con clase .toggle-switch dentro de la tabla.
+td {
+
+    // Anidar si están dentro de celdas de tabla
+    .toggle-switch {
+        position: relative;
+        display: inline-block;
+        width: 40px;
+        height: 22px; // Usar variables
+
+        input {
+            display: none;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: $color-border; // Usar variable
+            transition: $transition-speed-normal; // Usar variable
+            border-radius: 22px;
+
+            &:before {
+                position: absolute;
+                content: "";
+                height: 16px;
+                width: 16px; // Usar variable
+                left: 3px;
+                bottom: 3px; // Usar variable
+                background-color: $color-panel-bg; // Usar variable
+                transition: $transition-speed-normal; // Usar variable
+                border-radius: 50%;
+            }
+        }
+
+        input:checked+.toggle-slider {
+            background-color: $color-accent-green;
+        }
+
+        // Usar variable
+        input:checked+.toggle-slider:before {
+            transform: translateX(18px);
+        }
+
+        // Usar variable
+    }
+}
+
+
+/* --- Vista Calendario --- */
+.calendar-container {
+    background-color: $color-panel-bg; // Usar variable
+    padding: $spacing-lg; // Usar variable
+    border-radius: $border-radius-md; // Usar variable
+    box-shadow: 0 6px 15px rgba(140, 150, 170, 0.07); // Usar variable y rgba
+    /* Aquí irían estilos para sobreescribir la librería de calendario si es necesario */
+    // Usar variables SCSS para sobrescribir variables CSS de FullCalendar si es posible
+    /*
+        --fc-border-color: $color-border;
+        --fc-today-bg-color: lighten($color-primary-blue, 10%);
+        .fc-daygrid-event { border-radius: $border-radius-xs; padding: 2px 4px; font-size: 0.8em; }
+        */
+
+    // Responsive para el calendario si necesita ajustes
+    @include mobile-only {
+        padding: $spacing-md; // Ajustar padding
+    }
+}

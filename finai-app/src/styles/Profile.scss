@@ -1,0 +1,308 @@
+// Refactorizado y con Variables/Responsividad y Animación 
+.profile-container {
+    background-color: $color-panel-bg; // Usar variable
+    // background: linear-gradient(to bottom, $color-panel-bg, lighten($color-panel-bg, 5%)); // Usar variable y función si usas gradiente
+    padding: $spacing-xxxl $spacing-xxxxl; // Usar variables
+    border-radius: $border-radius-lg; // Usar variable
+    box-shadow: $box-shadow-md; // Usar variable
+    box-sizing: border-box;
+    width: 100%; // Asegurar ancho disponible
+    max-width: 1000px; // Ancho máximo típico para formularios de perfil (usar variable si aplica)
+    margin: 0 auto; // Centrar si tiene max-width
+
+    /* Animación de aparición - @keyframes DEBERÍA estar en _base.scss o _animations.scss */
+    animation: fadeInSlideUp 0.6s ease-out forwards; // Usar variables para animación si aplica
+    opacity: 0;
+    /* Empieza invisible para que el fade-in funcione */
+
+
+    /* --- Título del Perfil (.profile-title) --- */
+    .profile-title {
+        text-align: center;
+        font-size: 1.6em; // Usar variable si aplica
+        font-weight: 800; // Usar variable
+        color: $color-accent-purple; // Usar variable
+        margin-top: 0;
+        margin-bottom: $spacing-xxxl; // Usar variable
+        // border-bottom y padding-bottom si es un título con separador
+        @include mobile-only { // En pantallas pequeñas (menos de 640px)
+            font-size: 1.4em; // Ajustar tamaño (original)
+       }
+    }
+
+    /* --- Formulario del Perfil (#profileForm) --- */
+    #profileForm {
+        width: 100%;
+    }
+
+    .profile-avatar-section {
+      display: flex;            // Para usar flexbox para centrar
+      flex-direction: column;   // Apilar imagen y botón verticalmente
+      align-items: center;      // Centrar horizontalmente la imagen y el botón
+      margin-bottom: $spacing-xl; // Espacio debajo de toda la sección del avatar
+      position: relative;       // Si el botón de cambiar fuera absoluto respecto a la imagen
+
+      .profile-avatar { // Esta clase se aplica tanto al <img> como al componente <Avatar />
+        width: 150px;       // Tamaño del avatar (ajusta según necesites)
+        height: 150px;
+        border-radius: 50%; // Círculo perfecto
+        object-fit: cover;  // Para la etiqueta <img>
+        border: 4px solid lighten($color-accent-purple, 30%); // Un borde para destacarlo (usando tu color de acento)
+        box-shadow: $box-shadow-md; // Sombra más pronunciada
+        margin-bottom: $spacing-md; // Espacio hasta el botón de cambiar/crear
+        background-color: $color-border; // Color de fondo si la imagen no carga o mientras carga
+        
+        // Si el componente Avatar (SVG) necesita un display block para centrarse bien
+        svg {
+            display: block;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%; // Asegurar que el SVG también sea circular si es necesario
+        }
+      }
+
+      .btn-change-avatar {
+        
+        background-color: $color-accent-purple; // Color principal para esta acción
+        color: $color-text-light;
+        // Si necesitas que sea redondo y posicionarlo absolutamente sobre la imagen,
+            // como en un ejemplo anterior, esos estilos irían aquí:
+            // border-radius: 50%;
+            // width: 35px; // O el tamaño que quieras
+            // height: 35px;
+            // position: absolute;
+            // bottom: 10px; // Ajusta
+            // right: 10px;  // Ajusta
+            // display: flex; // Para centrar el icono si es redondo y tiene tamaño fijo
+            // align-items: center;
+            // justify-content: center;
+            // padding: 0; // Resetear padding si es un círculo con solo icono
+
+            // Si es un botón de texto normal debajo del avatar, los estilos de .btn y .btn-sm
+            // ya le darán padding, font-size, etc. Solo necesitas el color aquí.
+
+
+        i {
+          margin-right: $spacing-xs; // Espacio entre icono y texto del botón
+        }
+
+        &:hover {
+          background-color: darken($color-accent-purple, 10%);
+        }
+      }
+    }
+
+
+    /* --- Sección principal Info (.profile-main-info) --- */
+    .profile-main-info {
+        // Contenedor Flexbox para avatar y campos
+        display: flex;
+        align-items: flex-end; // Alinea arriba
+        gap: $spacing-xxxl; // Espacio entre avatar y campos (usar variable)
+        margin-bottom: $spacing-lg; // Usar variable
+        flex-wrap: nowrap; // Permitir que se apile en pantallas pequeñas
+        width: 100%;
+
+        .info-fields {
+            // Contenedor de los campos de información (a la derecha)
+            flex-grow: 1; // Ocupa el espacio restante
+            min-width: 200px; // Ancho mínimo antes de envolver (usar variable)
+            width: 100%; // Para ocupar todo el ancho en móvil
+            align-items: flex-start;
+            
+
+            // Responsive para los campos de info
+            @include mobile-only {
+                width: 100%;
+                min-width: auto;
+            }
+
+            // Ocupa todo el ancho en móvil
+        }
+
+        // Responsive para la sección principal
+        @include mobile-only {
+            // En pantallas pequeñas
+            flex-direction: column; // Apila avatar y campos
+            align-items: center; // Centra el avatar y campos
+            gap: $spacing-lg; // Menos espacio
+        }
+    }
+
+
+    /* --- Grupo de Input Estilizado (.input-group) --- */
+    // Si estos estilos son genéricos de formularios, muévelos a un partial (_forms.scss).
+    // Aquí los refactorizamos anidados si solo se aplican en este formulario.
+    .input-group {
+        // Estilo del grupo label + input/password display
+        margin-bottom: $spacing-lg; // Usar variable
+
+        label {
+            // Etiqueta del input
+            display: block;
+            margin-bottom: $spacing-sm; // Usar variable
+            color: $color-accent-purple; // Usar variable (Morado)
+            font-weight: 700; // Usar variable
+            font-size: 0.9em; // Usar variable
+            // padding-left: $spacing-xs; // Si aplica
+        }
+
+        // Estilos de los inputs de texto, email, tel (usarán estilos base si están en partial)
+        input[type="text"],
+        input[type="email"],
+        input[type="tel"] {
+            width: 100%; // Heredado
+            padding: $spacing-md $spacing-lg; // Usar variables
+            // border: 1px solid $color-border; // Heredado
+            border-radius: $border-radius-md; // Usar variable
+            // font-size: $base-font-size; // Heredado
+            font-weight: 600; // Usar variable
+            // box-sizing: border-box; // Heredado
+            background-color: lighten($color-border, 5%); // Usar variable y función (fondo gris claro)
+            @include transition-smooth((background-color, border-color, box-shadow)); // Usar mixin
+            color: $color-text-dark; // Usar variable
+        }
+
+        // Estilo cuando SÍ se puede editar y tiene foco
+        input:not([readonly]):not([disabled]) {
+            background-color: $color-panel-bg; // Usar variable (fondo blanco)
+            border-color: $color-accent-purple; // Usar variable (Borde morado)
+            box-shadow: 0 0 0 3px rgba($color-accent-purple, 0.25); // Sombra suave (usar variable y rgba)
+            outline: none;
+        }
+
+        // Estilo cuando está deshabilitado
+        input[disabled] {
+            background-color: lighten($color-border, 10%); // Usar variable y función
+            color: $color-text-muted; // Usar variable
+            cursor: not-allowed;
+            border-color: $color-border; // Usar variable
+        }
+
+
+        .password-display {
+            // Contenedor para mostrar asteriscos y botón "Cambiar" (usará estilos base si están en partial)
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: $spacing-md $spacing-lg; // Usar variables
+            border: 1px solid $color-border; // Usar variable
+            border-radius: $border-radius-md; // Usar variable
+            background-color: lighten($color-border, 5%); // Usar variable y función (fondo gris claro)
+
+            span {
+                // Texto de asteriscos
+                font-size: $base-font-size; // Usar variable
+                color: $color-text-dark; // Usar variable
+                font-family: monospace;
+            }
+
+            .btn-link {
+                // El botón "Cambiar Contraseña" (usará estilos base si están en partial _buttons.scss)
+                // background: none; border: none; // Heredado
+                color: $color-accent-orange; // Usar variable (Naranja para acción secundaria)
+                cursor: pointer;
+                font-weight: 700; // Usar variable
+                padding: 0;
+                font-size: 0.9em; // Usar variable
+                text-decoration: none; // Asegurar no subrayado
+                @include transition-smooth(color); // Usar mixin
+
+                &:hover {
+                    text-decoration: underline;
+                    color: darken($color-accent-orange, 10%); // Usar función SCSS
+                }
+            }
+        }
+
+        // Responsive para grupos de input si es necesario
+        @include mobile-only {
+            margin-bottom: $spacing-md; // Menos margen
+        }
+    }
+
+    .user-meta-info {
+        margin-top: $spacing-xl;
+        padding-top: $spacing-lg;
+        border-top: 1px solid $color-text-light; // Un separador
+        font-size: 0.85em;
+        color: $color-text-muted;
+
+        p {
+        margin-bottom: $spacing-xs;
+        display: flex;
+        align-items: center;
+
+        .meta-icon {
+            margin-right: $spacing-sm;
+            width: 16px; // Para alinear los textos si los iconos varían de ancho
+            text-align: center;
+            color: $color-accent-purple; // O un color que te guste para estos iconos
+        }
+        }
+    }
+
+    .profile-advanced-actions {
+        margin-top: $spacing-xl;
+        padding-top: $spacing-lg;
+        border-top: 1px solid $color-text-light;
+        display: flex;
+        justify-content: center; // O flex-start, o flex-end según prefieras
+
+        .btn.btn-outline-danger { // Asumiendo que tienes una clase para botones outline
+        // Si no, define aquí un estilo para un botón de "peligro" pero no tan invasivo
+        // Ejemplo:
+        color: $color-accent-red;
+        border-color: $color-accent-red;
+        background-color: transparent;
+            &:hover {
+                background-color: rgba($color-accent-red, 0.1);
+            }
+        }
+    }
+
+
+    /* --- Sección de Acciones del Formulario (.form-actions) --- */
+    // Si estos estilos son genéricos para acciones de formulario, muévelos a un partial (_forms.scss).
+    .form-actions {
+        // Contenedor de botones al final del formulario
+        margin-top: $spacing-xxxl; // Usar variable
+        text-align: center;
+        // Los botones usarán estilos de _buttons.scss
+        // Si tienes más de un botón aquí, puedes añadir flexbox para espaciarlos
+        // display: flex; justify-content: center; gap: $spacing-md;
+    }
+}
+
+
+// Responsive General (Movida y Anidada)
+// @media (max-width: 640px) { ... } // Se convierte en @include mobile-only
+/*
+@include mobile-only { // En pantallas pequeñas (menos de 640px, según tu breakpoint)
+    // .profile-header h1 { ... } // Ya anidado en .evaluations-header o .page-header
+    // .app-branding { ... } // Si es un elemento global, en partial
+    // .header-logo { ... } // Si es un elemento global, en partial
+
+    // .profile-container { padding: 20px; } // Ya anidado arriba
+
+    // .profile-main-info { ... } // Ya anidado arriba
+
+    // .avatar-section { ... } // Ya anidado arriba
+
+    // .info-fields { ... } // Ya anidado arriba
+
+    // .profile-title { ... } // Ya anidado arriba
+
+    // .input-group input[type="text/email/tel"], .password-display { ... } // Ya anidado en .input-group y .password-display
+    // .btn { ... } // Ya en _buttons.scss y refactorizado allí
+
+}
+*/
+
+// Keyframes de animación DEBERÍA estar en _base.scss o _animations.scss
+/*
+@keyframes fadeInSlideUp {
+    from { opacity: 0; transform: translateY(15px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+*/

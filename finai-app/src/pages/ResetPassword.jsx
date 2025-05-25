@@ -7,6 +7,7 @@ import React, { useState, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../services/supabaseClient'; // Asegúrate que la ruta sea correcta
 import toast from 'react-hot-toast'; // Importar toast
+import '../styles/Reset_password.scss';
 
 
 const MIN_PASSWORD_LENGTH = 8;

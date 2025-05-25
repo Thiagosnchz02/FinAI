@@ -26,25 +26,29 @@ function EvaluationForm({
             <label htmlFor="evalIngreso"><i className="fas fa-arrow-down icon-green"></i> Ingreso</label>
             <input type="number" id="evalIngreso" name="evalIngreso" // Usar name para el handler genérico
                    placeholder="0.00" step="any" min="0"
-                   value={formData.evalIngreso} onChange={onFormChange} disabled={isSaving}/>
+                   value={formData?.evalIngreso || ''}
+                   onChange={onFormChange} disabled={isSaving}/>
           </div>
           <div className="input-group">
             <label htmlFor="evalAhorroMes"><i className="fas fa-piggy-bank icon-blue"></i> Ahorro Mes</label>
             <input type="number" id="evalAhorroMes" name="evalAhorroMes"
                    placeholder="0.00" step="any" min="0"
-                   value={formData.evalAhorroMes} onChange={onFormChange} disabled={isSaving}/>
+                   value={formData?.evalAhorroMes || ''}
+                   onChange={onFormChange} disabled={isSaving}/>
           </div>
           <div className="input-group">
             <label htmlFor="evalFijos"><i className="fas fa-receipt icon-red"></i> Fijos</label>
             <input type="number" id="evalFijos" name="evalFijos"
                    placeholder="0.00" step="any" min="0"
-                   value={formData.evalFijos} onChange={onFormChange} disabled={isSaving}/>
+                   value={formData?.evalFijos || ''}
+                   onChange={onFormChange} disabled={isSaving}/>
           </div>
           <div className="input-group">
             <label htmlFor="evalVariables"><i className="fas fa-shopping-cart icon-orange"></i> Variables</label>
             <input type="number" id="evalVariables" name="evalVariables"
                    placeholder="0.00" step="any" min="0"
-                   value={formData.evalVariables} onChange={onFormChange} disabled={isSaving}/>
+                   value={formData?.evalVariables || ''} 
+                   onChange={onFormChange} disabled={isSaving}/>
           </div>
         </div>
 
@@ -54,25 +58,25 @@ function EvaluationForm({
             <label htmlFor="evalColchon"><i className="fas fa-shield-alt icon-blue-dark"></i> Colchón</label>
             <input type="number" id="evalColchon" name="evalColchon"
                    placeholder="0.00" step="any" min="0"
-                   value={formData.evalColchon} onChange={onFormChange} disabled={isSaving}/>
+                   value={formData?.evalColchon || ''} onChange={onFormChange} disabled={isSaving}/>
           </div>
           <div className="input-group">
             <label htmlFor="evalViajes"><i className="fas fa-plane icon-lightblue"></i> Viajes</label>
             <input type="number" id="evalViajes" name="evalViajes"
                    placeholder="0.00" step="any" min="0"
-                   value={formData.evalViajes} onChange={onFormChange} disabled={isSaving}/>
+                   value={formData?.evalViajes || ''} onChange={onFormChange} disabled={isSaving}/>
           </div>
           <div className="input-group">
             <label htmlFor="evalInversion"><i className="fas fa-chart-line icon-purple"></i> Inversión</label>
             <input type="number" id="evalInversion" name="evalInversion"
                    placeholder="0.00" step="any" min="0"
-                   value={formData.evalInversion} onChange={onFormChange} disabled={isSaving}/>
+                   value={formData?.evalInversion || ''} onChange={onFormChange} disabled={isSaving}/>
           </div>
           <div className="input-group">
             <label htmlFor="evalExtra"><i className="fas fa-plus-circle icon-green"></i> Extra</label>
             <input type="number" id="evalExtra" name="evalExtra"
                    placeholder="0.00" step="any" // Permite negativos
-                   value={formData.evalExtra} onChange={onFormChange} disabled={isSaving}/>
+                   value={formData?.evalExtra || ''} onChange={onFormChange} disabled={isSaving}/>
           </div>
         </div>
       </div>
@@ -82,7 +86,7 @@ function EvaluationForm({
           <label htmlFor="evalObservaciones"><i className="fas fa-pen icon-gray"></i> Observaciones</label>
           <textarea id="evalObservaciones" name="evalObservaciones" // Usar name
                     rows={3} placeholder="Anotaciones sobre la planificación..."
-                    value={formData.evalObservaciones} onChange={onFormChange} disabled={isSaving}></textarea>
+                    value={formData?.evalObservaciones || ''} onChange={onFormChange} disabled={isSaving}></textarea>
       </div>
 
       {/* Botón Guardar (el feedback de mensaje se muestra fuera del form) */}

@@ -1,6 +1,14 @@
 {
   "dependencies": {
+    "@fullcalendar/core": "^6.1.17",
+    "@fullcalendar/daygrid": "^6.1.17",
+    "@fullcalendar/interaction": "^6.1.17",
+    "@fullcalendar/react": "^6.1.17",
+    "chart.js": "^4.4.9",
+    "libphonenumber-js": "^1.12.7",
+    "qrcode.react": "^4.2.0",
     "react-hot-toast": "^2.5.2",
+    "react-phone-number-input": "^3.4.12",
     "sass": "^1.87.0"
   }
 }

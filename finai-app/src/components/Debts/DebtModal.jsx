@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 
 function DebtModal({ isOpen, onClose, onSubmit, mode, initialData, isSaving, error }) {
-  const [formData, setFormData] = useState({ creditor: '', description: '', initial_amount: '', current_balance: '', interest_rate: '', due_date: '', status: 'pendiente', notes: '' });
+  const [formData, setFormData] = useState({ creditor: '', description: '', initial_amount: '', current_balance: '', interest_rate: '', due_date: '', status: 'pendiente', reminder_enabled: false, notes: '' });
   const [localError, setLocalError] = useState('');
 
   useEffect(() => {
@@ -13,10 +13,12 @@ function DebtModal({ isOpen, onClose, onSubmit, mode, initialData, isSaving, err
           initial_amount: initialData.initial_amount || '', current_balance: initialData.current_balance || '',
           interest_rate: initialData.interest_rate || '',
           due_date: initialData.due_date ? initialData.due_date.split('T')[0] : '',
-          status: initialData.status || 'pendiente', notes: initialData.notes || ''
+          status: initialData.status || 'pendiente', 
+          reminder_enabled: initialData.reminder_enabled || false,
+          notes: initialData.notes || ''
         });
       } else { // add
-        setFormData({ creditor: '', description: '', initial_amount: '', current_balance: '', interest_rate: '', due_date: '', status: 'pendiente', notes: '' });
+        setFormData({ creditor: '', description: '', initial_amount: '', current_balance: '', interest_rate: '', due_date: '', status: 'pendiente', reminder_enabled: false, notes: '' });
       }
     } else {
         setLocalError('');
@@ -24,8 +26,8 @@ function DebtModal({ isOpen, onClose, onSubmit, mode, initialData, isSaving, err
   }, [isOpen, mode, initialData, error]);
 
   const handleInputChange = (event) => {
-    const { name, value } = event.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    const { name, value, type, checked } = event.target;
+    setFormData(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
     if (localError) setLocalError('');
   };
 
@@ -58,9 +60,10 @@ function DebtModal({ isOpen, onClose, onSubmit, mode, initialData, isSaving, err
           <div className="input-group"> <label htmlFor="debtDescriptionM">Descripción</label> <input type="text" id="debtDescriptionM" name="description" value={formData.description} onChange={handleInputChange} disabled={isSaving}/> </div>
           <div className="input-group"> <label htmlFor="debtInitialAmountM">Importe Inicial (€)</label> <input type="number" id="debtInitialAmountM" name="initial_amount" required step="0.01" min="0.01" value={formData.initial_amount} onChange={handleInputChange} disabled={isSaving}/> </div>
           <div className="input-group"> <label htmlFor="debtCurrentBalanceM">Saldo Pendiente (€)</label> <input type="number" id="debtCurrentBalanceM" name="current_balance" required step="0.01" min="0" value={formData.current_balance} onChange={handleInputChange} disabled={isSaving}/> <small>Se actualizará con pagos.</small> </div>
-          <div className="input-group"> <label htmlFor="debtInterestRateM">Tasa Interés Anual (%)</label> <input type="number" id="debtInterestRateM" name="interest_rate" step="0.01" min="0" value={formData.interest_rate} onChange={handleInputChange} disabled={isSaving}/> </div>
+          <div className="input-group"> <label htmlFor="debtInterestRateM">Tasa Interés Anual (%)</label> <input type="number" id="debtInterestRateM" placeholder='0.00' name="interest_rate" step="0.01" min="0" value={formData.interest_rate} onChange={handleInputChange} disabled={isSaving}/> <small>Introduce el % (ej: 2 para 2%) anual. Deja 0 o vacío si no hay interés.</small> </div>
           <div className="input-group"> <label htmlFor="debtDueDateM">Fecha Vencimiento</label> <input type="date" id="debtDueDateM" name="due_date" value={formData.due_date} onChange={handleInputChange} disabled={isSaving}/> </div>
           <div className="input-group"> <label htmlFor="debtStatusM">Estado</label> <select id="debtStatusM" name="status" required value={formData.status} onChange={handleInputChange} disabled={isSaving}><option value="pendiente">Pendiente</option><option value="parcial">Parcialmente Pagada</option><option value="pagada">Pagada</option></select> </div>
+          <div className="input-group checkbox-group"> <input type="checkbox" id="DebtReminderEnabled" name="reminder_enabled" checked={formData.reminder_enabled} onChange={handleInputChange} disabled={isSaving}/> <label htmlFor="DebtReminderEnabledM">Activar Recordatorio</label> </div>
           <div className="input-group"> <label htmlFor="debtNotesM">Notas</label> <textarea id="debtNotesM" name="notes" rows={2} value={formData.notes} onChange={handleInputChange} disabled={isSaving}></textarea> </div>
 
           {(localError || error) && <p className="error-message">{localError || error}</p>}

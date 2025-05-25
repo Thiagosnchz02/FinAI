@@ -6,8 +6,10 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../services/supabaseClient';
 import { useAuth } from '../contexts/AuthContext.jsx';
-import { formatCurrency, formatDate } from '../utils/formatters.js';
+import { formatCurrency } from '../utils/formatters.js';
+import PageHeader from '../components/layout/PageHeader.jsx';
 import Sidebar from '../components/layout/Sidebar.jsx'; 
+import '../styles/Fixed_expenses.scss';
 // Icono ahora se usa en FixedExpenseRow
 import FixedExpenseRow from '../components/FixedExpenses/FixedExpenseRow.jsx'; // Asume ruta /components/
 import FixedExpenseModal from '../components/FixedExpenses/FixedExpenseModal.jsx'; // Asume ruta /components/
@@ -17,10 +19,21 @@ import interactionPlugin from "@fullcalendar/interaction";
 import esLocale from '@fullcalendar/core/locales/es';
 import toast from 'react-hot-toast';
 import ConfirmationModal from '../components/ConfirmationModal.jsx';
+import FixedExpenseHistoryModal from '../components/FixedExpenses/FixedExpenseHistoryModal.jsx';
 
 // Importa imágenes
 import defaultAvatar from '../assets/avatar_predeterminado.png';
 // Importar mascota si se usa
+
+const FIXED_EXPENSE_SORT_OPTIONS = [
+    { value: 'next_due_date_asc', label: 'Próx. Vencimiento (Asc)' },
+    { value: 'next_due_date_desc', label: 'Próx. Vencimiento (Desc)' },
+    { value: 'description_asc', label: 'Descripción (A-Z)' },
+    { value: 'description_desc', label: 'Descripción (Z-A)' },
+    { value: 'amount_asc', label: 'Importe (Menor a Mayor)' },
+    { value: 'amount_desc', label: 'Importe (Mayor a Menor)' },
+    // Podrías añadir por categoría si lo ves útil, aunque requiere buscar el nombre
+];
 
 function FixedExpenses() {
     // --- Estado ---
@@ -32,6 +45,14 @@ function FixedExpenses() {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
     const [viewMode, setViewMode] = useState('list');
+    const [sortConfigFixed, setSortConfigFixed] = useState({ key: 'next_due_date', direction: 'ascending' });
+
+    // ESTADOS MODAL DE HISTORIAL 
+    const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
+    const [viewingHistoryForExpense, setViewingHistoryForExpense] = useState(null); // Guardará el objeto expense
+    const [historyTransactions, setHistoryTransactions] = useState([]);
+    const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+    const [historyError, setHistoryError] = useState('');
 
     // Estados Modales
     const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
@@ -55,12 +76,16 @@ function FixedExpenses() {
         try {
             const [profileRes, accountsRes, categoriesRes, expensesRes] = await Promise.all([
                 supabase.from('profiles').select('avatar_url').eq('id', currentUserId).single(),
-                supabase.from('accounts').select('id, name').eq('user_id', currentUserId).order('name'),
-                supabase.from('categories').select('id, name, icon, color') // Incluir icon/color para calendario
+                supabase.from('accounts')
+                .select('id, name, type, currency')
+                .eq('user_id', currentUserId)
+                .eq('is_archived', false)
+                .order('name'),
+                supabase.from('categories').select('id, name, icon, color, type, parent_category_id, is_default, is_archived') // Incluir icon/color para calendario
                     .or(`user_id.eq.${currentUserId},is_default.eq.true`)
                     .eq('type', 'gasto').order('name'),
                 // NO es necesario el JOIN aquí si pasamos 'categories' a FixedExpenseRow
-                supabase.from('scheduled_fixed_expenses').select(`*`)
+                supabase.from('scheduled_fixed_expenses').select(`*, last_payment_processed_on`)
                     .eq('user_id', currentUserId).order('next_due_date')
             ]);
 
@@ -72,8 +97,9 @@ function FixedExpenses() {
 
             // ** SIN ACTUALIZACIÓN DE FECHAS AQUÍ ** - Lo hace la Edge Function
             if (expensesRes.error) throw expensesRes.error;
-            setFixedExpenses(expensesRes.data || []);
-            console.log(`FixedExpenses: ${expensesRes.data?.length || 0} gastos fijos cargados.`);
+            const fetchedExpenses = expensesRes.data || [];
+            setFixedExpenses(fetchedExpenses);
+            console.log(`FixedExpenses: ${fetchedExpenses.length} gastos fijos cargados. Primer gasto (si existe):`, fetchedExpenses[0]);
 
         } catch (err) {
             console.error("Error cargando datos (Fixed Expenses):", err);
@@ -82,6 +108,44 @@ function FixedExpenses() {
             setIsLoading(false);
         }
     }, [supabase]);
+
+    const formattedExpenseCategoriesForModal = useMemo(() => {
+        console.log("[FixedExpenses.jsx useMemo] Formateando categorías de GASTO. 'categories'.length:", categories ? categories.length : 0);
+        if (!categories || categories.length === 0) {
+            return [];
+        }
+        
+        // 'categories' ya está filtrado por type='gasto' en fetchData.
+        // Ahora solo filtramos las activas (no archivadas) y construimos la jerarquía.
+        const activeExpenseCategories = categories.filter(cat => !cat.is_archived);
+
+        const categoryIdsInExpenseType = new Set(activeExpenseCategories.map(cat => cat.id));
+
+        const topLevelCategories = activeExpenseCategories.filter(
+            cat => !cat.parent_category_id || !categoryIdsInExpenseType.has(cat.parent_category_id)
+        ).sort((a, b) => a.name.localeCompare(b.name));
+        
+        const subCategories = activeExpenseCategories.filter(
+            cat => cat.parent_category_id && categoryIdsInExpenseType.has(cat.parent_category_id)
+        ).sort((a, b) => a.name.localeCompare(b.name));
+
+        const options = [];
+        topLevelCategories.forEach(parent => {
+            options.push({ 
+                id: parent.id, 
+                name: `${parent.name}${parent.is_default ? '' : ''}`
+            });
+            const children = subCategories.filter(sub => sub.parent_category_id === parent.id);
+            children.forEach(child => {
+                options.push({ 
+                    id: child.id, 
+                    name: `  ↳ ${child.name}` // Indentación con prefijo
+                });
+            });
+        });
+        console.log("[FixedExpenses.jsx useMemo] Opciones finales de GASTO para FixedExpenseModal:", options.length);
+        return options;
+    }, [categories]);
 
     // --- Cálculo Total Mensual (useMemo) ---
     // Calcula el total estimado de gastos fijos para el mes actual.
@@ -157,12 +221,126 @@ function FixedExpenses() {
             });
     }, [fixedExpenses, categories]); // Recalcular si cambian gastos o categorías
 
+    const processedFixedExpensesForList = useMemo(() => {
+        console.log("[FixedExpenses.jsx useMemo] Recalculando lista ordenada. SortConfig:", sortConfigFixed);
+        let activeFilteredExpenses = fixedExpenses.filter(exp => exp.is_active);
+        console.log("[FixedExpenses.jsx useMemo] Nº de gastos activos filtrados:", activeFilteredExpenses.length);
+
+        let expensesToSort = [...activeFilteredExpenses];
+
+        if (sortConfigFixed.key && expensesToSort.length > 1) {
+            const { key, direction } = sortConfigFixed;
+            console.log(`[FixedExpenses.jsx useMemo] Ordenando por: ${key}, Dirección: ${direction}`);
+
+            // Para ver el array ANTES de ordenar (solo los primeros 5 para no llenar la consola)
+            console.log("[FixedExpenses.jsx useMemo] Array ANTES de ordenar (primeros 5 descripciones):", expensesToSort.slice(0, 5).map(e => e.description));
+            
+            expensesToSort.sort((a, b) => {
+                let primaryComparison = 0;
+                let valA_log, valB_log;
+
+                if (key === 'next_due_date') {
+                    const timeA = a.next_due_date ? new Date(a.next_due_date).getTime() : null;
+                    const timeB = b.next_due_date ? new Date(b.next_due_date).getTime() : null;
+                    valA_log = timeA; valB_log = timeB;
+
+                    if (timeA === null && timeB === null) primaryComparison = 0;
+                    else if (timeA === null) primaryComparison = 1; 
+                    else if (timeB === null) primaryComparison = -1;
+                    else if (timeA < timeB) primaryComparison = -1;
+                    else if (timeA > timeB) primaryComparison = 1;
+                } else if (key === 'amount') {
+                    valA_log = Number(a.amount) || 0;
+                    valB_log = Number(b.amount) || 0;
+                    if (valA_log < valB_log) primaryComparison = -1;
+                    else if (valA_log > valB_log) primaryComparison = 1;
+                } else { 
+                    valA_log = String(a[key] || '').toLowerCase();
+                    valB_log = String(b[key] || '').toLowerCase();
+                    if (valA_log < valB_log) primaryComparison = -1;
+                    else if (valA_log > valB_log) primaryComparison = 1;
+                }
+                
+                if (primaryComparison !== 0) {
+                    // --- CORRECCIÓN AQUÍ: Usar 'asc' ---
+                    const result = direction === 'asc' ? primaryComparison : -primaryComparison;
+                    // ---------------------------------
+                    console.log(`[SORT DEBUG Primary] A='${a.description}'(${valA_log}) vs B='${b.description}'(${valB_log}). Dir: ${direction}. PrimaryRes: ${primaryComparison} -> Final: ${result}`);
+                    return result;
+                }
+
+                if (key !== 'description') {
+                    const descA = String(a.description || '').toLowerCase();
+                    const descB = String(b.description || '').toLowerCase();
+                    let tieBreakResult = 0;
+                    if (descA < descB) tieBreakResult = -1;
+                    else if (descA > descB) tieBreakResult = 1;
+                    
+                    // --- CORRECCIÓN AQUÍ: Usar 'asc' ---
+                    const finalTieBreakResult = direction === 'asc' ? tieBreakResult : -tieBreakResult;
+                    // ---------------------------------
+                    // console.log(`[SORT DEBUG Tiebreak] A='${descA}' vs B='${descB}'. Dir: ${direction}. TieBreakRes: ${tieBreakResult} -> Final: ${finalTieBreakResult}`);
+                    return finalTieBreakResult;
+                }
+                
+                return 0;
+            });
+           console.log("[FixedExpenses.jsx useMemo] Array DESPUÉS de ordenar (primer elemento descripción):", expensesToSort.length > 0 ? expensesToSort[0].description : "Lista vacía");
+        } else {
+            console.log("[FixedExpenses.jsx useMemo] No se aplicó ordenación (sin clave, lista vacía o un solo elemento).");
+        }
+        
+        return [...expensesToSort]; 
+    }, [fixedExpenses, sortConfigFixed, categories]); 
+
+    const fetchTransactionHistory = useCallback(async (expenseId) => {
+        if (!expenseId || !user?.id) return;
+        setIsLoadingHistory(true);
+        setHistoryError('');
+        setHistoryTransactions([]);
+        console.log(`[FixedExpenses] Fetching history for expense ID: ${expenseId}`);
+        try {
+            const { data, error } = await supabase
+                .from('transactions')
+                .select('id, transaction_date, description, amount, notes') // Los campos que quieras mostrar
+                .eq('user_id', user.id)
+                .eq('related_scheduled_expense_id', expenseId) // Filtrar por el ID del gasto fijo
+                .order('transaction_date', { ascending: false }) // Más recientes primero
+                .limit(10); // Mostrar, por ejemplo, las últimas 10
+
+            if (error) throw error;
+            setHistoryTransactions(data || []);
+            console.log(`[FixedExpenses] History fetched:`, data);
+        } catch (err) {
+            console.error("Error fetching transaction history:", err);
+            setHistoryError('No se pudo cargar el historial de pagos.');
+        } finally {
+            setIsLoadingHistory(false);
+        }
+    }, [supabase, user?.id]);
+
+    const handleOpenHistoryModal = useCallback((expense) => {
+        setViewingHistoryForExpense(expense); // Guardar el objeto expense completo
+        fetchTransactionHistory(expense.id);
+        setIsHistoryModalOpen(true);
+    }, [fetchTransactionHistory]);
+
+    const handleCloseHistoryModal = useCallback(() => {
+        setIsHistoryModalOpen(false);
+        setViewingHistoryForExpense(null);
+        setHistoryTransactions([]);
+        setHistoryError('');
+    }, []);
+
     // --- Manejadores ---
     const handleViewChange = (newView) => setViewMode(newView);
 
     const handleOpenExpenseModal = useCallback((mode = 'add', expense = null) => {
-        setModalMode(mode); setSelectedExpense(expense); setModalError('');
-        setIsSaving(false); setIsExpenseModalOpen(true);
+        setModalMode(mode); 
+        setSelectedExpense(expense); 
+        setModalError('');
+        setIsSaving(false); 
+        setIsExpenseModalOpen(true);
     }, []);
     const handleCloseExpenseModal = useCallback(() => { setIsExpenseModalOpen(false); setSelectedExpense(null); setModalError(''); }, []);
 
@@ -173,6 +351,18 @@ function FixedExpenses() {
         try {
             // Validaciones básicas ya hechas en modal, pero re-parseamos
             const amount = parseFloat(submittedFormData.amount);
+            if (!submittedFormData.description.trim() || 
+                isNaN(amount) || amount <= 0 || 
+                !submittedFormData.categoryId || 
+                !submittedFormData.accountId || // <-- ASEGURAR QUE SE VALIDA accountId
+                !submittedFormData.frequency || 
+                !submittedFormData.nextDueDate) {
+                
+                setModalError('Descripción, Importe (>0), Categoría, Cuenta de Cargo, Frecuencia y Próxima Fecha son obligatorios.'); 
+                toast.dismiss(toastId); // Quitar el toast de "guardando"
+                setIsSaving(false); // Resetear estado de guardado
+                return;
+            }
             let dayOfMonthValue = null;
             if (submittedFormData.frequency === 'mensual' && submittedFormData.nextDueDate) {
                 try { dayOfMonthValue = new Date(submittedFormData.nextDueDate + 'T00:00:00').getUTCDate(); } catch(e){} // Usar UTC
@@ -263,34 +453,95 @@ function FixedExpenses() {
     const handleBack = useCallback(() => navigate(-1), [navigate]);
     const scrollToTop = useCallback(() => window.scrollTo({ top: 0, behavior: 'smooth' }), []);
 
+    const handleSortChangeFixed = (event) => {
+        const valueParts = event.target.value.split('_');
+        const direction = valueParts.pop(); // El último elemento es la dirección (asc o desc)
+        const key = valueParts.join('_');   // El resto, unido por guion bajo, es la clave (ej. next_due_date)
+        
+        console.log(`[FixedExpenses.jsx] handleSortChangeFixed: Nuevo sort -> key: ${key}, direction: ${direction}`);
+        setSortConfigFixed({ key, direction });
+    };
 
-    // --- Renderizado ---
-    // ... (JSX completo usando estados y manejadores) ...
-    // Incluir el componente <FullCalendar> en la vista de calendario
+    const fixedExpensePageAction = (
+        <button 
+            onClick={() => handleOpenExpenseModal('add')} 
+            id="addExpenseBtn" 
+            className="btn btn-primary btn-add" // Tus clases existentes
+            // disabled se maneja por isProcessingPage en PageHeader,
+            // o puedes añadir lógica específica aquí si es necesario
+            // disabled={isLoading || isSaving} 
+        >
+            <i className="fas fa-plus"></i> Añadir Gasto
+        </button>
+    );
+
+    const displayPeriodForTotal = useMemo(() => {
+        if (!isLoading && fixedExpenses.length > 0 && categories.length > 0) { // Solo mostrar si hay datos para calcular
+            const now = new Date();
+            return now.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
+        }
+        return "este mes";
+    }, [isLoading, fixedExpenses, categories]);
+
     return (
         <div style={{ display: 'flex' }}>
             {/* Sidebar */}
             <Sidebar
                 // Pasar estado de carga/guardado si quieres deshabilitar botones mientras ocurre algo
-                isProcessing={isLoading || isSaving /* ...o el estado relevante */}
+                isProcessing={isLoading || isSaving | isLoadingHistory}
             />
 
             {/* Contenido Principal */}
             <div className="page-container">
                 {/* Cabecera */}
-                <div className="page-header fixed-expenses-header">
-                    <button onClick={handleBack} id="backButton" className="btn-icon" aria-label="Volver"><i className="fas fa-arrow-left"></i></button>
-                    <div className="header-title-group"> <img id="userAvatarHeader" src={avatarUrl} alt="Avatar" className="header-avatar-small" /> <h1>Gastos Fijos</h1> </div>
-                    <button onClick={() => handleOpenExpenseModal('add')} id="addExpenseBtn" className="btn btn-primary btn-add"> <i className="fas fa-plus"></i> Añadir Gasto </button>
-                </div>
+                <PageHeader 
+                    pageTitle="Gastos Fijos"
+                    headerClassName="fixed-expenses-header" // Tu clase específica si la necesitas
+                    showSettingsButton={false}             // No mostrar botón de settings aquí
+                    isProcessingPage={isLoading || isSaving} // Para deshabilitar botones de PageHeader si es necesario
+                    actionButton={fixedExpensePageAction}    // <-- Pasar el botón "Añadir Gasto"
+                />
 
                 {/* Resumen Total */}
-                <div className="total-summary"> Total Fijo Estimado Este Mes: <span id="monthlyTotalAmount">{isLoading ? 'Calculando...' : monthlyTotal}</span> </div>
+                <div className="total-summary fixed-expense-total-summary"> {/* Clase específica para estilo */}
+                    {/* --- TOTAL CON TOOLTIP --- */}
+                    <span className="summary-title-container">
+                        Total Fijo Estimado {displayPeriodForTotal}:
+                        <span className="tooltip-trigger-container">
+                            <i className="fas fa-info-circle tooltip-icon" tabIndex={0}></i>
+                            <span className="tooltip-text">
+                                Estimación del total de tus gastos fijos activos que vencen o se aplican durante el mes actual.
+                            </span>
+                        </span>
+                    </span>
+                    <strong className="summary-amount">
+                        {isLoading ? 'Calculando...' : monthlyTotal}
+                    </strong>
+                    {/* --- FIN TOTAL CON TOOLTIP --- */}
+                </div>
 
                 {/* Toggle de Vista */}
-                <div className="view-toggle">
-                    <button onClick={() => handleViewChange('list')} id="listViewBtn" className={`btn-view ${viewMode === 'list' ? 'active' : ''}`} aria-label="Vista de Lista"> <i className="fas fa-list"></i> Lista </button>
-                    <button onClick={() => handleViewChange('calendar')} id="calendarViewBtn" className={`btn-view ${viewMode === 'calendar' ? 'active' : ''}`} aria-label="Vista de Calendario"> <i className="fas fa-calendar-alt"></i> Calendario </button>
+                <div className="view-controls-bar">
+                    <div className="view-mode-toggle">
+                        <button onClick={() => handleViewChange('list')} id="listViewBtn" className={`btn-view ${viewMode === 'list' ? 'active' : ''}`} aria-label="Vista de Lista"> <i className="fas fa-list"></i> Lista </button>
+                        <button onClick={() => handleViewChange('calendar')} id="calendarViewBtn" className={`btn-view ${viewMode === 'calendar' ? 'active' : ''}`} aria-label="Vista de Calendario"> <i className="fas fa-calendar-alt"></i> Calendario </button>
+                    </div>
+
+                    {viewMode === 'list' && ( 
+                        <div className="sort-control fixed-expense-sort">
+                            <label htmlFor="fixedExpenseSort">Ordenar por:</label>
+                            <select 
+                                id="fixedExpenseSort" 
+                                value={`${sortConfigFixed.key}_${sortConfigFixed.direction}`} 
+                                onChange={handleSortChangeFixed}
+                                disabled={isLoading || processedFixedExpensesForList.length === 0}
+                            >
+                                {FIXED_EXPENSE_SORT_OPTIONS.map(opt => (
+                                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                                ))}
+                            </select>
+                        </div>
+                    )}
                 </div>
 
                  {/* Mensaje General de Error */}
@@ -301,18 +552,36 @@ function FixedExpenses() {
                     <div id="listViewContainer">
                         <div className="table-container">
                             <table id="fixedExpensesTable" className="data-table">
-                                <thead>{/* ... Encabezados ... */}</thead>
+                                <thead>
+                                    <tr>
+                                        <th>Descripción</th>
+                                        <th>Importe</th>
+                                        <th>Categoría</th>
+                                        <th>Frecuencia</th>
+                                        <th>Próx. Vencimiento</th>
+                                        <th>Recordatorio</th>
+                                        <th>Activo</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
                                 <tbody>
-                                    {isLoading && (<tr><td colSpan="8">Cargando...</td></tr>)}
-                                    {!isLoading && fixedExpenses.length === 0 && !error && (<tr><td colSpan="8"><p>No hay gastos fijos.</p></td></tr>)}
-                                    {!isLoading && !error && fixedExpenses.map(exp => (
-                                        <FixedExpenseRow // <<< USA COMPONENTE
+                                    {isLoading && (<tr><td colSpan="8" style={{textAlign: 'center'}}>Cargando...</td></tr>)}
+                                    {!isLoading && processedFixedExpensesForList.length === 0 && !error && (
+                                        <tr><td colSpan="8" style={{textAlign: 'center'}}>
+                                            No hay gastos fijos activos que mostrar.
+                                            {fixedExpenses.filter(exp => !exp.is_active).length > 0 && " (Algunos están inactivos)"}
+                                        </td></tr>
+                                    )}
+                                    {/* Renderizar la lista usando 'processedFixedExpensesForList' */}
+                                    {!isLoading && !error && processedFixedExpensesForList.map(exp => (
+                                        <FixedExpenseRow
                                             key={exp.id}
                                             expense={exp}
-                                            category={categories.find(c => c.id === exp.category_id)} // Pasa categoría encontrada
+                                            category={categories.find(c => c.id === exp.category_id)}
                                             onEdit={() => handleOpenExpenseModal('edit', exp)}
                                             onDelete={() => handleDeleteExpense(exp.id, exp.description)}
-                                            onToggle={handleToggle} // Pasa la función de toggle
+                                            onToggle={handleToggle}
+                                            onViewHistory={() => handleOpenHistoryModal(exp)}
                                         />
                                     ))}
                                 </tbody>
@@ -341,9 +610,13 @@ function FixedExpenses() {
 
             {/* Modales */}
             <FixedExpenseModal // <<< USA COMPONENTE
-                isOpen={isExpenseModalOpen} onClose={handleCloseExpenseModal} onSubmit={handleExpenseFormSubmit}
-                mode={modalMode} initialData={selectedExpense}
-                accounts={accounts} categories={categories} // Pasa listas para selects
+                isOpen={isExpenseModalOpen} 
+                onClose={handleCloseExpenseModal} 
+                onSubmit={handleExpenseFormSubmit}
+                mode={modalMode} 
+                initialData={selectedExpense}
+                accounts={accounts} 
+                categories={formattedExpenseCategoriesForModal} // Pasa listas para selects
                 isSaving={isSaving} error={modalError}
             />
             <ConfirmationModal // <<< USA COMPONENTE
@@ -353,6 +626,17 @@ function FixedExpenses() {
                 message={`¿Seguro eliminar el gasto fijo "${expenseToDelete?.name || ''}"?`}
                 confirmText="Eliminar" cancelText="Cancelar" isDanger={true}
             />
+
+            {viewingHistoryForExpense && (
+                <FixedExpenseHistoryModal
+                    isOpen={isHistoryModalOpen}
+                    onClose={handleCloseHistoryModal}
+                    expense={viewingHistoryForExpense}
+                    transactions={historyTransactions}
+                    isLoading={isLoadingHistory}
+                    error={historyError}
+                />
+            )}
 
             {/* Botón Scroll-Top */}
             {showScrollTop && ( <button onClick={scrollToTop} id="scrollTopBtn" className="scroll-top-btn visible" title="Volver arriba"><i className="fas fa-arrow-up"></i></button> )}

@@ -1,0 +1,139 @@
+// src/styles/_buttons.scss
+
+
+@import 'mixins';
+
+.btn {
+    padding: $spacing-sm $spacing-lg; // Padding estándar del botón
+    border: none;
+    @include pill-shape; // Bordes muy redondeados (forma píldora)
+    font-weight: 700;
+    font-size: 0.95em;
+    width: 100%;
+    cursor: pointer;
+    @include transition-smooth((background-color, transform)); // Transición suave
+    display: inline-flex;
+    align-items: center;
+    gap: $spacing-sm; // Espacio entre icono y texto
+    text-decoration: none;
+    color: $color-text-light; // Color de texto por defecto (blanco)
+    white-space: nowrap; // Evitar que el texto se rompa
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); // Sombra
+
+    i {
+        font-size: 1.1em;
+    }
+
+    &:hover { transform: scale(1.03); }
+    &:active { transform: scale(0.98); }
+
+    &:disabled {
+        background-color: $color-border !important;
+        cursor: not-allowed;
+        opacity: 0.7;
+        transform: none !important;
+        box-shadow: none;
+    }
+}
+
+// Variantes de color principales
+.btn-primary {
+    background-color: $color-accent-purple;
+    &:hover { background-color: darken($color-accent-purple, 10%); }
+}
+
+.btn-secondary {
+    background-color: $color-text-muted; // Gris estándar
+    color: $color-text-light;
+    &:hover { background-color: darken($color-text-muted, 10%); }
+}
+
+.btn-danger {
+    background-color: $color-accent-red;
+    color: $color-text-light;
+    &:hover { background-color: darken($color-accent-red, 10%); }
+}
+
+.btn-show-all {
+    background-color: $color-panel-bg; // O un color base para botones no activos
+    color: $color-text-muted;// Usa tu variable de color secundario   // Usa tu variable de color de texto para secundario
+    @extend .btn;
+    
+
+    &:hover {
+        background-color: $color-accent-blue; // O tu color de acento principal
+        color: $color-text-light;
+        border-color: darken($color-accent-blue, 10%);
+        font-weight: 600;
+        box-shadow: $box-shadow-sm;
+    }
+}
+
+// Botones con color de acento como fondo (para acciones rápidas, etc.)
+.red-btn { background-color: $color-accent-red; }
+.red-btn:hover { background-color: darken($color-accent-red, 10%); }
+.green-btn { background-color: $color-accent-green; }
+.green-btn:hover { background-color: darken($color-accent-green, 10%); }
+.blue-btn { background-color: $color-accent-blue; }
+.blue-btn:hover { background-color: darken($color-accent-blue, 10%); }
+.orange-btn { background-color: $color-accent-orange; }
+.orange-btn:hover { background-color: darken($color-accent-orange, 10%); }
+
+
+// Botón de icono (base para los iconos clickeables sin fondo sólido)
+.btn-icon {
+    background: none;
+    border: none;
+    font-size: 1.6em; // Tamaño del icono
+    color: $color-text-muted; // Color gris por defecto
+    cursor: pointer;
+    padding: $spacing-xs;
+    @include transition-smooth((color, transform));
+
+    &:hover { color: $color-accent-purple; transform: scale(1.1); }
+    &:active { transform: scale(0.95); }
+
+    &:disabled {
+        color: lighten($color-text-muted, 15%); // Gris más claro
+        cursor: not-allowed;
+        opacity: 0.7;
+        transform: none;
+    }
+}
+
+// Variaciones de tamaño y propósito
+.btn-sm { padding: $spacing-xs $spacing-sm; font-size: 0.85em; }
+.btn-add { font-size: $base-font-size; } // Tamaño normal para añadir
+.btn-full-width { width: 100%; justify-content: center; } // Botón a ancho completo
+
+// Estilo para un enlace que parece botón (ej. Volver a login)
+.back-link {
+    background: none;
+    border: none;
+    color: $color-text-muted;
+    cursor: pointer;
+    font-weight: 600;
+    padding: $spacing-xs;
+    text-decoration: none;
+    transition: color $transition-speed-fast $transition-ease;
+    &:hover {
+        color: darken($color-text-muted, 15%);
+        text-decoration: underline;
+    }
+}
+
+
+// Responsive para botones
+@include mobile-only {
+    .btn {
+        padding: $spacing-sm $spacing-md;
+        font-size: 0.9em;
+        gap: $spacing-xs;
+    }
+    .btn-icon {
+        font-size: 1.4em;
+        padding: $spacing-xs * 0.5;
+    }
+    .btn-sm { padding: $spacing-xs $spacing-sm; font-size: 0.8em; }
+    .btn-full-width { padding: $spacing-sm $spacing-md; font-size: 0.9em; }
+}

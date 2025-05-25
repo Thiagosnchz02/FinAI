@@ -12,6 +12,9 @@ import InfoModal from '../components/common/InfoModal.jsx';         // Ajusta ru
 import Setup2faModal from '../components/settings/Setup2faModal.jsx'; // Ajusta ruta
 import DeleteAccountModal from '../components/settings/DeleteAccountModal.jsx'; // Ajusta ruta
 import Sidebar from '../components/layout/Sidebar.jsx'; 
+import PageHeader from '../components/layout/PageHeader.jsx';
+import '../styles/Settings.scss';
+
 
 // Importa imágenes
 import defaultAvatar from '../assets/avatar_predeterminado.png';
@@ -25,6 +28,7 @@ const APP_VERSION = 'v1.0.0'; // O desde variables de entorno
 function Settings() {
     // --- Estado ---
     const { user, loading: authLoading } = useAuth();
+    const [avatarUrl, setAvatarUrl] = useState(defaultAvatar);
     const [settings, setSettings] = useState({ // Estado único para todas las config del perfil
         theme: 'system', language: 'es', doble_factor_enabled: false,
         default_view: 'Dashboard', notify_fixed_expense: true,
@@ -389,14 +393,14 @@ function Settings() {
             {/* --- Contenido Principal --- */}
             <div className={`page-container ${isProcessing ? 'processing' : ''}`}> {/* Clase opcional para overlay/cursor */}
                 {/* --- Cabecera --- */}
-                <div className="page-header settings-header">
-                    <button onClick={handleBack} id="backButton" className="btn-icon" aria-label="Volver" disabled={isProcessing}><i className="fas fa-arrow-left"></i></button>
-                    <div className="header-title-group">
-                        <img id="userAvatarHeader" src={userAvatarUrl} alt="Avatar" className="header-avatar-small" />
-                        <h1>Configuración</h1>
-                    </div>
-                    <div style={{ width: '40px' }}></div> {/* Spacer */}
-                </div>
+                <PageHeader 
+                    pageTitle="Configuración"
+                    headerClassName="settings-header" // Tu clase específica si la necesitas
+                    showSettingsButton={false}       // Definitivamente false aquí
+                    showBackButton={true}            // Mantener el botón de volver
+                    isProcessingPage={isProcessing} // Para deshabilitar botones de PageHeader si es necesario
+                    actionButton={null} // No hay botón de acción principal en la cabecera de Settings
+                />
 
                 {/* --- Grid de Configuración --- */}
                 <div className="settings-grid">

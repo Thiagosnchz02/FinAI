@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 function TripModal({ isOpen, onClose, onSubmit, mode, initialData, isSaving, error }) {
     // Estado interno del formulario
     const [formData, setFormData] = useState({
-        name: '', destination: '', start_date: '', end_date: '', budget: 0, saved_amount: 0, notes: ''
+        name: '', destination: '', start_date: '', end_date: '', budget: 0, saved_amount: 0, notes: '', status: 'planificado',
     });
     const [localError, setLocalError] = useState('');
 
@@ -20,10 +20,11 @@ function TripModal({ isOpen, onClose, onSubmit, mode, initialData, isSaving, err
                     end_date: initialData.end_date?.split('T')[0] || '',
                     budget: initialData.budget || 0,
                     saved_amount: initialData.saved_amount || 0,
-                    notes: initialData.notes || ''
+                    notes: initialData.notes || '',
+                    status: initialData.status || 'planificado',
                 });
             } else { // add
-                setFormData({ name: '', destination: '', start_date: '', end_date: '', budget: 0, saved_amount: 0, notes: '' });
+                setFormData({ name: '', destination: '', start_date: '', end_date: '', budget: 0, saved_amount: 0, notes: '', status: 'planificado', });
             }
         } else {
             setLocalError(''); // Limpiar al cerrar
@@ -39,15 +40,25 @@ function TripModal({ isOpen, onClose, onSubmit, mode, initialData, isSaving, err
     const handleSubmit = (e) => {
         e.preventDefault();
         // Validaciones básicas (pueden mejorarse)
-        if (!formData.name.trim()) {
-            setLocalError("El nombre es obligatorio."); return;
+        if (!formData.name.trim()) { setLocalError("El nombre del viaje es obligatorio."); return; }
+        const budget = parseFloat(formData.budget);
+        const saved = parseFloat(formData.saved_amount);
+        if (isNaN(budget) || budget < 0) { setLocalError("El presupuesto debe ser un número válido (0 o más)."); return; }
+        if (isNaN(saved) || saved < 0) { setLocalError("El ahorrado debe ser un número válido (0 o más)."); return; }
+        if (formData.start_date && formData.end_date && formData.start_date > formData.end_date) {
+            setLocalError("La fecha de fin no puede ser anterior a la fecha de inicio."); return;
         }
-        if (formData.start_date && formData.end_date && new Date(formData.end_date) < new Date(formData.start_date)) {
-             setLocalError("La fecha fin no puede ser anterior a la fecha inicio."); return;
+        if (!formData.status) { // Validar que el estado tenga un valor
+            setLocalError("Por favor, selecciona un estado para el viaje."); return;
         }
-        // Más validaciones si es necesario (ej. presupuesto > 0?)
+
         setLocalError('');
-        onSubmit(formData); // Llama al onSubmit del padre con los datos internos
+        // Enviar el formData completo (que ahora incluye 'status') al padre
+        onSubmit({ 
+            ...formData, 
+            budget: budget, // Enviar como número
+            saved_amount: saved // Enviar como número
+        });
     };
 
     if (!isOpen) return null;
@@ -65,7 +76,25 @@ function TripModal({ isOpen, onClose, onSubmit, mode, initialData, isSaving, err
                     <div className="input-group"> <label htmlFor="modalTripEndDate">Fecha Fin</label> <input type="date" id="modalTripEndDate" name="end_date" value={formData.end_date} onChange={handleChange} disabled={isSaving}/> </div>
                     <div className="input-group"> <label htmlFor="modalTripBudget">Presupuesto (€)</label> <input type="number" id="modalTripBudget" name="budget" step="0.01" min="0" value={formData.budget} onChange={handleChange} disabled={isSaving}/> </div>
                     <div className="input-group"> <label htmlFor="modalTripSavedAmount">Ahorrado Específico (€)</label> <input type="number" id="modalTripSavedAmount" name="saved_amount" step="0.01" min="0" value={formData.saved_amount} onChange={handleChange} disabled={isSaving}/> <small>Dinero apartado.</small> </div>
-                    <div className="input-group"> <label htmlFor="modalTripNotes">Notas</label> <textarea id="modalTripNotes" name="notes" rows={2} value={formData.notes} onChange={handleChange} disabled={isSaving}></textarea> </div>
+                    {/* --- NUEVO: SELECTOR DE ESTADO DEL VIAJE --- */}
+                    <div className="input-group">
+                        <label htmlFor="tripStatusM">Estado del Viaje</label>
+                        <select 
+                            id="tripStatusM" 
+                            name="status" 
+                            required 
+                            value={formData.status} 
+                            onChange={handleChange} 
+                            disabled={isSaving}
+                        >
+                            <option value="planificado">Planificado</option>
+                            <option value="en curso">En Curso</option>
+                            <option value="finalizado">Finalizado</option>
+                            {/* Podrías añadir más estados si los necesitas, ej: 'cancelado' */}
+                        </select>
+                    </div>
+                    {/* ----------------------------------------- */}
+                    <div className="input-group"> <label htmlFor="modalTripNotes">Notas (Opcional)</label> <textarea id="modalTripNotes" name="notes" rows={2} value={formData.notes} onChange={handleChange} disabled={isSaving}></textarea> </div>
 
                     {(localError || error) && <p className="error-message">{localError || error}</p>}
 

@@ -8,6 +8,8 @@ import { supabase } from '../services/supabaseClient';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { formatDate } from '../utils/formatters.js';
 import Sidebar from '../components/layout/Sidebar.jsx'; 
+import '../styles/Transactions.scss';
+import PageHeader from '../components/layout/PageHeader.jsx';
 // getIconClass ahora se usa en TransactionRow
 import TransactionRow from '../components/Transactions/TransactionRow.jsx'; // Asume ruta src/components/
 import TransactionModal from '../components/Transactions/TransactionModal.jsx'; // Asume ruta src/components/
@@ -44,6 +46,9 @@ function Transactions() {
     const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
     const [transactionToDelete, setTransactionToDelete] = useState(null); // { id, description, date }
     const [showScrollTop, setShowScrollTop] = useState(false);
+    const [message, setMessage] = useState(''); // Inicializa con cadena vacía o null
+    const [messageType, setMessageType] = useState('');
+    const [error, setError] = useState(null);
 
     const navigate = useNavigate();
     const isMounted = useRef(true); // Para cleanup
@@ -59,8 +64,16 @@ function Transactions() {
             // Cargar datos estáticos (perfil, cuentas, categorías)
             const [profileRes, accountsRes, categoriesRes] = await Promise.all([
                 supabase.from('profiles').select('avatar_url').eq('id', currentUserId).single(),
-                supabase.from('accounts').select('id, name, currency').eq('user_id', currentUserId).order('name'),
-                supabase.from('categories').select('id, name, type, icon, color').or(`user_id.eq.${currentUserId},is_default.eq.true`).order('name')
+                supabase.from('accounts').select('id, name, currency')
+                .eq('user_id', currentUserId)
+                .eq('is_archived', false)
+                .order('name'),
+                supabase.from('categories')
+                    // --- MODIFICACIÓN AQUÍ: Añadir parent_category_id al select ---
+                    .select('id, name, type, icon, color, parent_category_id') 
+                    // -----------------------------------------------------------
+                    .or(`user_id.eq.${currentUserId},is_default.eq.true`)
+                    .order('name')
             ]);
    
              if (!isMounted.current) return; // Usar isMounted.current si tienes esa ref
@@ -93,6 +106,12 @@ function Transactions() {
    
             // Aplicar Ordenación
             query = query.order(currentSort.column, { ascending: currentSort.ascending });
+            if (currentSort.column === 'transaction_date') {
+                // Cuando se ordena por fecha de transacción, usa 'created_at' como segundo criterio
+                // para asegurar un orden consistente para transacciones en el mismo día.
+                // 'ascending: false' para created_at significa que la transacción registrada más recientemente aparecerá primero.
+                query = query.order('created_at', { ascending: false }); 
+            }
    
             // Aplicar Rango para paginación
             query = query.range(rangeFrom, rangeTo);
@@ -117,7 +136,7 @@ function Transactions() {
         } finally {
             if (isMounted.current) setIsLoading(false);
         }
-    }, [supabase])  // fetchTransactions se pasa como dependencia abajo
+    }, [supabase]);  // fetchTransactions se pasa como dependencia abajo
 
     // --- Efectos ---
     useEffect(() => {
@@ -260,9 +279,18 @@ function Transactions() {
     // Asegúrate de incluir todas las dependencias externas usadas
     }, [user, modalMode, editingTransaction, accounts, supabase, handleCloseModal, fetchData, filters, sort, currentPage, itemsPerPage]);
 
-    const handleDeleteTransaction = (transactionId, description, date) => {
-        if (!transactionId) return;
-        setItemToDelete({ id: transactionId, name: description || 'Transacción', date: date });
+    const handleDeleteTransaction = (transaction) => { // <--- CAMBIO AQUÍ: Recibe el objeto 'transaction' completo
+        if (!transaction || !transaction.id) {
+            console.warn("handleDeleteTransaction: Se intentó eliminar una transacción inválida o sin ID.");
+            return;
+        }
+    
+        // Ahora puedes acceder a todas las propiedades de la transacción
+        setTransactionToDelete({ 
+            id: transaction.id, 
+            name: transaction.description || 'Transacción sin descripción', // Usa la descripción real
+            date: transaction.transaction_date // Usa la fecha real (asegúrate que transaction_date es el nombre correcto de la propiedad en tu objeto tx)
+        });
         setIsConfirmModalOpen(true);
     };
 
@@ -281,7 +309,7 @@ function Transactions() {
                  toast.error('La eliminación de transferencias debe hacerse manualmente (borrar ambas partes) o con una función avanzada.', { id: toastId, duration: 6000 });
                  // Alternativa: intentar buscar y borrar la hermana (complejo y frágil)
                  // Alternativa 2: No permitir borrar aquí y añadir botón específico en modal de transferencia?
-                 setItemToDelete(null);
+                 setTransactionToDelete(null);
                  return;
              }
 
@@ -295,7 +323,7 @@ function Transactions() {
             console.error('Error eliminando transacción:', err);
             toast.error(`Error: ${err.message}`, { id: toastId });
         } finally {
-            setItemToDelete(null);
+            setTransactionToDelete(null);
         }
     }, [user, transactionToDelete, supabase, fetchData, filters, sort, transactions]); // Incluir 'transactions' si se usa para check de transferencia
 
@@ -309,6 +337,17 @@ function Transactions() {
         return sort.ascending ? <i className="fas fa-sort-up"></i> : <i className="fas fa-sort-down"></i>;
     };
 
+    const transactionPageAction = (
+        <button 
+            onClick={() => handleOpenModal('add')} 
+            id="addTransactionBtn" 
+            className="btn btn-primary btn-add" // Tus clases existentes
+            disabled={isLoading || isSaving} // Usar los estados de carga/guardado de esta página
+        >
+            <i className="fas fa-plus"></i> Añadir
+        </button>
+    );
+
     return (
         <div style={{ display: 'flex' }}>
 
@@ -320,16 +359,14 @@ function Transactions() {
             {/* --- Contenido Principal --- */}
             <div className={`page-container ${isLoading ? 'content-loading' : ''}`}>
                 {/* --- Cabecera --- */}
-                <div className="page-header transactions-header">
-                    <button onClick={handleBack} id="backButton" className="btn-icon" aria-label="Volver" disabled={isSaving}><i className="fas fa-arrow-left"></i></button>
-                    <div className="header-title-group">
-                        <img id="userAvatarHeader" src={userAvatarUrl} alt="Avatar" className="header-avatar-small" />
-                        <h1>Transacciones</h1>
-                    </div>
-                    <button onClick={() => handleOpenModal('add')} id="addTransactionBtn" className="btn btn-primary btn-add" disabled={isLoading || isSaving}>
-                        <i className="fas fa-plus"></i> Añadir
-                    </button>
-                </div>
+                <PageHeader 
+                    pageTitle="Transacciones"
+                    headerClassName="transactions-header" // Tu clase específica si la necesitas
+                    showSettingsButton={false}           // No mostrar botón de settings aquí
+                    isProcessingPage={isLoading || isSaving} // Para deshabilitar botones de PageHeader si es necesario
+                    actionButton={transactionPageAction}     // <-- Pasar el botón "Añadir"
+                    // showBackButton={true} // Ya es true por defecto
+                />
 
                  {/* Mensaje General */}
                  {message && (
@@ -390,7 +427,7 @@ function Transactions() {
                                     key={tx.id}
                                     transaction={tx}
                                     onEdit={() => handleOpenModal('edit', tx)}
-                                    onDelete={() => handleDeleteTransaction(tx.id)}
+                                    onDelete={() => handleDeleteTransaction(tx)}
                                 />
                             ))}
                         </tbody>

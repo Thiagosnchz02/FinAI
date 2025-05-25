@@ -8,11 +8,15 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../services/supabaseClient';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import toast from 'react-hot-toast';
+import '../styles/Dashboard.scss';
+import { formatCurrency, formatDate } from '../utils/formatters.js'; // <-- Asegúrate que están aquí
+import { getIconClass} from '../utils/iconUtils.js';
+
 // Importar Layouts
 import Sidebar from '../components/layout/Sidebar.jsx'; // Ajusta ruta
 import MainHeader from '../components/layout/MainHeader.jsx'; // Ajusta ruta
 import NotificationPanel from '../components/layout/NotificationPanel.jsx'; // Ajusta ruta
-import Sidebar from '../components/layout/Sidebar.jsx'; 
+
 // Importar Widgets del Dashboard
 import SummaryPanel from '../components/dashboard/SummaryPanel.jsx';
 import BudgetWidget from '../components/dashboard/BudgetWidget.jsx';
@@ -25,7 +29,7 @@ import TripWidget from '../components/dashboard/TripWidget.jsx';
 import EvaluationWidget from '../components/dashboard/EvaluationWidget.jsx';
 import AccountsWidget from '../components/dashboard/AccountsWidget.jsx';
 // Importar Modales si se abren desde aquí (Acciones Rápidas)
-import TransactionModal from '../components/TransactionModal.jsx'; // Asume ruta /components/
+import TransactionModal from '../components/Transactions/TransactionModal.jsx'; // Asume ruta /components/
 import TripExpenseModal from '../components/Trips/TripExpenseModal.jsx'; // Asume ruta /components/Trips/
 
 import defaultAvatar from '../assets/avatar_predeterminado.png';
@@ -94,9 +98,21 @@ function Dashboard() {
      const fetchAccountsAndCategories = useCallback(async (currentUserId) => {
         try {
             const [accountsRes, categoriesRes, tripsRes] = await Promise.all([
-                 supabase.from('accounts').select('id, name, currency').eq('user_id', currentUserId).order('name'),
-                 supabase.from('categories').select('id, name, type, icon, color').or(`user_id.eq.${currentUserId},is_default.eq.true`).order('name'),
-                 supabase.from('trips').select('id, name').eq('user_id', currentUserId).order('start_date', { ascending: false })
+                 supabase.from('accounts')
+                 .select('id, name, currency, type')
+                 .eq('user_id', currentUserId)
+                 .eq('is_archived', false)
+                 .order('name'),
+                 supabase.from('categories')
+                    .select('id, name, type, icon, color, parent_category_id, is_default, is_archived') 
+                    .or(`user_id.eq.${currentUserId},is_default.eq.true`)
+                    .order('name'),
+                 supabase.from('trips')
+                 .select('id, name')
+                 .eq('user_id', currentUserId)
+                 .eq('is_archived', false) // También filtrar viajes activos
+                 .neq('status', 'finalizado')
+                 .order('start_date', { ascending: false })
              ]);
              if (accountsRes.error) throw accountsRes.error;
              if (categoriesRes.error) throw categoriesRes.error;
@@ -105,9 +121,12 @@ function Dashboard() {
                   setAccounts(accountsRes.data || []);
                   setCategories(categoriesRes.data || []);
                   setTrips(tripsRes.data || []);
+                  console.log("Dashboard: Categorías cargadas con parent_category_id:", categoriesRes.data); // Log para verificar
               }
-        } catch (err) { console.error("Error fetchAccountsAndCategories:", err); /* Opcional: setError */ }
-    }, [supabase]);
+        } catch (err) { 
+            console.error("Error fetchAccountsAndCategories:", err);
+            if (isMounted.current) setError("Error al cargar datos esenciales para formularios.");}
+    }, [supabase, setAccounts, setCategories, setTrips]);
 
     const fetchRecentActivity = useCallback(async (userId) => {
         setRecentActivity({ loading: true, items: [], error: false });
@@ -224,12 +243,16 @@ function Dashboard() {
         try {
              console.log("Fetching Goals Progress...");
              const { data: goalsData, error: goalsError } = await supabase.from('goals').select('id, name, current_amount, target_amount, icon, target_date')
-                .eq('user_id', userId).lt('current_amount', supabase.sql('target_amount'))
+                .eq('user_id', userId)
+                //.lt('current_amount', supabase.sql('target_amount'))
+                .gt('target_amount', 0)
                 .order('target_date', { ascending: true, nullsLast: true }).limit(5);
              if (goalsError) throw goalsError;
    
              const { count: totalGoalsCount, error: countError } = await supabase.from('goals').select('*', { count: 'exact', head: true })
-                  .eq('user_id', userId).lt('current_amount', supabase.sql('target_amount'));
+                  .eq('user_id', userId)
+                  //.lt('current_amount', supabase.sql('target_amount'));
+                  .gt('target_amount', 0)
              if (countError) console.warn("Error counting goals:", countError.message);
    
              const hasMoreGoals = (totalGoalsCount || 0) > (goalsData?.length || 0);
@@ -396,6 +419,19 @@ function Dashboard() {
              toast.error(`Error Cuentas: ${err.message}`);
         }
     }, [supabase]);
+
+    // --- Manejadores Modales ---
+    const handleOpenTransactionModal = useCallback((type = 'gasto') => {
+        setTransactionModalProps({ mode: 'add', initialData: null, type: type }); // Pasar tipo aquí
+        setModalError(''); setIsTransactionModalOpen(true);
+    }, []);
+    const handleCloseTransactionModal = useCallback(() => setIsTransactionModalOpen(false), []);
+
+    const handleOpenTripExpenseModal = useCallback(() => {
+        setTripExpenseModalProps({ mode: 'add', initialData: null });
+        setModalError(''); setIsTripExpenseModalOpen(true);
+    }, []);
+    const handleCloseTripExpenseModal = useCallback(() => setIsTripExpenseModalOpen(false), []);
 
     const handleSaveTransaction = useCallback(async (submittedFormData) => {
         if (!user?.id) { toast.error("Usuario no identificado."); return; }
@@ -599,54 +635,58 @@ const fetchNotificationCount = useCallback(async (userId) => {
         }
     }, [user?.id, notifications, supabase, fetchNotificationCount]);
 
-    const handleNotificationClick = useCallback(async (notificationId) => {
-        const notification = notifications.find(n => n.id === notificationId);
-        if (notification && !notification.is_read) {
-             // Optimista
-             setNotifications(prev => prev.map(n => n.id === notificationId ? { ...n, is_read: true } : n));
-             setUnreadCount(prev => Math.max(0, prev - 1));
-             try {
-                  await supabase.from('notifications').update({ is_read: true }).eq('id', notificationId);
-             } catch (err) {
-                 console.error("Error marking single notification read:", err);
-                 toast.error("Error al actualizar notificación.");
-                 fetchNotificationCount(user.id); // Re-sincronizar contador
-                 // Podrías revertir el estado de la notificación específica también si quieres
-             }
+    const handleNotificationClick = useCallback(async (notification) => {
+        if (!user?.id || !notification) return;
+
+        console.log("Notification clicked:", notification);
+
+        // 1. Marcar como leída (si no lo está ya)
+        if (!notification.is_read) {
+            // Actualización optimista en UI
+            setNotifications(prev => prev.map(n => 
+                n.id === notification.id ? { ...n, is_read: true } : n
+            ));
+            setUnreadCount(prev => Math.max(0, prev - 1));
+            
+            try {
+                const { error: updateError } = await supabase
+                    .from('notifications')
+                    .update({ is_read: true })
+                    .eq('id', notification.id)
+                    .eq('user_id', user.id); // Seguridad extra
+                if (updateError) {
+                    console.error("Error marking single notification read:", updateError);
+                    toast.error("Error al actualizar notificación.");
+                    // Revertir UI o recargar contadores si falla
+                    fetchNotificationCount(user.id); 
+                    fetchAndDisplayNotifications(); // Recargar lista para consistencia
+                }
+            } catch (err) {
+                console.error("Error en try-catch al marcar notificación:", err);
+                fetchNotificationCount(user.id);
+                fetchAndDisplayNotifications();
+            }
         }
-        // Lógica de redirección
-        if (notification?.related_entity_type === 'goals' && notification.related_entity_id) {
-            navigate(`/goals#goal-${notification.related_entity_id}`);
-        } else if (notification?.related_entity_type === 'scheduled_fixed_expenses' && notification.related_entity_id) {
-            navigate('/fixed-expenses');
+
+        // 2. Lógica de redirección según el tipo de notificación
+        if (notification.type === 'trip_completed' && notification.related_entity_type === 'trip' && notification.related_entity_id) {
+            console.log(`Navegando a viaje ID: ${notification.related_entity_id} para resumen.`);
+            navigate('/trips', { 
+                state: { 
+                    tripIdToOpen: notification.related_entity_id, 
+                    action: 'viewSummary' 
+                } 
+            });
+        } else if (notification.type === 'loan_reminder' && notification.related_entity_type === 'loan' && notification.related_entity_id) {
+            navigate('/loans', { state: { loanIdToHighlight: notification.related_entity_id } });
+        } else if (notification.type === 'debt_reminder' && notification.related_entity_type === 'debt' && notification.related_entity_id) {
+            navigate('/debts', { state: { debtIdToHighlight: notification.related_entity_id } });
         }
-        setIsNotificationPanelOpen(false); // Cerrar panel
-    }, [notifications, supabase, navigate, fetchNotificationCount]); // Incluir fetchNotificationCount
+        // Añade más casos 'else if' para otros tipos de notificaciones y sus destinos
 
+        setIsNotificationPanelOpen(false); // Cerrar el panel después del clic
+    }, [user?.id, supabase, navigate, fetchNotificationCount, fetchAndDisplayNotifications, notifications]); // 'notifications' es dependencia para el find
 
-    // --- Manejadores Modales ---
-    const handleOpenTransactionModal = useCallback((type = 'gasto') => {
-        setTransactionModalProps({ mode: 'add', initialData: null, type: type }); // Pasar tipo aquí
-        setModalError(''); setIsTransactionModalOpen(true);
-    }, []);
-    const handleCloseTransactionModal = useCallback(() => setIsTransactionModalOpen(false), []);
-
-    const handleOpenTripExpenseModal = useCallback(() => {
-        setTripExpenseModalProps({ mode: 'add', initialData: null });
-        setModalError(''); setIsTripExpenseModalOpen(true);
-    }, []);
-    const handleCloseTripExpenseModal = useCallback(() => setIsTripExpenseModalOpen(false), []);
-
-    // Reutilizar handleLogout, scrollToTop
-    const handleLogout = async () => { // Añadir async y try/catch
-        const { error } = await supabase.auth.signOut();
-        if (error) {
-            toast.error('Error al cerrar sesión.');
-            console.error('Error logout:', error);
-        } else {
-            navigate('/login'); // Redirigir explícitamente
-        }
-      };
     const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
     const handleProfileClick = useCallback(() => navigate('/profile'), [navigate]);
     //const handleHamburgerClick = () => console.log("Toggle sidebar (pendiente)");
@@ -654,11 +694,11 @@ const fetchNotificationCount = useCallback(async (userId) => {
 
     // --- Renderizado ---
     if (isLoading && !user) { return <div className="full-page-loader"><p>Cargando...</p></div>; }
-    if (error) { return <div className="full-page-error"><p>Error al cargar: {error}</p></div>; }
+    if (error && !isLoading) { return <div className="full-page-error"><p>Error al cargar: {error}</p></div>; }
 
     return (
         <div className="dashboard-container"> {/* Ajustar si sidebar se saca */}
-            <Sidebar isProcessing={isLoading || isSaving /*... u otro estado relevante */} />
+            <Sidebar isProcessing={isLoading || modalIsSaving} />
 
             {/* --- Contenido Principal --- */}
             <main className="main-content">

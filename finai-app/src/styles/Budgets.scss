@@ -1,0 +1,672 @@
+// Controles y Resumen (Refactorizado y con Variables/Responsividad)
+
+.page-header.budgets-header {
+  
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: $spacing-md; // Espacio entre los botones de acción
+  }
+}
+
+.custom-toast-container { // El que usaste para el toast de viaje/meta
+  background: rgb(183, 217, 255);
+  color: #333;
+  padding: 16px;
+  border-radius: 8px;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.1), 0 3px 3px rgba(0,0,0,0.05);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start; // Alinear a la izquierda para la lista
+  gap: 10px;
+  max-width: 2000px; // O el ancho que prefieras
+
+  p {
+    margin: 0;
+    text-align: left;
+    width: 100%;
+    color: #333;
+    &.toast-title {
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    &.toast-body {
+      font-size: 0.9em;
+      margin-bottom: 4px;
+    }
+    &.toast-question {
+      font-size: 0.9em;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+  }
+
+  ul { // Para la lista de conflictos
+    font-size: 0.85em;
+    max-height: 100px;
+    overflow-y: auto;
+    padding-left: 20px;
+    margin-bottom: 12px;
+    width: 100%;
+    list-style-type: disc; // O el que prefieras
+    li {
+      margin-bottom: 4px;
+    }
+  }
+
+  .toast-actions { // Contenedor para los botones del toast
+    display: flex;
+    gap: $spacing-sm; // Usa tu variable de espaciado
+    width: 100%;
+    justify-content: space-around; // O center, o flex-end
+
+    .btn { // Estilos específicos para botones DENTRO del toast
+      // Hereda de .btn y .btn-sm si esas clases ya se aplican en el JSX
+      padding: $spacing-xs $spacing-sm; 
+      font-size: 0.85em;                
+      min-width: 100px; 
+      justify-content: center; 
+      
+      i { font-size: 1em; }
+      
+      // Colores específicos
+      &.green-btn { background-color: $color-accent-green; /* ... */ }
+      &.blue-btn { background-color: $color-accent-blue; /* ... */ }
+      // .btn-secondary ya debería estar definido
+      // .btn-danger ya debería estar definido
+    }
+  }
+}
+
+.budget-main-controls-summary {
+    width: 100%;
+    //max-width: 1200px; // O el ancho que prefieras para esta sección
+    margin: 0 auto $spacing-xl auto; // Centrado y con margen inferior
+    padding: $spacing-lg;
+    //background-color: lighten($color-panel-bg, 2%); // Un fondo sutil si quieres
+    border-radius: $border-radius-lg;
+    //box-shadow: $box-shadow-md;
+
+  .current-period-display-main { // El h3 con el nombre del mes
+        text-align: center;
+        font-size: 1.6em;
+        color: #333; // O tu color principal
+        margin-bottom: $spacing-lg;
+        //padding-bottom: $spacing-sm;
+        //border-bottom: 1px solid $color-text-light;
+    }
+
+  .budget-columns-container {
+        display: flex;
+        flex-wrap: wrap; // Para que se apilen en móvil
+        gap: $spacing-xl; // Espacio entre las dos columnas principales
+        justify-content: center; // Centrar las columnas si no ocupan todo el ancho
+    }
+
+  .budget-column-left,
+  .budget-column-right {
+        display: flex;
+        flex-direction: column;
+        gap: $spacing-lg; // Espacio entre los elementos dentro de cada columna
+        flex: 1; // Intentar que ambas columnas tengan un tamaño similar
+        min-width: 300px; // Ancho mínimo antes de que el wrap actúe
+    }
+
+  .budget-column-left {
+        // Estilos específicos si la columna izquierda necesita ser más estrecha, por ejemplo
+        // flex-basis: 350px;
+        // flex-grow: 0;
+        align-items: center; // Centrar el selector de periodo y el indicador
+        justify-content: center;
+        @include md-up {
+            align-items: flex-start; // Alinear a la izquierda en pantallas más grandes
+        }
+    }
+   .budget-column-right {
+        // Estilos específicos si es necesario
+        align-items: center; // Centrar el contenido de esta columna
+        @include md-up {
+            align-items: stretch; // Estirar para que el summary box y chart ocupen el ancho
+        }
+    }
+
+    .period-selector {
+        display: flex;
+        align-items: center;
+        gap: $spacing-sm; // Usar variable
+        padding: $spacing-md;
+
+        label {
+            // Etiqueta del selector
+            font-weight: 700;
+            color: $color-text-dark; // Usar variable
+        }
+
+        input[type="month"] {
+            // Input tipo month
+            padding: $spacing-sm $spacing-md; // Usar variables
+            border: 1px solid $color-border; // Usar variable
+            border-radius: $border-radius-sm; // Usar variable
+            font-size: 0.95em; // Usar variable
+            //background-color: $color-panel-bg; // Usar variable
+            cursor: pointer;
+            @include transition-smooth((border-color, box-shadow)); // Usar mixin
+
+            &:hover {
+                border-color: $color-accent-purple; // Usar variable
+                box-shadow: 0 0 0 2px rgba($color-accent-purple, 0.2);
+                outline: none;
+            }
+        }
+    }
+}
+  
+  // Indicador de Dinero por Presupuestar
+  .budget-to-assign-indicator {
+    //background-color: $color-panel-bg;
+    padding: $spacing-md;
+    border-radius: $border-radius-md;
+    //box-shadow: $box-shadow-sm;
+    width: 100%;
+    //max-width: 350px; // Ajusta según necesites
+    text-align: center;
+    justify-content: center;
+
+    h4 {
+      font-size: 1em;
+      color: $color-text-dark;
+      margin: 0 0 $spacing-sm 0;
+      padding-bottom: $spacing-xs;
+      border-bottom: 1px solid $color-text-dark;
+    }
+    .indicator-item {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.9em;
+      padding: $spacing-xs / 2 0;
+      span { color: $color-text-muted; }
+      strong { color: $color-text-dark; font-weight: 600; }
+
+      &.positive strong { color: $color-accent-green; }
+      &.negative strong { color: $color-accent-red; }
+    }
+    &.no-evaluation p {
+        font-style: italic;
+        color: $color-text-muted;
+        font-size: 0.9em;
+        i { margin-right: $spacing-xs; }
+    }
+  }
+
+  // Resumen Numérico y Gráfico (dentro de .budget-column-right)
+  .budget-summary-box.main-summary {
+    width: 100%;
+    display: flex;
+    gap: $spacing-xl; // Espacio entre totales (usar variable)
+    font-size: 0.95em; // Usar variable
+    color: $color-text-dark; // Usar variable
+    flex-wrap: wrap; // Para móvil
+    //flex-grow: 1; // Para que ocupe espacio si el selector de periodo es pequeño
+    justify-content: center; // Alinear a la derecha si hay espacio
+    padding: $spacing-xxxl;
+
+    .rollover-toggle-control {
+            display: flex;
+            align-items: center;
+            margin-top: $spacing-sm; // Espacio respecto al selector de periodo
+            font-size: 0.9em;
+
+            label {
+                margin-bottom: 0; // Quitar margen por defecto de label si es necesario
+                margin-left: $spacing-xs / 2;
+                margin-right: $spacing-xs / 2;
+                color: $color-text-muted;
+                font-weight: 500;
+            }
+
+            input[type="checkbox"] {
+                // Estilos para hacerlo parecer más un switch si quieres, o dejar el default
+                width: auto; // Resetear de los estilos de input generales si es necesario
+                height: auto;
+                margin-right: $spacing-xs; 
+                vertical-align: middle; // Alinear mejor con el texto
+            }
+            small i.fas.fa-info-circle {
+                color: $color-text-muted;
+                cursor: help;
+            }
+        }
+
+    div {
+        // Cada total individual
+        display: flex;
+        flex-direction: column;
+        /* Etiqueta arriba, valor abajo */
+        align-items: flex-end;
+        /* Alinear a la derecha */
+        min-width: 120px; // Ancho mínimo para evitar que se aplasten
+
+        span {
+            // Etiqueta del total
+            font-size: 0.9em; // Usar variable
+            color: $color-text-muted; // Usar variable
+            margin-bottom: $spacing-xs; // Usar variable
+        }
+
+        strong {
+            // Valor del total
+            font-size: 1.2em; // Usar variable
+            font-weight: 800; // Usar variable
+            color: $color-text-dark; // Usar variable (color base)
+        }
+
+        #totalRemaining.negative {
+            // Color rojo si es negativo
+            color: $color-accent-red; // Usar variable
+        }
+
+        #totalRemaining.positive {
+            // Color verde si es positivo
+            color: $color-accent-green; // Usar variable
+        }
+
+        // Si no tiene clase (neutral o cero) usa el color del strong base
+    }
+  }
+
+.budget-overview-container {
+    display: flex;
+    margin-bottom: $spacing-xxxl;
+    flex-direction: column; // Apila resumen numérico y gráfico en móvil
+    gap: $spacing-lg;
+    width: 100%; // Ocupa el espacio disponible
+
+        .budget-distribution-chart-container {
+            //background-color: $color-panel-bg; // Opcional: un fondo para el área del gráfico
+            padding: $spacing-md;
+            border: none;
+            border-radius: $border-radius-lg;
+            //box-shadow: $box-shadow-sm;
+            margin-bottom: $spacing-xxxl;
+            width: 100%; // Ocupa el ancho de su contenedor padre (.budget-overview-container)
+            
+            @include md-up {
+                flex-grow: 1; // Para que ocupe el espacio restante al lado del resumen numérico
+                max-width: 400px; // Un ancho máximo para el gráfico
+            }
+
+            .class-wrapper{
+                position: relative;
+                height: 100px;
+                width: 100%;
+            }
+
+            &.empty-chart { // Estilo para cuando no hay datos para el gráfico
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                min-height: 150px; // Para que el mensaje tenga algo de espacio
+                p {
+                color: $color-text-muted;
+                font-style: italic;
+                }
+            }
+        }
+
+        @include md-up {
+        flex-direction: row; // Resumen numérico al lado del gráfico en pantallas más grandes
+        align-items: center; // Centrar verticalmente
+        justify-content: space-around; // O 'center' si prefieres
+        flex-grow: 1; // Para que ocupe el espacio restante al lado del selector de periodo
+        }
+    }
+
+
+// Grid Lista de Presupuestos (Refactorizado y con Variables/Responsividad)
+.budget-list-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); // Base definida aquí
+    gap: $spacing-xl; // Usar variable
+
+    // Media Queries anidadas para responsividad del grid
+    // md-up ya definido en el selector padre
+    @include mobile-only {
+        // En móviles (menos de $breakpoint-sm)
+        grid-template-columns: 1fr; // Una columna: las tarjetas se apilan
+        gap: $spacing-md; // Menos espacio entre tarjetas
+    }
+}
+
+/* --- Tarjeta de Presupuesto (.budget-card) --- */
+// Refactorizado y Anidado
+.budget-card {
+    background-color: $color-panel-bg; // Usar variable
+    border-radius: $border-radius-lg; // Usar variable
+    padding: $spacing-lg; // Usar variable
+    // box-shadow: 0 6px 15px rgba(140, 150, 170, 0.07); // Movido a mixin o aplicado globalmente si es común
+    display: flex;
+    flex-direction: column;
+    // border-left: 6px ; /* Borde por defecto */ // Color definido por JS o tipo?
+    @include transition-smooth((transform, box-shadow, border-color)); // Usar mixin
+    position: relative;
+    /* Para acciones */
+    @include card-shadow; // Aplicar mixin de sombra
+
+    &:hover {
+        transform: translateY(-5px); // Usar variable
+        box-shadow: 0 0px 25px rgba($color-accent-orange, 0.4); // Usar variable y rgba
+        // Puedes añadir un borde de color al pasar el ratón si quieres
+        // border-color: $color-accent-orange;
+    }
+
+    // Indicador de presupuesto excedido (si es una clase directa en la tarjeta)
+    &.overspent {
+        border-left-color: $color-accent-red; // Borde rojo
+        // Otros estilos visuales para indicar exceso
+        background-color: lighten($color-accent-red, 28%); // Fondo rojo muy claro
+    }
+
+
+    .card-header {
+        // Encabezado de la tarjeta
+        display: flex;
+        align-items: center;
+        gap: $spacing-md; // Usar variable
+        margin-bottom: $spacing-md; // Usar variable
+        // padding-bottom: $spacing-md; // Si necesitas padding
+        // border-bottom: 1px solid $color-border; // Si necesitas separador
+    }
+
+    .category-icon {
+        // Icono de categoría
+        font-size: 1.8em;
+        color: $color-accent-purple; // Color base del icono (puede venir de JS)
+        width: 35px; // Usar variable
+        text-align: center;
+        flex-shrink: 0;
+        // Si el color del icono varía por categoría (gestionado por JS generalmente)
+    }
+
+    .category-name {
+        // Nombre de categoría
+        margin: 0;
+        font-size: 1.2em;
+        font-weight: 700;
+        color: $color-text-dark; // Usar variable
+        flex-grow: 1;
+        @include text-ellipsis; // Usar mixin
+    }
+
+    .card-body {
+        // Cuerpo de la tarjeta
+        flex-grow: 1;
+        margin-bottom: $spacing-md; // Usar variable
+
+        .previous-month-info {
+            margin-top: $spacing-sm; // Espacio respecto a la barra de progreso
+            padding-top: $spacing-xs;
+            border-top: 1px dashed lighten($color-border, 10%); // Un separador muy sutil
+            text-align: center; // O left, o right, según prefieras
+
+            small {
+                font-size: 0.75em; // Hacerlo pequeño
+                color: $color-text-muted; // Un color discreto
+                font-style: italic; // Opcional: cursiva
+            }
+        }
+    }
+
+    .budget-amounts {
+        // Contenedor de montos (Presup., Gastado, Restante)
+        font-size: 0.9em; // Usar variable
+        line-height: 1.6;
+        color: $color-text-dark; // Usar variable
+        margin-bottom: $spacing-md; // Usar variable
+
+        div {
+            // Cada línea de monto
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: $spacing-xs; // Usar variable
+        }
+
+        .rollover-amount,
+        .available-budget {
+            font-size: 0.85em; // Un poco más pequeño que los principales
+            color: $color-text-muted;
+            padding: $spacing-xs / 2 0; // Menos padding vertical
+
+            .amount {
+            font-weight: 600; // Un poco de énfasis
+            // El color se hereda o se puede especificar
+            }
+
+            // Estilo específico para el rollover si es positivo o negativo
+            &.positive .amount {
+            color: $color-accent-green; // O un azul para indicar "más disponible"
+            }
+            &.negative .amount {
+            color: $color-accent-red; // O un naranja para indicar "menos disponible"
+            }
+        }
+
+        .available-budget {
+            // border-top: 1px dashed lighten($color-border, 10%); // Separador opcional
+            margin-top: $spacing-xs / 2;
+            padding-top: $spacing-xs / 2;
+            font-weight: 600; // Un poco más de énfasis para el disponible
+            color: $color-text-dark; // Color más oscuro para el disponible
+
+            .amount.emphasis { // Clase para el valor del disponible
+            font-size: 1.05em; // Ligeramente más grande
+            // El color ya es $color-text-dark por herencia de .available-budget
+            }
+        }
+
+        .amount {
+            // Valor del monto
+            font-weight: 700;
+        }
+
+        .amount.remaining {
+          display: flex; // Para alinear el texto del restante y el icono
+          align-items: center; // Alinear verticalmente
+          // La clase .negative ya debería ponerlo en rojo
+          
+          // --- NUEVO: Estilos para el icono indicador ---
+          .budget-status-indicator-icon {
+            font-size: 0.9em; // Ajusta el tamaño del icono si es necesario
+            margin-left: $spacing-xs; // Espacio entre el texto y el icono
+            // line-height: 1; // A veces ayuda a alinear verticalmente si hay problemas
+          }
+          // --- FIN NUEVO ---
+        }
+
+        .budgeted {
+            color: $color-text-dark;
+        }
+
+        // Presupuestado (color normal)
+        .spent {
+            color: $color-accent-red;
+        }
+
+        // Gastado (rojo)
+        .remaining.positive {
+            color: $color-accent-green;
+        }
+
+        // Restante positivo (verde)
+        .remaining.negative {
+            color: $color-accent-red;
+            font-weight: bold;
+        }
+
+        // Restante negativo (rojo y negrita)
+    }
+
+
+    /* Barra de Progreso */
+    .progress-bar-container {
+        width: 100%;
+        height: $spacing-md; // Grosor barra (usar variable)
+        background-color: $color-border; // Fondo gris claro
+        border-radius: $border-radius-sm; // Bordes redondeados (usar variable)
+        overflow: hidden;
+        margin-top: $spacing-sm; // Usar variable
+        position: relative; // Para el porcentaje si se superpone
+
+        .progress-bar {
+            // Barra de progreso interior
+            height: 100%;
+            width: 0%;
+            /* Ajustado por JS */
+            background-color: $color-accent-green; // Color verde por defecto (ajustado por JS según porcentaje)
+            border-radius: $border-radius-sm;
+            transition: width $transition-speed-slow $transition-ease, background-color $transition-speed-slow $transition-ease;
+            display: block;
+            // Colores barra según porcentaje (Gestionado por JS añadiendo clases o estilos inline)
+            // &.medium { background-color: $color-accent-yellow; }
+            // &.high { background-color: $color-accent-red; }
+        }
+
+        .progress-percentage {
+            // Porcentaje superpuesto (si aplica)
+            position: absolute;
+            right: $spacing-xs;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.75em; // Usar variable
+            font-weight: 600; // Usar variable
+            color: rgba($color-text-dark, 0.5); // Color base (oscuro)
+            transition: color $transition-speed-fast $transition-ease;
+            // Color blanco si la barra es oscura y está avanzada (gestionado por JS añadiendo clase)
+            // &.light-text { color: rgba($color-text-light, 0.9); }
+        }
+    }
+
+    .overspent-indicator {
+        // Indicador de presupuesto excedido
+        font-size: 0.9em; // Usar variable
+        font-weight: 700; // Usar variable
+        color: $color-accent-red; // Usar variable
+        text-align: center;
+        margin-top: $spacing-sm; // Usar variable
+    }
+
+
+    .card-actions {
+        // Contenedor de acciones
+        display: flex;
+        justify-content: flex-end;
+        gap: $spacing-sm; // Usar variable
+        padding-top: $spacing-md; // Usar variable
+        border-top: 1px solid $color-border; // Usar variable
+
+        .btn-icon {
+            // Botones icono dentro de card-actions
+            font-size: 1.0em; // Usar variable
+            padding: $spacing-xs; // Usar variable
+            color: $color-text-muted; // Usar variable
+
+            &:hover {
+                color: $color-accent-purple;
+            }
+
+            // Usar variable
+            &.btn-delete:hover {
+                color: $color-accent-red;
+            }
+
+            // Usar variable
+            // Si tienes un botón específico para editar importe
+            &.btn-edit {
+                color: $color-accent-orange;
+            }
+
+            // Usar variable
+            &.btn-edit:hover {
+                color: darken($color-accent-orange, 10%);
+            }
+
+            // Usar variable y función
+        }
+    }
+
+    // Responsive para la tarjeta individual si necesita ajustes
+    @include mobile-only {
+        // En pantallas pequeñas
+        padding: $spacing-md; // Menos padding
+
+        .card-header {
+            gap: $spacing-sm;
+        }
+
+        // Menos espacio en header
+        .category-icon {
+            font-size: 1.4em;
+            width: 25px;
+        }
+
+        // Icono más pequeño
+        .category-name {
+            font-size: 1em;
+        }
+
+        // Nombre más pequeño
+        .card-body {
+            margin: $spacing-sm 0;
+        }
+
+        // Ajustar margen body
+        .budget-amounts {
+            font-size: 0.85em;
+        }
+
+        // Ajustar tamaño fuente de montos
+        .budget-amounts div {
+            margin-bottom: $spacing-xs/2;
+        }
+
+        // Menos espacio entre líneas de monto
+        .budget-amounts .amount {
+            font-size: 1em;
+        }
+
+        // Ajustar tamaño valor del monto
+        .progress-bar-container {
+            height: $spacing-sm;
+        }
+
+        // Menos grosor de barra
+        .progress-bar {
+            border-radius: $border-radius-sm;
+        }
+
+        // Ajustar border-radius de barra
+        .progress-percentage {
+            font-size: 0.7em;
+            right: $spacing-xs/2;
+        }
+
+        // Ajustar porcentaje
+        .overspent-indicator {
+            font-size: 0.8em;
+            margin-top: $spacing-xs;
+        }
+
+        // Ajustar indicador
+        .card-actions {
+            padding-top: $spacing-sm;
+            gap: $spacing-xs;
+        }
+
+        // Ajustar acciones
+        .card-actions .btn-icon {
+            font-size: 0.9em;
+            padding: $spacing-xs/2;
+        }
+
+        // Iconos más pequeños
+    }
+}

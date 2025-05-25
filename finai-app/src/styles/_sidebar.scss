@@ -1,0 +1,208 @@
+// src/styles/_sidebar.scss
+
+
+@import 'mixins';
+
+.sidebar {
+    width: $sidebar-width-collapsed; // Ancho colapsado
+    background-color: $color-sidebar-bg;
+    padding: $spacing-lg 0; // Padding vertical
+    display: flex;
+    flex-direction: column;
+    align-items: center; // Centrar contenido en estado colapsado
+    transition: width $transition-speed-normal $transition-ease; // Transición para expansión
+    position: fixed; // Posición fija
+    left: 0; top: 0; bottom: 0; // Anclado a los bordes
+    z-index: $zindex-sidebar; // Z-index
+    overflow-x: hidden; // Ocultar scroll horizontal
+    box-sizing: border-box;
+    box-shadow: 2px 0 5px rgba(0,0,0,0.1); // Sombra lateral
+
+    .sidebar-logo {
+        margin-bottom: $spacing-xxxl; // Espacio debajo del logo
+        padding: 0 $spacing-md; // Padding horizontal del logo
+        align-self: center; // Centrar por defecto
+        transition: align-self $transition-speed-normal $transition-ease, padding $transition-speed-normal $transition-ease;
+
+        img {
+            max-width: 50px;
+            height: auto;
+            display: block;
+        }
+    }
+
+    .sidebar-nav {
+        display: flex;
+        flex-direction: column;
+        align-items: center; // Centrar botones en estado colapsado
+        gap: $spacing-sm; // Espacio entre botones
+        flex-grow: 1; // Ocupar espacio disponible
+        width: 100%; // Ancho completo del contenedor flex
+    }
+
+    .nav-button {
+        background-color: transparent;
+        color: rgba($color-text-light, 0.7); // Color de texto con transparencia
+        border: none;
+        border-radius: $border-radius-sm; // Bordes redondeados
+        width: calc(100% - $spacing-lg); // Ancho: 100% - (margen * 2)
+        height: 55px; // Altura fija
+        display: flex;
+        align-items: center;
+        justify-content: center; // Centrar contenido del botón (icono)
+        font-size: 1.4rem; // Tamaño icono
+        cursor: pointer;
+        transition: all $transition-speed-fast $transition-ease; // Transición suave
+        position: relative;
+        text-decoration: none;
+        padding: 0 $spacing-sm; // Padding horizontal
+        margin: 0 $spacing-sm $spacing-sm $spacing-sm; // Margen
+        overflow: hidden;
+        white-space: nowrap;
+        box-sizing: border-box;
+
+        i {
+            width: 25px; // Ancho fijo para el icono
+            text-align: center;
+            flex-shrink: 0; // No permitir que el icono se encoja
+            transition: color $transition-speed-fast $transition-ease;
+        }
+
+        span {
+            display: none; // Texto oculto por defecto
+            margin-left: $spacing-md; // Espacio entre icono y texto
+            font-weight: 700;
+            font-size: 0.9em;
+            opacity: 0; // Invisible por defecto
+            transition: opacity $transition-speed-fast ease 0.1s; // Transición con pequeño delay
+        }
+
+        // Estado Hover
+        &:hover {
+            background-color: rgba($color-text-light, 0.1);
+            color: $color-text-light;
+             i { color: $color-text-light; }
+        }
+
+        // Estado Activo (cuando la ruta coincide)
+        &.active {
+            background-color: rgba($color-text-light, 0.2);
+            color: $color-text-light;
+            // Puedes añadir un indicador visual diferente si quieres
+        }
+    }
+
+    // Botón Logout
+    .logout-button {
+        margin-top: auto; // Empuja el botón al final de la flex column
+        width: calc(100% - $spacing-lg);
+        margin: $spacing-sm $spacing-sm 0 $spacing-sm;
+        justify-content: center; // Centrar contenido
+        border-top: 1px solid rgba($color-text-light, 0.1); // Separador superior
+        padding-top: $spacing-md;
+
+        span { display: none; } // Texto oculto por defecto
+    }
+
+
+    // --- ESTILOS PARA SIDEBAR EXPANDIDA (EN HOVER o con clase JS) ---
+    &:hover {
+        width: $sidebar-width-expanded; // Ancho expandido
+        align-items: flex-start; // Alinear contenido al inicio
+
+        .sidebar-logo {
+            align-self: flex-start;
+            padding: 0 $spacing-xl;
+        }
+
+        .sidebar-nav {
+             align-items: flex-start; // Alinear botones al inicio
+             gap: $spacing-sm;
+        }
+
+        .nav-button {
+            justify-content: flex-start;
+            width: calc(100% - $spacing-xxl);
+            margin: 0 $spacing-md $spacing-sm $spacing-md;
+            padding: $spacing-sm $spacing-md;
+            gap: $spacing-md; // Espacio entre icono y texto
+            font-size: $base-font-size;
+
+            i {
+                font-size: 1.2em;
+                width: 20px;
+                color: rgba($color-text-light, 0.8);
+            }
+
+            span {
+                display: inline !important; // Mostrar texto
+                opacity: 1 !important; // Hacer visible
+                margin-left: 0;
+                font-size: 1.1em;
+                font-weight: 600;
+                transition: opacity $transition-speed-fast ease 0.1s;
+            }
+
+            &:hover {
+                background-color: rgba($color-text-light, 0.15);
+                color: $color-text-light;
+                 i { color: $color-text-light; }
+            }
+
+            &.active {
+                background-color: $color-text-light;
+                color: $color-sidebar-bg;
+                font-weight: 700;
+                padding: $spacing-sm $spacing-md;
+                 i, span { color: $color-sidebar-bg; }
+            }
+        }
+
+        .logout-button {
+            justify-content: flex-start;
+            width: calc(100% - $spacing-xxl);
+            margin: $spacing-sm $spacing-md 0 $spacing-md;
+            padding: $spacing-sm $spacing-xl;
+
+             span {
+                 display: inline !important;
+                 opacity: 1 !important;
+                 font-size: 0.95em;
+                 font-weight: 600;
+                 color: rgba($color-text-light, 0.85);
+             }
+             i { color: rgba($color-text-light, 0.75); }
+
+             &:hover {
+                  background-color: rgba($color-accent-red, 0.15);
+                  color: lighten($color-accent-red, 20%);
+                   i, span { color: lighten($color-accent-red, 20%); }
+             }
+        }
+
+        // Ajuste del margen izquierdo del page-container cuando la sidebar está expandida
+         + .page-container {
+             margin-left: $sidebar-width-expanded;
+         }
+    }
+
+
+    // Responsive para la sidebar (si se comporta diferente en breakpoints específicos)
+    @include mobile-only {
+         width: 0; // Ancho cero en móvil
+         overflow: hidden;
+         position: fixed; // Asegurar posición fija
+
+         // Ajustar el margen del page-container
+         + .page-container { margin-left: 0 !important; }
+
+         // Si implementas control con JS para abrir/cerrar en móvil
+         // &.is-open { width: 200px; + .page-container { margin-left: 200px; } }
+    }
+    // En tablets, mantener colapsada pero con hover para expansión
+     @include md-up {
+         width: $sidebar-width-collapsed;
+         // La expansión por hover sigue funcionando
+         // + .page-container { margin-left: $sidebar-width-collapsed; }
+     }
+}

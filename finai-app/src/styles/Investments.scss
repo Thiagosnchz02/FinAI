@@ -1,0 +1,438 @@
+/* --- Grid Lista de Inversiones (.investment-list-grid) --- */
+// Refactorizado y con Responsividad
+.investment-list-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); // Base
+    gap: $spacing-xl; // Usar variable
+    margin-top: $spacing-lg; // Usar variable
+
+    // Media Queries anidadas para ajustar el grid
+    @include lg-up {
+        // Desktop grande
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        gap: $spacing-xxl;
+    }
+
+    @include md-up {
+        // Tabletas
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: $spacing-xl;
+    }
+
+    @include mobile-only {
+        // Móviles
+        grid-template-columns: 1fr; // Una columna
+        gap: $spacing-md;
+    }
+}
+
+
+/* --- Tarjeta de Inversión (.investment-card) --- */
+// Refactorizado y Anidado
+.investment-card {
+    background-color: $color-panel-bg; // Usar variable
+    border-radius: $border-radius-lg; // Usar variable
+    padding: $spacing-lg; // Usar variable
+    box-shadow: 0 6px 18px rgba($color-shadow, 0.1); // Usar variable y rgba
+    display: flex;
+    flex-direction: column;
+    border: 1px solid $color-border; // Usar variable
+    @include transition-smooth((transform, box-shadow, border-color)); // Usar mixin
+
+    &:hover {
+        // Estado hover
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba($color-shadow, 0.15);
+        // Puedes añadir un borde de color al pasar el ratón si quieres
+        // border-color: $color-accent-green;
+    }
+
+
+    .investment-card-header {
+        // Encabezado de la tarjeta
+        display: flex;
+        align-items: flex-start;
+        gap: $spacing-md;
+        margin-bottom: $spacing-md;
+        padding-bottom: $spacing-md;
+        border-bottom: 1px dashed $color-border; // Usar variable
+    }
+
+    .investment-icon-container {
+        // Contenedor del icono (anidado)
+        flex-shrink: 0;
+        width: 55px;
+        height: 55px; // Usar variable
+        border-radius: $border-radius-md; // Usar variable
+        @include flex-center; // Usar mixin
+        background-color: #e0e0e0; // Gris default (color base, sobrescrito por tipo)
+
+        i {
+            font-size: 1.8em;
+            color: $color-text-light;
+        }
+
+        // Icono blanco (usar variable)
+    }
+
+    // Colores fondo icono por tipo (anidado en el padre .investment-card)
+    &[data-type="acciones"] .investment-icon-container {
+        background-color: $color-accent-blue;
+    }
+
+    &[data-type="fondo"] .investment-icon-container {
+        background-color: $color-accent-green;
+    }
+
+    &[data-type="crypto"] .investment-icon-container {
+        background-color: $color-accent-orange;
+    }
+
+    &[data-type="inmueble"] .investment-icon-container {
+        background-color: $color-accent-red;
+    }
+
+    // O un coral específico
+    &[data-type="otro"] .investment-icon-container {
+        background-color: $color-text-muted;
+    }
+
+    // Usar variable
+
+    .investment-header-info {
+        flex-grow: 1;
+    }
+
+    // Contenedor de nombre, símbolo, badge
+
+    .investment-name {
+        // Nombre del activo
+        font-size: 1.25em;
+        font-weight: 800;
+        color: $color-text-dark;
+        margin: 0 0 $spacing-xs/2 0; // Usar variables
+    }
+
+    .investment-symbol {
+        // Símbolo/Ticker
+        font-size: 0.85em;
+        color: $color-text-muted;
+        font-family: monospace;
+        margin-bottom: $spacing-xs;
+        display: block;
+    }
+
+    .investment-type-badge {
+        // Badge de tipo
+        font-size: 0.7em;
+        font-weight: 700;
+        padding: 3px $spacing-sm;
+        border-radius: $border-radius-sm; // Usar variables
+        background-color: lighten($color-border, 5%);
+        color: $color-text-dark; // Base (usar variables)
+        display: inline-block;
+        text-transform: capitalize;
+    }
+
+    // Colores badge por tipo (anidado en el padre .investment-card)
+    &[data-type="acciones"] .investment-type-badge {
+        background-color: lighten($color-accent-blue, 20%);
+        color: darken($color-accent-blue, 10%);
+    }
+
+    &[data-type="fondo"] .investment-type-badge {
+        background-color: lighten($color-accent-green, 20%);
+        color: darken($color-accent-green, 10%);
+    }
+
+    &[data-type="crypto"] .investment-type-badge {
+        background-color: lighten($color-accent-orange, 20%);
+        color: darken($color-accent-orange, 10%);
+    }
+
+    &[data-type="inmueble"] .investment-type-badge {
+        background-color: lighten($color-accent-red, 20%);
+        color: darken($color-accent-red, 10%);
+    }
+
+    // O un coral
+    &[data-type="otro"] .investment-type-badge {
+        background-color: lighten($color-text-muted, 20%);
+        color: darken($color-text-muted, 10%);
+    }
+
+
+    .investment-card-body {
+        // Cuerpo de la tarjeta con datos
+        display: grid;
+        grid-template-columns: repeat(2, 1fr); // Dos columnas por default
+        gap: $spacing-sm $spacing-md; // Espacio entre items
+        font-size: 0.9em; // Usar variable
+        margin-bottom: $spacing-md; // Usar variable
+
+        .info-item {
+            line-height: 1.4;
+        }
+
+        // Cada línea de información
+
+        .info-label {
+            display: block;
+            font-size: 0.85em;
+            color: $color-text-muted;
+            margin-bottom: $spacing-xs/2;
+        }
+
+        // Etiqueta (ej. Cantidad)
+
+        .info-value {
+            font-weight: 600;
+            color: $color-text-dark;
+        }
+
+        // Valor (ej. 100 acciones)
+        .info-value.important {
+            font-size: 1.1em;
+            font-weight: 700;
+        }
+
+        // Valor destacado (ej. Valor Actual)
+        .info-value.profit {
+            color: $color-accent-green;
+            font-weight: 700;
+        }
+
+        // Ganancia (verde)
+        .info-value.loss {
+            color: $color-accent-red;
+            font-weight: 700;
+        }
+
+        // Pérdida (rojo)
+    }
+
+    .investment-card-footer {
+        // Pie de la tarjeta (broker y acciones)
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-top: $spacing-md; // Espacio superior
+        border-top: 1px dashed $color-border; // Separador
+        font-size: 0.8em;
+        color: $color-text-muted; // Usar variables
+    }
+
+    .investment-broker {
+        font-style: italic;
+    }
+
+    // Nombre del broker
+
+    .investment-actions {
+        // Contenedor de botones de acción
+        display: flex;
+        gap: $spacing-xs; // Espacio
+
+        // Los botones icono (.btn-icon) usarán estilos de _buttons.scss
+        // Si necesitas modificarlos SÓLO aquí, anidarlos.
+        .btn-icon {
+            font-size: 1em;
+            padding: $spacing-xs;
+            color: $color-text-muted;
+
+            &:hover {
+                color: $color-accent-purple;
+            }
+
+            &.btn-delete:hover {
+                color: $color-accent-red;
+            }
+        }
+    }
+
+    // Responsive para la tarjeta de inversión
+    @include mobile-only {
+        // En pantallas pequeñas
+        padding: $spacing-md; // Menos padding
+
+        .investment-card-header {
+            gap: $spacing-sm;
+            padding-bottom: $spacing-md;
+            margin-bottom: $spacing-md;
+        }
+
+        .investment-icon-container {
+            width: 45px;
+            height: 45px;
+            border-radius: $border-radius-sm;
+        }
+
+        // Icono más pequeño
+        .investment-icon-container i {
+            font-size: 1.5em;
+        }
+
+        .investment-name {
+            font-size: 1.1em;
+        }
+
+        // Nombre más pequeño
+        .investment-symbol {
+            font-size: 0.8em;
+            margin-bottom: $spacing-xs/2;
+        }
+
+        .investment-type-badge {
+            font-size: 0.65em;
+            padding: 2px $spacing-xs;
+        }
+
+        .investment-card-body {
+            grid-template-columns: 1fr;
+            gap: $spacing-xs;
+            margin-bottom: $spacing-md;
+        }
+
+        // Una columna
+        .info-label {
+            font-size: 0.8em;
+        }
+
+        .info-value {
+            font-size: 1em;
+        }
+
+        .info-value.important {
+            font-size: 1.05em;
+        }
+
+        .investment-card-footer {
+            padding-top: $spacing-sm;
+            font-size: 0.75em;
+        }
+
+        .investment-actions {
+            gap: $spacing-xs/2;
+        }
+
+        .investment-actions .btn-icon {
+            font-size: 0.9em;
+            padding: 2px;
+        }
+    }
+
+    @include md-up {
+
+        // En tabletas, ajustar layout de datos si se desea
+        .investment-card-body {
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); // Más columnas si caben
+        }
+    }
+}
+
+
+/* --- Resumen Footer (.summary-footer) --- */
+// Este estilo base ya debería estar en _layout.scss o _components.scss si es común.
+// Si lo está, ignora este bloque y solo añade la media query responsiva si es específica de esta página.
+.summary-footer {
+    display: grid; // Usar grid
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); // Usar variables
+    gap: $spacing-md; // Usar variable
+    margin-top: $spacing-xxxl; // Usar variable
+    padding-top: $spacing-lg; // Usar variable
+    border-top: 1px solid $color-border; // Usar variable
+
+    .summary-box {
+        // Caja de resumen individual (usará estilos base de .panel o _components.scss)
+        background-color: $color-panel-bg; // Usar variable
+        border-radius: $border-radius-lg; // Usar variable
+        padding: $spacing-md $spacing-lg; // Usar variables
+        text-align: center;
+        box-shadow: $box-shadow-sm; // Usar variable
+
+        // Colores de borde según tipo (Investments)
+        &.green {
+            background-color: lighten($color-accent-green, 20%);
+            border-left: 5px solid $color-accent-green;
+        }
+
+        &.blue {
+            background-color: lighten($color-accent-blue, 20%);
+            border-left: 5px solid $color-accent-blue;
+        }
+
+        // El original tenía purple para uno, ¿quizás para la pérdida? Revisa cuál usarías.
+        &.red {
+            background-color: lighten($color-accent-red, 20%);
+            border-left: 5px solid $color-accent-red;
+        }
+
+
+        .summary-label {
+            display: block;
+            font-size: 0.85em;
+            color: $color-text-muted;
+            margin-bottom: $spacing-xs;
+        }
+
+        strong {
+            font-size: 1.4em;
+            font-weight: 800;
+            color: $color-text-dark;
+            display: block;
+        }
+
+        strong.positive {
+            color: $color-accent-green;
+        }
+
+        // Verde Ganancia
+        strong.negative {
+            color: $color-accent-red;
+        }
+
+        // Rojo Pérdida
+
+        small {
+            font-size: 0.75em;
+            color: $color-text-muted;
+            display: block;
+            margin-top: $spacing-xs/2;
+        }
+    }
+
+    // Responsive para el summary footer
+    @include mobile-only {
+        // En móviles
+        grid-template-columns: 1fr; // Apilar cajas en una columna
+        gap: $spacing-sm; // Menos espacio
+
+        .summary-box {
+            padding: $spacing-sm $spacing-md;
+        }
+
+        // Ajustar padding
+        .summary-box strong {
+            font-size: 1.2em;
+        }
+
+        // Ajustar tamaño fuente
+    }
+}
+
+
+// Estilos para el Modal Añadir Inversión (#investmentForm)
+// Si estos estilos son genéricos de modales, muévelos a _modals.scss.
+// Si son específicos de este modal, refactorízalos y anídalos aquí.
+#investmentForm {
+    // Anidado si es específico de este formulario
+    flex-grow: 1; // Permite que el form ocupe espacio en modal flexbox
+    // overflow-y: auto; // Si quieres scroll solo en el form
+    // padding-bottom: 10px;
+
+    // Los .input-group y .modal-actions dentro de este formulario
+    // DEBERÍAN usar los estilos definidos en _modals.scss.
+    // Si tienen alguna particularidad SÓLO en este modal, anidarla aquí:
+    // .input-group { ... overrides ... }
+    // .modal-actions { ... overrides ... }
+}

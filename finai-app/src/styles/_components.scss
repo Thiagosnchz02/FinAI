@@ -1,0 +1,356 @@
+// src/styles/_components.scss
+
+
+@import 'mixins'; // Para usar mixins
+
+// Botón Scroll to Top
+.scroll-top-btn {
+    position: fixed;
+    bottom: $spacing-xxl; // Distancia del borde inferior (usar variable)
+    right: $spacing-xxl; // Distancia del borde derecho (usar variable)
+    background-color: $color-accent-purple; // Color del botón (usar variable)
+    color: $color-text-light; // Color del icono (usar variable)
+    border: none;
+    border-radius: 50%; // Forma redonda
+    width: 50px; height: 50px; // Tamaño (usar variable)
+    font-size: 1.5em; // Tamaño del icono (usar variable)
+    cursor: pointer;
+    @include flex-center; // Centrar contenido con mixin
+    box-shadow: $box-shadow-md; // Sombra (usar variable)
+    z-index: $zindex-scroll-top; // Z-index
+    transition: opacity $transition-speed-normal $transition-ease, visibility $transition-speed-normal $transition-ease, transform $transition-speed-fast $transition-ease; // Transiciones
+    opacity: 0;
+    visibility: hidden; // Oculto por defecto
+
+    &.visible { // Clase que activa la visibilidad
+        opacity: 1;
+        visibility: visible;
+        transform: scale(1); // Escala normal
+    }
+
+    &:hover { background-color: darken($color-accent-purple, 10%); transform: scale(1.1); } // Hover (usar variable y función)
+    &:active { transform: scale(0.95); } // Active (usar variable)
+
+    // Responsive para el botón scroll-top
+    @include mobile-only {
+         bottom: $spacing-lg; // Ajustar posición en móvil
+         right: $spacing-lg; // Ajustar posición en móvil
+         width: 45px; height: 45px; // Ajustar tamaño
+         font-size: 1.3em; // Ajustar tamaño icono
+    }
+}
+
+// Mensaje de lista vacía
+.empty-list-message {
+    text-align: center;
+    margin-top: $spacing-xxl; // Usar variable
+    padding: $spacing-xxl $spacing-lg; // Usar variables
+    color: $color-text-muted; // Usar variable
+    background-color: $color-panel-bg; // Usar variable
+    border-radius: $border-radius-lg; // Usar variable
+    box-shadow: 0 6px 15px rgba($color-shadow, 0.07); // Usar variable y rgba
+    // Si está dentro de un grid, puedes añadir:
+    // grid-column: 1 / -1;
+
+    .empty-mascot {
+        max-width: 80px; // Usar variable
+        margin-bottom: $spacing-md; // Usar variable
+        opacity: 0.7;
+    }
+
+    p {
+        margin: $spacing-xs * 1.5 0; // Usar variable
+        line-height: 1.6; // Usar variable
+        font-size: 1.05em; // Usar variable
+    }
+
+    .btn { // Estilo para botón dentro del mensaje vacío (usará estilos de _buttons.scss)
+        margin-top: $spacing-xl; // Usar variable
+    }
+
+    &.small-empty { // Variación más pequeña (ej. en detalle de viaje)
+        padding: $spacing-lg; // Usar variable
+        margin-top: $spacing-sm; // Usar variable
+        font-size: 0.9em; // Usar variable
+        background: none;
+        box-shadow: none;
+    }
+
+    &.welcome-options {
+    padding: $spacing-xl $spacing-lg;
+    align-items: center; // Más padding si es un mensaje de bienvenida
+    
+    h2 {
+      font-size: 1.4em;
+      color: $color-text-dark;
+      margin-bottom: $spacing-sm;
+    }
+    p {
+      font-size: 1em;
+      color: $color-text-muted;
+      max-width: 500px; // Para que no sea demasiado ancho el texto
+      line-height: 1.6;
+      &:last-of-type { // El párrafo antes de los botones
+        margin-bottom: $spacing-xl;
+      }
+    }
+
+    .empty-mascot {
+        // ... tus estilos existentes para la mascota ...
+        &.large { // Si quieres hacerla un poco más grande en este contexto
+            width: 120px; // Ejemplo
+            height: 120px; // Ejemplo
+            margin-bottom: $spacing-md;
+        }
+    }
+
+    .welcome-actions {
+      display: flex;
+      flex-direction: column; // Apilar botones en móvil por defecto
+      gap: $spacing-md;     // Espacio entre botones
+      align-items: center;  // Centrar botones
+      width: 100%;
+      max-width: 350px; // Ancho máximo para los botones
+
+      @include md-up { // En pantallas más grandes, ponerlos lado a lado
+        flex-direction: row;
+        justify-content: center; // Centrar el grupo de botones
+      }
+
+      .btn { // Estilos para los botones dentro de .welcome-actions
+        width: 100%; // Hacer que los botones ocupen el ancho disponible en móvil
+        padding: $spacing-md $spacing-lg; // Botones un poco más grandes
+        font-size: 1em;
+        
+        @include md-up {
+          width: auto; // Ancho automático en pantallas más grandes
+          flex: 1; // Para que ambos botones tengan un ancho similar si están en fila
+          max-width: 220px; // Un máximo para que no se estiren demasiado
+        }
+
+        i {
+          margin-right: $spacing-sm;
+        }
+      }
+    }
+  }
+    
+}
+
+// Spinner (mover estilos de global.scss aquí)
+.spinner-container {
+    @include flex-center; // Centrar
+    padding: $spacing-lg; // Usar variable
+}
+
+.loading-spinner {
+    border-width: 4px; border-style: solid; border-radius: 50%; // Usar variable para border-width
+    animation: spinner-spin 1s linear infinite;
+    border-top-color: $color-accent-purple; // Usar variable
+    border-right-color: rgba($color-accent-purple, 0.3); // Usar variable y rgba
+    border-bottom-color: rgba($color-accent-purple, 0.3);
+    border-left-color: rgba($color-accent-purple, 0.3);
+}
+.message {
+    margin-top: $spacing-lg; // Usar variable
+    padding: $spacing-sm $spacing-md; // Usar variables
+    border-radius: $border-radius-sm; // Usar variable
+    font-size: 0.9em; // Usar variable si aplica
+    text-align: center;
+    min-height: 1.2em; // Para evitar saltos de layout
+
+    // Variantes de estado
+    &.success {
+        background-color: lighten($color-accent-green, 20%); // Usar variable y función SCSS
+        color: darken($color-accent-green, 15%); // Usar variable y función SCSS
+    }
+
+    &.error {
+        background-color: lighten($color-accent-red, 20%); // Usar variable y función SCSS
+        color: darken($color-accent-red, 15%); // Usar variable y función SCSS
+    }
+
+    &.info { // Para mensajes informativos
+        background-color: lighten($color-accent-blue, 20%); // Usar variable y función SCSS
+        color: darken($color-accent-blue, 15%); // Usar variable y función SCSS
+    }
+}
+
+// --- Estilos Generales de Panel/Widget ---
+.panel {
+    background-color: $color-panel-bg;
+    border-radius: $border-radius-lg; // Usar variable
+    padding: $spacing-lg $spacing-xl; // Usar variables
+    box-shadow: 0 8px 25px rgba($color-shadow, 0.12); // Usar variable (sombra un poco más pronunciada)
+    display: flex;
+    flex-direction: column;
+    border: 1px solid transparent; // Borde sutil general
+    // border-left-width: 4px; // Grosor para el borde izquierdo de color (si se aplica globalmente)
+    // border-left-color: $color-accent-purple; // Color por defecto del borde lateral (si se aplica globalmente)
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease; // Usar variables o mixin
+
+    &:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 30px rgba($color-shadow, 0.15);
+        // border-color: inherit; // El color del borde lateral se mantiene en hover
+    }
+
+    h3 { // Título del panel
+        font-size: 1.1em;
+        font-weight: 700;
+        color: $color-text-dark;
+        margin: 0 0 $spacing-md 0; // Usar variable
+        display: flex; // Para alinear título y link
+        justify-content: space-between;
+        align-items: center;
+
+        .panel-link i { font-size: 0.8em; color: $color-text-muted; } // Icono del link "Ver más"
+        .panel-link:hover i { color: $color-accent-purple; } // Color al pasar el ratón
+    }
+
+    .panel-loading { // Mensaje de carga
+        font-size: 0.9em;
+        color: $color-text-muted;
+        text-align: center;
+        padding: $spacing-lg 0; // Usar variable
+    }
+     .panel-empty { // Mensaje de lista vacía en panel
+        font-size: 0.9em;
+        color: $color-text-muted;
+        text-align: center;
+        padding: $spacing-md 0; // Usar variable
+     }
+}
+
+// --- Estilos de Panel de Notificaciones ---
+.notification-panel {
+    position: absolute; top: 65px; right: $spacing-xl; // Posición (usar variables)
+    width: 100%; max-width: 380px; // Ancho (usar variable)
+    background-color: $color-panel-bg; // Fondo blanco
+    border-radius: $border-radius-md; // Bordes redondeados
+    box-shadow: $box-shadow-md; // Sombra
+    z-index: $zindex-notification-panel; // Z-index
+    opacity: 0; visibility: hidden; // Oculto por defecto
+    transform: translateY(-$spacing-sm) scale(0.98); // Efecto inicial
+    transition: opacity 0.25s ease, transform 0.25s ease, visibility 0s linear 0.25s; // Transiciones
+    pointer-events: none; // No interactuable
+    border: 1px solid $color-border; // Borde
+
+    &.active { // Estado activo
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(0) scale(1);
+        transition: opacity 0.25s ease, transform 0.25s ease, visibility 0s linear 0s;
+        pointer-events: auto; // Interactuable
+    }
+
+    .notification-panel-header { // Encabezado del panel
+        display: flex; justify-content: space-between; align-items: center;
+        padding: $spacing-sm $spacing-md; // Padding
+        border-bottom: 1px solid $color-border; // Separador
+
+        h4 {
+            margin: 0;
+            font-size: $base-font-size; // Tamaño título
+            font-weight: 700;
+            color: $color-text-dark; // Color título
+        }
+
+        .btn-link-small { // Botón "Marcar todas leídas"
+            background: none; border: none;
+            font-size: 0.8em; color: $color-accent-purple; // Color acento
+            cursor: pointer; padding: 3px; font-weight: 600;
+            &:hover { text-decoration: underline; }
+        }
+    }
+
+    .notification-list { // Lista de notificaciones
+        max-height: 400px; // Altura máxima antes de scroll
+        overflow-y: auto; // Scroll vertical
+        padding: $spacing-xs 0; // Padding vertical
+    }
+
+    .notification-item { // Item individual de notificación
+        display: flex; align-items: flex-start; gap: $spacing-md;
+        padding: $spacing-sm $spacing-md; // Padding
+        border-bottom: 1px solid $color-border; // Separador
+        cursor: pointer; // Indicar que es clickeable
+        transition: background-color 0.2s ease;
+
+        &:last-child { border-bottom: none; } // Sin borde al último
+        &:hover { background-color: lighten($color-border, 5%); } // Fondo al pasar ratón
+
+        .icon { // Icono de la notificación
+            font-size: 1.2em;
+            width: 25px; text-align: center; margin-top: 2px;
+            opacity: 0.8;
+            // Colores por tipo de notificación (Gestionado por JS o clases específicas)
+            &.recordatorio_gasto_fijo { color: $color-accent-orange; }
+            &.presupuesto_excedido { color: $color-accent-red; }
+            &.meta_alcanzada { color: $color-accent-green; }
+        }
+
+        .content { flex-grow: 1; } // Contenido del mensaje y timestamp
+
+        .message { // Texto del mensaje
+            font-size: 0.9em; line-height: 1.5; margin: 0 0 $spacing-xs 0;
+            color: $color-text-dark;
+        }
+
+        .timestamp { // Timestamp (ej. "hace 5 min")
+            font-size: 0.75em; color: $color-text-muted;
+        }
+
+        // Estado no leído
+        &.unread {
+            background-color: lighten($color-accent-purple, 30%); // Fondo ligero
+            border-left: 3px solid $color-accent-purple; // Borde de acento
+            padding-left: $spacing-md - 3px; // Ajustar padding
+            .message { font-weight: 600; } // Texto en negrita
+        }
+    }
+
+    // Mensajes dentro del panel (carga, vacío)
+    .panel-loading, .panel-empty {
+        padding: $spacing-lg;
+        text-align: center; font-size: 0.9em; color: $color-text-muted;
+    }
+
+    // Estilos de modo oscuro (anidados)
+    // Si manejas modo oscuro con una clase en body
+    body.dark-mode & { // & se refiere al .notification-panel
+        background-color: darken($color-panel-bg, 50%); // Fondo oscuro
+        border-color: darken($color-border, 30%); // Borde oscuro
+
+        .notification-panel-header { border-bottom-color: darken($color-border, 30%); }
+        h4 { color: $color-text-light; } // Color título
+
+        .btn-link-small { color: lighten($color-accent-purple, 10%); } // Color link
+
+        .notification-item { border-bottom-color: darken($color-border, 30%); }
+        &:hover { background-color: darken($color-panel-bg, 60%); } // Fondo hover oscuro
+
+        .message { color: $color-text-light; } // Color mensaje
+        .timestamp { color: lighten($color-text-muted, 10%); } // Color timestamp
+
+        &.unread {
+            background-color: darken($color-accent-purple, 20%); // Fondo no leído oscuro
+            border-left-color: $color-accent-purple;
+            .message { color: $color-text-light; }
+        }
+
+        .panel-loading, .panel-empty { color: lighten($color-text-muted, 10%); }
+    }
+
+    // Responsive para el panel de notificaciones (posición, tamaño)
+    @include mobile-only {
+         top: $spacing-xl; // Ajustar distancia desde top
+         right: $spacing-md; // Ajustar distancia derecha
+         max-width: calc(100% - $spacing-lg); // Ocupar casi todo el ancho
+         border-radius: $border-radius-md; // Menos redondeado
+    }
+}
+
+// La keyframes @spinner-spin debe definirse en un lugar donde se pueda acceder,
+// como _base.scss o el propio _components.scss si no se usa globalmente.
+// Si se usa globalmente, déjala en global.scss o _base.scss.

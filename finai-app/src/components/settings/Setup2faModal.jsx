@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import QRCode from 'qrcode.react'; // Necesitas importar esto
+//import { QRCode } from 'qrcode.react'; // <-- Importación nombrada
+//import QRCode from 'qrcode.react';
+import * as QRCode from 'qrcode.react';
 import toast from 'react-hot-toast'; // Para feedback de copia
 
 function Setup2faModal({ isOpen, onClose, onVerify, setupData, isProcessing }) {

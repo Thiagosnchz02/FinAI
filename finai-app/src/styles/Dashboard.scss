@@ -1,0 +1,657 @@
+// Refactorizado y con Responsividad
+.dashboard-grid {
+    flex-grow: 1;
+    display: grid !important;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); // Base
+    gap: $spacing-xl; // Usar variable
+
+    // Media Queries anidadas para ajustar el grid en diferentes breakpoints
+    @include lg-up {
+        // Desktop grande
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        gap: $spacing-xxl;
+    }
+
+    @include md-up {
+        // Tabletas
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: $spacing-xl;
+    }
+
+    @include mobile-only {
+        // Móviles
+        grid-template-columns: 1fr; // Una columna
+        gap: $spacing-md;
+    }
+}
+
+.summary-panel {
+    // Widget Resumen (Ej. Saldo Variable)
+    // Este panel ya tiene estilos específicos de color/fuente en el CSS original (si no los moviste)
+    color: $color-text-muted;
+    border-left: 4px solid $color-accent-purple; // Ejemplo de borde lateral
+    // Inherits: background-color, padding, border-radius, box-shadow, etc.
+
+    &:hover {
+        box-shadow: 0 0px 25px rgba($color-accent-purple, 0.4);
+    }
+
+    // Usar variable
+
+    h3 {
+        font-size: 1.3em;
+        color: $color-text-muted;
+        font-weight: 400;
+    }
+
+    // Anidar y usar variables
+    .summary-amount {
+        font-size: 2.5em;
+        font-weight: 800;
+        color: $color-text-dark;
+        margin: $spacing-xs 0 $spacing-md 0;
+    }
+
+    .sparkline-placeholder { // Si usas este placeholder para el gráfico
+        height: 40px; // Usar variable si aplica
+        background-color: $color-accent-red; // Usar variable
+        border-radius: $border-radius-sm; // Usar variable si aplica
+        margin-top: $spacing-sm; // Usar variable
+    }
+    // Estilos de Acciones Rápidas dentro del Summary Panel
+    .quick-actions-panel {
+        box-shadow: none; // Quitar sombra si es panel anidado sin borde
+        background-color: transparent; // Quitar fondo
+        padding: $spacing-sm 0 0 0; // Ajustar padding
+        margin-top: $spacing-md; // Usar variable
+
+        h3 {
+            display: none;
+        }
+
+        // Ocultar título "Acciones Rápidas" si no lo usas
+
+        .quick-actions-buttons {
+            display: flex;
+            gap: $spacing-md; // Usar variable
+            margin-top: $spacing-sm; // Usar variable
+
+            .btn-action {
+                // Botones de acción rápida (usarán estilos de _buttons.scss)
+                flex-grow: 1;
+                font-size: $base-font-size;
+                padding: $spacing-md $spacing-sm;
+                border-radius: $border-radius-sm; // Usar variable
+                // Los colores ya están definidos en _buttons.scss (.red-btn, .green-btn)
+            }
+        }
+    }
+
+    // Responsive para el Summary Panel
+    @include mobile-only {
+        .summary-amount {
+            font-size: 2em;
+        }
+
+        .quick-actions-panel .quick-actions-buttons {
+            flex-direction: column;
+            gap: $spacing-sm;
+        }
+    }
+}
+
+.budget-summary-panel {
+    // Widget Presupuestos
+    border-left: 4px solid $color-accent-green; // Ejemplo
+
+    &:hover {
+        box-shadow: 0 0px 25px rgba($color-accent-green, 0.4);
+    }
+
+    .budget-item {
+        // Estilo del item de presupuesto (anidado)
+        display: flex;
+        align-items: center;
+        gap: $spacing-md;
+        margin-bottom: $spacing-sm;
+        // border-bottom: 1px solid $color-border; // Si necesitas separador
+
+        .budget-icon {
+            font-size: 1.5em;
+            width: 30px;
+            text-align: center;
+            color: $color-accent-purple;
+        }
+
+        // Color base
+        .budget-info {
+            flex-grow: 1;
+        }
+
+        // Contenedor de nombre y barra
+        .budget-name {
+            font-weight: 600;
+            margin-bottom: 3px;
+            font-size: 0.95em;
+        }
+
+        // Nombre
+        .progress-bar-container.mini {
+            // Barra mini (usar estilos de _components.scss o definir aquí)
+            height: 8px;
+            background-color: $color-border;
+            border-radius: 4px;
+            overflow: hidden;
+
+            .progress-bar.mini {
+                height: 100%;
+                width: 0%;
+                background-color: $color-accent-green;
+                border-radius: 4px;
+                transition: width 0.5s ease;
+            }
+        }
+
+        .budget-amount {
+            font-size: 0.9em;
+            font-weight: 600;
+            color: $color-text-muted;
+            white-space: nowrap;
+        }
+
+        // Monto
+
+        // Responsive para items de presupuesto
+        @include mobile-only {
+            gap: $spacing-sm;
+
+            .budget-icon {
+                font-size: 1.3em;
+                width: 25px;
+            }
+
+            .budget-name {
+                font-size: 0.9em;
+            }
+
+            .budget-amount {
+                font-size: 0.85em;
+            }
+        }
+    }
+}
+
+.upcoming-payments-panel {
+    // Widget Próximos Pagos
+    border-left: 4px solid $color-accent-red; // Ejemplo
+
+    &:hover {
+        box-shadow: 0 0px 25px rgba($color-accent-red, 0.4);
+    }
+
+    .payment-item {
+        // Item de pago próximo (anidado)
+        display: flex;
+        align-items: center;
+        gap: $spacing-sm;
+        padding: $spacing-sm 0;
+        border-bottom: 1px solid $color-border;
+        font-size: 0.9em; // Usar variable
+
+        &:last-child {
+            border-bottom: none;
+        }
+
+        .payment-icon {
+            width: 25px;
+            text-align: center;
+            font-size: 1.1em;
+            color: $color-accent-purple;
+        }
+
+        // Usar variable
+        .payment-desc {
+            flex-grow: 1;
+            font-weight: 600;
+            color: $color-text-dark;
+            @include text-ellipsis;
+        }
+
+        // Usar variable, mixin
+        .payment-date {
+            color: $color-text-muted;
+            font-size: 0.9em;
+            margin-left: auto;
+            padding-left: $spacing-sm;
+            white-space: nowrap;
+        }
+
+        // Usar variable
+        .payment-amount {
+            font-weight: 700;
+            min-width: 70px;
+            text-align: right;
+            white-space: nowrap;
+            color: $color-accent-red;
+        }
+
+        // Usar variable
+
+        // Responsive para items de pago
+        @include mobile-only {
+            gap: $spacing-xs;
+
+            .payment-desc {
+                font-size: 0.85em;
+            }
+
+            .payment-date {
+                font-size: 0.8em;
+                padding-left: $spacing-xs;
+            }
+
+            .payment-amount {
+                font-size: 0.85em;
+                min-width: 60px;
+            }
+        }
+    }
+}
+
+.goals-progress-panel {
+    // Widget Metas
+    border-left: 4px solid $color-accent-blue; // Ejemplo
+
+    &:hover {
+        box-shadow: 0 0px 25px rgba($color-accent-blue, 0.4);
+    }
+
+    .goal-item { // Estilo del item de meta (si no está en _components.scss)
+     display: flex; align-items: center; gap: $spacing-md; margin-bottom: $spacing-sm;
+     // border-bottom: 1px solid $color-border; // Si necesitas separador
+
+     .goal-icon { // Icono de meta (si no está en _components.scss)
+          font-size: 1.5em; width: 30px; text-align: center; color: $color-accent-purple; // Color base
+          flex-shrink: 0;
+          // El color real del icono se suele gestionar por JS o estilo inline
+     }
+     .goal-info { flex-grow: 1; } // Contenedor de nombre y barra (si no está en _components.scss)
+     .goal-name { font-weight: 600; margin-bottom: 3px; font-size: 0.95em; @include text-ellipsis; } // Nombre (si no está en _components.scss)
+     // La barra de progreso (.progress-bar-container.mini, .progress-bar.mini) debería estar en _components.scss
+     .goal-amount { font-size: 0.9em; font-weight: 600; color: $color-text-dark; white-space: nowrap; } // Monto (si no está en _components.scss)
+
+     // Responsive para items de meta si necesitan ajustes
+     @include mobile-only {
+          gap: $spacing-sm;
+          .goal-icon { font-size: 1.3em; width: 25px; }
+          .goal-name { font-size: 0.9em; }
+          .goal-amount { font-size: 0.85em; }
+     }
+    }
+}
+
+.recent-activity-panel {
+    // Widget Actividad Reciente
+    border-left: 4px solid $color-text-muted; // Ejemplo gris
+
+    &:hover {
+        box-shadow: 0 0px 25px rgba($color-text-muted, 0.4);
+    }
+
+    .activity-item {
+        // Item de actividad (anidado)
+        display: flex;
+        align-items: center;
+        gap: $spacing-sm;
+        padding: $spacing-sm 0;
+        border-bottom: 1px solid $color-border;
+        font-size: 0.9em; // Usar variable
+
+        &:last-child {
+            border-bottom: none;
+        }
+
+        .activity-icon {
+            width: 25px;
+            text-align: center;
+            font-size: 1.1em;
+            color: $color-text-muted;
+            flex-shrink: 0;
+        }
+
+        // Color base, puede ser sobreescrito por tipo
+        .activity-desc {
+            flex-grow: 1;
+            font-weight: 600;
+            color: $color-text-dark;
+            @include text-ellipsis;
+        }
+
+        // Usar variable, mixin
+        .activity-date {
+            color: $color-text-muted;
+            font-size: 0.9em;
+            margin-left: auto;
+            padding-left: $spacing-sm;
+            white-space: nowrap;
+        }
+
+        // Usar variable
+        .activity-amount {
+            font-weight: 700;
+            min-width: 70px;
+            text-align: right;
+            white-space: nowrap;
+        }
+
+        // Usar variable
+        .activity-amount.income {
+            color: $color-accent-green;
+        }
+
+        // Usar variable
+        .activity-amount.expense {
+            color: $color-accent-red;
+        }
+
+        // Usar variable
+        .activity-amount.transfer {
+            color: $color-text-dark;
+        }
+
+        // Usar variable
+        .activity-icon.income i {
+            color: $color-accent-green;
+        }
+
+        // Usar variable
+        .activity-icon.expense i {
+            color: $color-accent-red;
+        }
+
+        // Usar variable
+
+        // Responsive para items de actividad
+        @include mobile-only {
+            gap: $spacing-xs;
+
+            .activity-desc {
+                font-size: 0.85em;
+            }
+
+            .activity-date {
+                font-size: 0.8em;
+                padding-left: $spacing-xs;
+            }
+
+            .activity-amount {
+                font-size: 0.85em;
+                min-width: 60px;
+            }
+        }
+    }
+}
+
+.debts-summary-panel {
+    // Widget Deudas
+    border-left: 4px solid $color-accent-red; // Ejemplo
+
+    &:hover {
+        box-shadow: 0 0px 25px rgba($color-accent-red, 0.4);
+    }
+
+    .debt-item { // Estilo del item de deuda (si no está en _components.scss)
+        display: flex; align-items: center; gap: $spacing-md; margin-bottom: $spacing-sm;
+        border-bottom: 1px solid $color-border; // Si necesitas separador
+   
+        .debt-icon { // Icono de deuda (si no está en _components.scss)
+             font-size: 1.5em; width: 30px; text-align: center; color: $color-accent-red; // Color por defecto para deuda
+             flex-shrink: 0;
+             // El color real del icono puede variar por estado o tipo (gestionado por JS o estilo inline)
+        }
+        .debt-info { flex-grow: 1; } // Contenedor de info (si no está en _components.scss)
+        .debt-amount { font-size: 0.9em; font-weight: 600; color: $color-accent-red; white-space: nowrap; } // Monto pendiente (si no está en _components.scss)
+        // Puedes añadir estilos para nombre, etc. si no están en _components.scss
+   }
+}
+
+.loans-summary-panel {
+    // Widget Préstamos
+    border-left: 4px solid $color-accent-green; // Ejemplo
+
+    &:hover {
+        box-shadow: 0 0px 25px rgba($color-accent-green, 0.4);
+    }
+
+    .loan-item { // Estilo del item de préstamo (si no está en _components.scss)
+        display: flex; align-items: center; gap: $spacing-md; margin-bottom: $spacing-sm;
+        border-bottom: 1px solid $color-border; // Si necesitas separador
+   
+        .loan-icon { // Icono de préstamo (si no está en _components.scss)
+             font-size: 1.5em; width: 30px; text-align: center; color: $color-accent-green; // Color por defecto para préstamo
+             flex-shrink: 0;
+              // El color real del icono puede variar por estado o tipo (gestionado por JS o estilo inline)
+        }
+        .loan-info { flex-grow: 1; } // Contenedor de info (si no está en _components.scss)
+        .loan-amount { font-size: 0.9em; font-weight: 600; color: $color-accent-green; white-space: nowrap; } // Monto pendiente (si no está en _components.scss)
+         // Puedes añadir estilos para deudor, etc. si no están en _components.scss
+   }
+}
+
+.trips-summary-panel {
+    // Widget Próximo Viaje
+    border-left: 4px solid $color-accent-orange; // Ejemplo
+
+    &:hover {
+        box-shadow: 0 0px 25px rgba($color-accent-orange, 0.4);
+    }
+
+    // Los .trip-summary-item tienen estilos específicos, refactoriza y anida aquí.
+    .trip-summary-item {
+        // Anidado
+        display: flex;
+        align-items: center;
+        gap: $spacing-md;
+        margin-bottom: $spacing-sm;
+
+        .trip-summary-icon {
+            width: 30px;
+            text-align: center;
+            font-size: 1.5em;
+            color: $color-accent-orange;
+            flex-shrink: 0;
+        }
+
+        // Usar variable
+        .trip-summary-info {
+            flex-grow: 1;
+        }
+
+        // Contenedor de nombre y fechas/barra
+        .trip-summary-name {
+            font-weight: 700;
+            font-size: 1em;
+            color: $color-text-dark;
+            display: block;
+            margin-bottom: 2px;
+            @include text-ellipsis;
+        }
+
+        // Usar variable, mixin
+        .trip-summary-destination {
+            font-size: 0.85em;
+            color: $color-text-muted;
+            display: block;
+            margin-bottom: $spacing-xs;
+        }
+
+        // Usar variable
+        .trip-summary-dates {
+            font-size: 0.8em;
+            color: $color-text-muted;
+            display: block;
+            margin-bottom: $spacing-sm;
+        }
+
+        // Usar variable
+        .progress-bar-container.mini {
+            // Barra mini (usar estilos de _components.scss o definir aquí)
+            height: 8px;
+            //background-color: $border-color;
+            border-radius: 4px;
+            overflow: hidden;
+
+            .progress-bar.mini {
+                height: 100%;
+                width: 0%;
+                background-color: $color-accent-orange;
+                border-radius: 4px;
+                transition: width 0.5s ease;
+            }
+        }
+
+        .trip-summary-amount {
+            font-size: 0.9em;
+            font-weight: 600;
+            color: $color-text-muted;
+            white-space: nowrap;
+            margin-left: auto;
+            padding-left: $spacing-sm;
+        }
+
+        // Usar variable
+    }
+}
+
+.evaluation-summary-panel {
+    // Widget Evaluación Mensual
+    border-left: 4px solid $color-accent-blue; // Ejemplo
+
+    &:hover {
+        box-shadow: 0 0px 25px rgba($color-accent-blue, 0.4);
+    }
+
+    // Los .evaluation-item tienen estilos específicos, refactoriza y anida aquí.
+    .evaluation-item {
+        // Anidado
+        display: flex;
+        align-items: center;
+        gap: $spacing-sm;
+        padding: $spacing-sm 0;
+        border-bottom: 1px solid $color-border;
+        font-size: 0.9em; // Usar variable
+
+        &:last-child {
+            border-bottom: none;
+        }
+
+        .evaluation-icon {
+            width: 25px;
+            text-align: center;
+            font-size: 1.1em;
+            color: $color-text-muted;
+            flex-shrink: 0;
+        }
+
+        // Color base, puede ser sobreescrito por JS
+        .evaluation-label {
+            flex-grow: 1;
+            font-weight: 600;
+            color: $color-text-dark;
+            @include text-ellipsis;
+        }
+
+        // Usar variable, mixin
+        .evaluation-amount {
+            font-weight: 700;
+            min-width: 90px;
+            text-align: right;
+            white-space: nowrap;
+            margin-left: auto;
+        }
+
+        // Usar variable
+        .evaluation-amount.income {
+            color: $color-accent-green;
+        }
+
+        // Usar variable
+        .evaluation-amount.expense {
+            color: $color-text-dark;
+        }
+
+        // Usar variable (o rojo si prefieres)
+    }
+}
+
+.accounts-summary-panel {
+    // Widget Resumen Cuentas
+    border-left: 4px solid $color-accent-purple; // Ejemplo
+
+    &:hover {
+        box-shadow: 0 0px 25px rgba($color-accent-purple, 0.4);
+    }
+
+    // Los .account-summary-item tienen estilos específicos, refactoriza y anida aquí.
+    .account-summary-item {
+        // Anidado
+        display: flex;
+        align-items: center;
+        gap: $spacing-sm;
+        padding: $spacing-sm 0;
+        border-bottom: 1px solid $color-border;
+        font-size: 0.9em; // Usar variable
+
+        &:last-child {
+            border-bottom: none;
+        }
+
+        .account-summary-icon {
+            width: 25px;
+            text-align: center;
+            font-size: 1.1em;
+            color: $color-text-muted;
+            flex-shrink: 0;
+        }
+
+        // Usar variable
+        .account-summary-name {
+            flex-grow: 1;
+            font-weight: 600;
+            color: $color-text-dark;
+            @include text-ellipsis;
+        }
+
+        // Usar variable, mixin
+        .account-summary-balance {
+            font-weight: 700;
+            min-width: 90px;
+            text-align: right;
+            white-space: nowrap;
+            margin-left: auto;
+        }
+
+        // Usar variable
+        .account-summary-balance.income {
+            color: $color-accent-green;
+        }
+
+        // Usar variable
+        .account-summary-balance.expense {
+            color: $color-accent-red;
+        }
+
+        // Usar variable
+        .account-summary-balance.neutral {
+            color: $color-text-dark;
+        }
+
+        // Usar variable
+        .account-summary-balance.error-text {
+            color: $color-accent-red;
+        }
+
+        // Usar variable
+    }
+}
+    

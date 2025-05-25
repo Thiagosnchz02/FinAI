@@ -1,0 +1,300 @@
+// --- Lista de Categorías (.category-list) ---
+// Refactorizado y con Responsividad
+.category-list {
+    display: flex; // Usar grid para un layout de tarjetas más controlado
+    // Columnas responsivas: intentará encajar tantas columnas de 300px como pueda,
+    // y si no caben, se ajustarán para ocupar el espacio (1fr).
+    // Puedes ajustar minmax(280px, 320px) para el ancho de tus tarjetas.
+    //grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); 
+    gap: 20px; // Espacio entre las tarjetas de categoría (o grupos)
+    margin-top: $spacing-lg;
+    width: 100%;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    
+    // --- NUEVO: Centrar la lista en la página y darle un ancho máximo ---
+    max-width: 1200px; // Ancho máximo para la lista de categorías (ajústalo a tu gusto)
+    margin-left: auto;  // Centrar el contenedor de la lista
+    margin-right: auto; // Centrar el contenedor de la listajustify-items: center; // Descomenta si es necesario
+}
+
+// Encabezado de sección de categorías (ej. "Categorías por Defecto", "Personalizadas")
+.category-section-header {
+    width: 100%; // Ocupa toda la línea
+    font-size: 1.1em; // Usar variable
+    font-weight: 700; // Usar variable
+    color: darken($color-text-dark, 10%); // Usar variable y función
+    margin-top: $spacing-xl; // Usar variable
+    margin-bottom: $spacing-sm; // Usar variable
+    padding-bottom: $spacing-xs; // Usar variable
+    border-bottom: 1px solid $color-border; // Usar variable
+    grid-column: 1 / -1; // Asegura que ocupe toda la fila en flexbox
+}
+
+.category-section-header:first-of-type {
+    margin-top: $spacing-md; // Menos espacio para el primer encabezado
+}
+
+// --- Estilos para el contenedor de un grupo de categoría (padre + hijas) ---
+.category-group {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-xs; 
+    margin-bottom: 10px;
+}
+
+.category-type-section {
+    //width: 100%;
+    margin-bottom: 20px; // Espacio entre la sección de Ingresos y la de Gastos
+    
+    //grid-column: 1 / -1; // Asegura que ocupe todo el ancho del grid de .category-list
+  
+    &:last-of-type {
+      margin-bottom: 5px; // Menos margen para la última sección
+    }
+}
+
+.category-type-header {
+    font-size: 1.5em; // Más grande que los encabezados de sección (Default/Custom)
+    font-weight: 800; // Más peso
+    color: $color-text-dark; // O un color distintivo para los tipos
+    margin-bottom: $spacing-lg;
+    padding-bottom: $spacing-md;
+    border-bottom: 2px solid ; // Un borde más grueso o diferente
+    text-align: center; // Opcional: centrar el encabezado del tipo
+    //width: 100%;
+}
+
+.category-type-section {
+    .category-section-header:first-of-type {
+      margin-top: 0; // Quitar el margen superior si es el primer encabezado de la sección de tipo
+    }
+}
+
+// --- Tarjeta de Categoría Individual (.category-item) ---
+.category-item {
+    display: flex;
+    align-items: center;
+    padding: $spacing-sm $spacing-lg; // Usar variables
+    border-radius: $border-radius-pill; // Forma de píldora (usar variable)
+    background-color: #e0e0e0; // Color de fondo por defecto (Gestionado por JS o por tipo/color en DB)
+    color: #333; // Color de texto por defecto (Gestionado por JS con isColorDark)
+    box-shadow: $box-shadow-sm; // Sombra (usar variable)
+    @include transition-smooth((transform, box-shadow)); // Usar mixin
+    min-width: 150px; // Ancho mínimo (usar variable si es común)
+    flex-grow: 1; // Ocupa espacio flexible
+    position: relative;
+    
+    /* Para badges o indicadores absolutos */
+
+    &:hover {
+        // Estado hover
+        transform: scale(1.03);
+        box-shadow: 0 0px 25px rgba($color-shadow, 0.3); // Sombra (usar variable y rgba)
+        // Puedes hacer que el color de fondo o borde cambie al pasar el ratón si quieres
+        // border-color: $color-accent-purple;
+    }
+
+    // Si quieres diferenciar visualmente las por defecto (con atributo data-default)
+    &[data-default="true"] {
+        background-color: lighten($color-panel-bg, 2%); // Fondo ligeramente diferente
+        opacity: 0.9;
+        border-left: 3px dotted $color-border; // Borde punteado
+    }
+
+
+    .category-icon {
+        // Icono de la categoría (anidado)
+        font-size: 1.3em; // Usar variable
+        margin-right: $spacing-md; // Usar variable
+        width: 25px; // Ancho fijo para alinear (usar variable)
+        text-align: center;
+        opacity: 0.8; // Ligeramente transparente
+        // El color real del icono se suele gestionar por JS o CSS inline basado en el color de fondo
+        // para asegurar contraste (como ya tienes implementado con isColorDark)
+    }
+
+    .category-name {
+        // Nombre de la categoría (anidado)
+        font-weight: 700; // Usar variable
+        font-size: $base-font-size; // Usar variable
+        flex-grow: 1;
+        @include text-ellipsis; // Usar mixin para texto largo
+    }
+
+    .category-actions {
+        // Contenedor de acciones (tipo, editar, eliminar) (anidado)
+        display: flex;
+        align-items: center;
+        gap: $spacing-sm; // Usar variable
+        margin-left: $spacing-md; // Usar variable (espacio respecto al nombre)
+        flex-shrink: 0; // Evita que se encoja en flexbox
+    }
+
+    .category-type-indicator {
+        // Indicador (Gasto/Ingreso) (anidado)
+        font-size: 0.75em; // Usar variable
+        font-weight: 600; // Usar variable
+        opacity: 0.7;
+        margin-right: $spacing-xs; // Usar variable
+
+        // Colores según tipo (gestionado por JS o por selector de atributo data-type en el padre)
+        .category-item[data-type="ingreso"] & {
+            color: $color-accent-green;
+        }
+
+        // Usar variable
+        .category-item[data-type="gasto"] & {
+            color: $color-accent-red;
+        }
+
+        // Usar variable
+    }
+
+    &.subcategory-item {
+        // Indentación para mostrar jerarquía
+        margin-left: $spacing-xl; // Ajusta este valor según la indentación deseada (ej: 30px o 2rem)
+        
+        // Opcional: Hacerlas ligeramente más pequeñas o con un estilo diferente
+        padding-top: $spacing-xs;
+        padding-bottom: $spacing-xs;
+        font-size: 0.95em; // Un poco más pequeñas
+        
+        // Opcional: Un borde izquierdo para enfatizar la anidación
+        border-left: 3px solid rgba($color-text-muted, 0.3);
+        padding-left: $spacing-md; // Añadir padding si usas borde izquierdo
+    
+        // Si quieres que el hover sea menos pronunciado para subcategorías
+        &:hover {
+          transform: scale(1.01);
+          box-shadow: $box-shadow-sm;
+        }
+      }
+
+    .category-actions .btn-icon {
+        // Botones icono dentro de acciones (anidado)
+        font-size: 0.9em; // Usar variable
+        padding: 3px; // Usar variable
+        color: inherit; // Hereda color de texto del padre (.category-item)
+        opacity: 0.6; // Ligeramente transparente
+        @include transition-smooth((opacity, transform)); // Usar mixin
+
+        &:hover {
+            opacity: 1;
+            transform: scale(1.1);
+            color: inherit; // Mantiene color heredado
+        }
+
+        // Ocultar botones de acción para categorías por defecto (anidado)
+        .category-item[data-default="true"] & {
+            // & se refiere al .btn-icon
+            display: none;
+            // O para hacerlos visibles pero deshabilitados:
+            // pointer-events: none; opacity: 0.3; cursor: not-allowed;
+        }
+
+        &.btn-archive {
+            // Puedes darle un color específico si quieres, ej: naranja o gris
+             &:hover { color: $color-accent-orange; }
+        }
+        &.btn-unarchive {
+            // Puedes darle un color específico si quieres, ej: verde
+             &:hover { color: $color-accent-green; }
+        }
+    }
+
+
+    .default-badge {
+        // Badge "Default" (anidado)
+        position: absolute;
+        top: $spacing-xs;
+        right: $spacing-sm;
+        font-size: 0.6em; // Usar variable
+        background-color: rgba(0, 0, 0, 0.1);
+        color: inherit;
+        opacity: 0.7;
+        padding: 1px $spacing-xs; // Usar variable
+        border-radius: 3px; // Usar variable
+    }
+
+    .archived-badge {
+        position: absolute;
+        top: $spacing-xs;
+        right: $spacing-sm;
+        font-size: 0.6em;
+        background-color: rgba(80, 80, 80, 0.7); // Un gris oscuro semitransparente
+        color: $color-text-light;
+        padding: 1px $spacing-xs;
+        border-radius: 3px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    &.archived {
+        // background-color: lighten($color-border, 10%) !important; // Un fondo más apagado
+        // color: $color-text-muted !important; // Texto más apagado
+        opacity: 0.6; // Opacidad general para indicar archivado
+        border-left: 3px solid $color-text-muted; // Un borde distintivo
+
+        &:hover {
+            opacity: 0.8; // Ligeramente menos opaco al pasar el ratón
+            // transform: none; // Quizás no quieres efecto de hover en archivadas
+            // box-shadow: $box-shadow-sm; 
+        }
+
+        .category-icon, .category-name, .category-type-indicator {
+            color: $color-text-muted !important; // Asegurar que el texto interno también se apague
+        }
+    }
+
+
+    // Responsive para la tarjeta de categoría individual
+    @include mobile-only {
+        // En pantallas pequeñas
+        padding: $spacing-sm $spacing-md; // Ajustar padding
+        min-width: 120px; // Ajustar ancho mínimo
+
+        .category-icon {
+            font-size: 1.1em; // Icono más pequeño
+            margin-right: $spacing-sm; // Menos margen
+            width: 20px; // Ajustar ancho fijo
+        }
+
+        &.subcategory-item {
+            margin-left: $spacing-lg; // Menor indentación en móviles
+            // font-size: 0.9em;
+          }
+
+        .category-name {
+            font-size: 0.9em;
+        }
+
+        // Nombre más pequeño
+
+        .category-actions {
+            gap: $spacing-xs; // Menos espacio
+            margin-left: $spacing-sm; // Menos margen
+        }
+
+        .category-type-indicator {
+            font-size: 0.7em; // Indicador más pequeño
+            margin-right: $spacing-xs/2; // Menos margen
+        }
+
+        .category-actions .btn-icon {
+            font-size: 0.8em;
+            padding: 2px;
+        }
+
+        // Iconos más pequeños
+        .default-badge {
+            font-size: 0.55em;
+            top: $spacing-xs/2;
+            right: $spacing-sm;
+        }
+
+        // Badge más pequeño
+    }
+}
+

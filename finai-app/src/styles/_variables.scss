@@ -1,0 +1,69 @@
+// src/styles/_variables.scss
+
+// Paleta de Colores (Consolidada)
+$color-primary-blue: #a0d2eb; // Azul cielo fondo
+$color-sidebar-bg: #6BB9F0; // Azul sidebar
+$color-header-bg: #ffffff; // Cabecera blanca
+$color-content-bg: #f8fafc; // Fondo contenido principal
+$color-panel-bg: #ffffff; // Fondo paneles/tarjetas
+$color-text-dark: #2d3748; // Texto oscuro principal
+$color-text-light: #ffffff; // Texto claro (ej. en sidebar)
+$color-text-muted: #718096; // Texto gris/apagado
+$color-border: #e2e8f0; // Color general de bordes/separadores
+$color-shadow: rgba(100, 110, 140, 0.1); // Color general de sombras
+
+// Colores de Acento y Estado (usados en botones, indicadores, etc.)
+$color-accent-purple: #8a82d5;
+$color-accent-orange: #ff9800;
+$color-accent-green: #4CAF50;
+$color-accent-red: #f44336;
+$color-accent-blue: #4299e1; // Un azul adicional si se usa
+$color-accent-teal: #81e6d9; // Un turquesa si se usa
+$color-accent-yellow: #ecc94b; // Un amarillo si se usa
+
+// Tipografía
+$font-family-base: 'Nunito', sans-serif;
+$base-font-size: 1em; // Tamaño de fuente base
+
+// Espaciados (Sistema de espaciado basado en múltiplos, ej. de 4 u 8 px)
+// Revisa tus paddings/margins repetidos y crea variables aquí
+$spacing-xs: 4px;
+$spacing-sm: 8px;
+$spacing-md: 12px;
+$spacing-lg: 16px;
+$spacing-xl: 20px;
+$spacing-xxl: 24px;
+$spacing-xxxl: 32px;
+$spacing-xxxxl: 40px;
+
+// Bordes y Sombras
+$border-radius-sm: 8px;
+$border-radius-md: 15px;
+$border-radius-lg: 20px;
+$border-radius-pill: 50px; // Para elementos muy redondeados
+
+$box-shadow-sm: 0 2px 4px rgba(0,0,0,0.1);
+$box-shadow-md: 0 5px 15px rgba(0,0,0,0.15);
+$box-shadow-lg: 0 10px 25px rgba(0,0,0,0.1);
+
+// Transiciones
+$transition-speed-fast: 0.15s;
+$transition-speed-normal: 0.3s;
+$transition-speed-slow: 0.5s;
+$transition-ease: ease-in-out;
+
+// Breakpoints Responsivos
+$breakpoint-sm: 576px;
+$breakpoint-md: 768px;
+$breakpoint-lg: 992px;
+$breakpoint-xl: 1200px;
+
+// Z-index
+$zindex-modal-overlay: 1000;
+$zindex-sidebar: 1010;
+$zindex-notification-panel: 1050;
+$zindex-scroll-top: 999;
+
+// Ancho de Sidebar
+$sidebar-width-collapsed: 85px;
+$sidebar-width-expanded: 230px;

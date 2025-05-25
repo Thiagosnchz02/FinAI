@@ -7,6 +7,7 @@ import React, { useState, useCallback } from 'react';
 import { Link } from 'react-router-dom'; // Para el enlace de volver al login
 import { supabase } from '../services/supabaseClient'; // Asegúrate que la ruta sea correcta
 import toast from 'react-hot-toast'; // Importar toast
+import '../styles/Reset_password_email.scss';
 
 function ResetPasswordEmail() {
     // --- Estado del Componente ---

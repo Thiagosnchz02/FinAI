@@ -1,0 +1,366 @@
+// Reset básico y configuración general (body, container, etc.)
+// DEBERÍAN estar en _base.scss y _layout.scss.
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: $font-family-base; // Usar variable
+    background-color: #FFDAB9; // Usar variable (si es el color base)
+    background: linear-gradient(135deg, #FFDAB9 60%, #ADD8E6 100%); // Usar variables/mixins
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: $spacing-lg; // Usar variable
+    color: $color-text-dark; // Usar variable
+}
+
+.container {
+    // Contenedor general de la página login
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    max-width: 800px; // Usar variable
+}
+
+
+
+/* --- Título Principal (.main-title) --- */
+// Refactorizado y con Variables/Responsividad
+.main-title {
+    font-size: 4rem; // Usar variable
+    font-weight: 800; // Usar variable
+    color: $color-text-light; // Usar variable (blanco)
+    margin-bottom: $spacing-xxxl; // Usar variable
+    text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.2); // Usar variable o mixin
+
+    // Responsive
+    @include md-up {
+        // En tabletas o más grandes
+        font-size: 3rem; // Ajustar tamaño
+    }
+
+    @include mobile-only {
+        // En móviles pequeños
+        font-size: 2.5rem; // Ajustar tamaño
+    }
+}
+
+// Contenedor de paneles (.panels-container)
+// DEBERÍA estar en _layout.scss o _components.scss si es un patrón de layout común.
+// Si solo se usa aquí, se mantiene aquí y se refactoriza/anida.
+// Asumimos que está en _layout.scss por ser un contenedor principal.
+
+    .panels-container {
+        display: flex;
+        justify-content: center;
+        gap: $spacing-xxxl; // Usar variable
+        width: 100%;
+        flex-wrap: wrap;
+    
+        // Responsive
+        @include md-up { // En tabletas o más grandes (menos de 768px, según tu breakpoint)
+             gap: $spacing-lg; // Ajustar espacio
+        }
+         @include mobile-only { // En móviles pequeños (menos de 480px, según tu breakpoint)
+              gap: $spacing-md; // Ajustar espacio
+         }
+    }
+    
+
+// Estilo base de panel (.panel)
+// DEBERÍA estar en _components.scss o _panels.scss si es un componente reutilizable.
+// Si solo se usa aquí, se mantiene aquí y se refactoriza/anida.
+// Asumimos que está en _components.scss o _panels.scss.
+
+    .panel {
+        background-color: $color-panel-bg;
+        padding: 35px 30px; // Usar variables
+        border-radius: $border-radius-lg; // Usar variable
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15); // Usar variable
+        width: 100%;
+        max-width: 350px; // Usar variable
+        display: flex;
+        flex-direction: column;
+        transition: transform 0.3s ease, box-shadow 0.3s ease; // Usar variables o mixin
+    
+        &:hover { transform: translateY(-5px); box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2); } // Usar variable
+        h2 { // Título base de panel
+             font-size: 2rem; // Usar variable
+             font-weight: 700; // Usar variable
+             margin-bottom: 25px; // Usar variable
+             text-align: center;
+        }
+    }
+    
+
+
+/* --- Estilos específicos de paneles (Anidados y con Variables/Responsividad) --- */
+// Estos selectores aplican estilos a las VARIANTEs de .panel.
+// Asumimos que la clase base .panel está en _components.scss o _panels.scss.
+
+.sign-in-panel {
+    // Panel de Sign In
+    background-color: $color-sidebar-bg; // Usar variable (Azul claro)
+    color: $color-text-light; // Usar variable (blanco)
+
+    h2 {
+        // Título H2 dentro del panel Sign In
+        color: $color-text-light; // Usar variable (blanco)
+        // Hereda margin y font-size de .panel h2 si está en partial
+    }
+
+    // Estilos específicos de elementos de formulario dentro de este panel
+    // .input-group, label, input estilos base DEBERÍAN estar en _forms.scss o _modals.scss.
+    // Si necesitas modificar .input-group label SÓLO aquí:
+    .input-group {
+        label {
+            color: #f0f0f0; // Color específico (casi blanco) - Usar variable si aplica
+        }
+    }
+
+    // Estilos específicos de botones dentro de este panel (usarán estilos base de _buttons.scss)
+    // .btn-primary { ... } // Se usa la clase genérica en _buttons.scss
+    // .forgot-password { ... } // Se estiliza más abajo si es específico
+}
+
+.sign-up-panel {
+    // Panel de Sign Up
+    background-color: $color-content-bg; // Usar variable (Crema / Naranja pálido) - O #FFF3E0 si es específico
+    color: $color-text-dark; // Usar variable (gris oscuro)
+    position: relative; // Para posicionar el robot
+
+    h2 {
+        // Título H2 dentro del panel Sign Up
+        color: $color-accent-orange; // Usar variable (Naranja)
+        // Hereda margin y font-size de .panel h2
+    }
+
+    // Estilos específicos de elementos de formulario dentro de este panel
+    // .input-group, label, input estilos base DEBERÍAN estar en _forms.scss o _modals.scss.
+    // Si necesitas modificar .input-group label SÓLO aquí:
+    .input-group {
+        label {
+            color: #777; // Color específico (gris medio) - Usar variable si aplica
+        }
+    }
+
+    // Estilos específicos de botones dentro de este panel (usarán estilos base de _buttons.scss)
+    // .btn-secondary { ... } // Se usa la clase genérica en _buttons.scss
+    // .btn-google { ... } // Se usa la clase genérica en _buttons.scss
+}
+
+
+/* Formularios y campos */
+// form, .input-group, label, input[type="email/password/text"] estilos base
+// DEBERÍAN estar en _forms.scss o _modals.scss.
+
+form {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-md; // Usar variable
+}
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: $spacing-md; // Usar variable (si no tiene margen en su contenedor flex)
+}
+
+.input-group label {
+    font-size: 0.9rem; // Usar variable
+    font-weight: 700; // Usar variable
+    margin-bottom: $spacing-xs; // Usar variable
+    color: inherit;
+    padding-left: 5px; // Usar variable
+}
+
+input[type="email"],
+input[type="password"],
+input[type="text"] {
+    padding: $spacing-sm $spacing-md; // Usar variables
+    border: 1px solid $color-border; // Usar variable
+    border-radius: $border-radius-md; // Usar variable
+    font-size: $base-font-size; // Usar variable
+    font-family: $font-family-base;
+    background-color: $color-panel-bg; // Usar variable
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05); // Usar variable o mixin
+    @include transition-smooth((border-color, box-shadow, background-color)); // Usar mixin
+}
+
+input[type="email"]:focus,
+input[type="password"]:focus,
+input[type="text"]:focus {
+    outline: none;
+    border-color: $color-accent-orange; // Usar variable
+    box-shadow: 0 0 0 3px rgba($color-accent-orange, 0.2); // Usar variable
+    background-color: $color-panel-bg; // Usar variable
+}
+
+
+
+/* Botones */
+// .btn, .btn-primary, .btn-secondary, .btn-google, .btn-google i
+// DEBERÍAN estar en _buttons.scss.
+
+.btn {
+    padding: 12px 15px; // Usar variables
+    border: none;
+    border-radius: $border-radius-md; // Usar variable (si son rectangulares aquí)
+    font-size: 1.1rem; // Usar variable
+    font-weight: 700; // Usar variable
+    font-family: $font-family-base;
+    cursor: pointer;
+    @include transition-smooth((background-color, transform, box-shadow)); // Usar mixin
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); // Usar variable
+
+    &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    // Usar variable
+    &:active {
+        transform: translateY(0);
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    // Usar variable
+}
+
+.btn-primary {
+    // Botón Sign In
+    background-color: $color-accent-orange; // Usar variable (Naranja)
+    color: $color-text-light; // Usar variable (blanco)
+    margin-top: $spacing-sm; // Espacio extra arriba (usar variable)
+
+    &:hover {
+        background-color: darken($color-accent-orange, 10%);
+    }
+
+    // Usar función
+}
+
+.btn-secondary {
+    // Botón Sign Up (si es la variante secundaria aquí)
+    background-color: $color-accent-orange; // Usar variable (Naranja)
+    color: $color-text-light; // Usar variable (blanco)
+    width: 100%; // Ocupa el ancho disponible en su contenedor
+
+    &:hover {
+        background-color: darken($color-accent-orange, 10%);
+    }
+
+    // Usar función
+}
+
+.btn-google {
+    // Botón Google
+    background-color: $color-panel-bg; // Usar variable
+    color: #555; // Usar variable si aplica
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: $spacing-sm;
+    border: 1px solid $color-border; // Usar variable
+
+    &:hover {
+        background-color: lighten($color-border, 5%);
+    }
+
+    // Usar variable
+    i {
+        color: #DB4437;
+        /* Color de Google - mantener hardcodeado o definir como variable específica si se repite */
+    }
+}
+
+.full-width-btn {
+    width: 100%;
+    justify-content: center;
+    margin-bottom: $spacing-lg;
+}
+
+// Usar variable
+
+
+/* --- Enlace "Forgot Password" (.forgot-password) --- */
+// Refactorizado y con Variables/Responsividad
+.forgot-password {
+    color: #f0f0f0; // Color específico (casi blanco) - Usar variable si aplica
+    text-decoration: none;
+    font-size: 0.9rem; // Usar variable
+    text-align: center;
+    margin-top: $spacing-sm; // Usar variable
+    @include transition-smooth(color); // Usar mixin
+
+    &:hover {
+        color: $color-text-light; // Usar variable (blanco)
+        text-decoration: underline;
+    }
+
+    // Responsive si es necesario
+    @include mobile-only {
+        font-size: 0.85rem;
+    }
+
+    // Ajustar tamaño
+}
+
+
+/* --- Robot (.robot-container, .robot-image) --- */
+// Refactorizado y con Variables/Responsividad
+// Este contenedor está DENTRO de .sign-up-panel. Lo anidamos aquí.
+.sign-up-panel {
+
+    // Nos referimos al panel de Sign Up
+    .robot-container {
+        // Contenedor del robot y botón Sign Up
+        display: flex;
+        align-items: flex-end; // Alinea el botón abajo
+        gap: $spacing-md; // Usar variable
+        margin-top: $spacing-md; // Usar variable
+    }
+
+    .robot-image {
+        // Imagen del robot
+        width: 80px; // Usar variable
+        height: auto;
+        margin-bottom: -$spacing-sm/2; // Ajuste fino (usar variable)
+
+        // Responsive si es necesario
+        @include mobile-only {
+            width: 60px;
+            margin-bottom: -$spacing-xs;
+        }
+
+        // Ajustar tamaño
+    }
+}
+
+
+/* Responsividad General (Movida y Anidada) */
+// Las media queries generales ya deberían estar en _base.scss o _layout.scss
+// Aquí solo se aplican ajustes específicos de los elementos de Login.
+
+// Ajustes generales de paneles y título principal en media queries (originales)
+@include md-up {
+    // En tabletas o más grandes (menos de 768px, según tu breakpoint)
+    /* .panels-container { flex-direction: column; align-items: center; gap: $spacing-lg; } // Esto DEBERÍA estar en _layout.scss si es el comportamiento general de paneles */
+    /* .panel { max-width: 400px; } // Esto DEBERÍA estar en _components.scss o _panels.scss si es un ajuste general */
+    // .main-title { font-size: 3rem; } // Ya anidado arriba
+}
+
+@include mobile-only {
+    // En móviles pequeños (menos de 480px, según tu breakpoint)
+    // .main-title { font-size: 2.5rem; } // Ya anidado arriba
+    /* .panel { padding: 25px 20px; border-radius: 20px; } // Esto DEBERÍA estar en _components.scss o _panels.scss */
+    /* .panel h2 { font-size: 1.8rem; } // Esto DEBERÍA estar en .panel h2 en _components.scss o _panels.scss */
+    /* .btn { font-size: 1rem; padding: 10px 12px; } // Esto DEBERÍA estar en _buttons.scss */
+    // 
+}

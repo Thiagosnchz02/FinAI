@@ -1,0 +1,157 @@
+// src/styles/_layout.scss
+
+
+@import 'mixins';
+
+.dashboard-container { // Contenedor si usas sidebar fija y un área de contenido principal
+     display: flex;
+     min-height: 100vh;
+     background-color: $color-content-bg; // Fondo del área de contenido
+     width: 100%; // Asegura ancho completo para flexbox
+}
+.profile-container {
+    background-color: $color-panel-bg; // Usar variable
+    // background: linear-gradient(to bottom, $color-panel-bg, lighten($color-panel-bg, 5%)); // Si usas gradiente
+    padding: $spacing-xxxl $spacing-xxxxl; // Usar variables
+    border-radius: $border-radius-lg; // Usar variable
+    box-shadow: $box-shadow-md; // Usar variable
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 700px; // Usar variable si se repite
+    margin: 0 auto; // Centrar
+
+    // Aplicación de la animación (aquí, ya que este selector es el que se anima)
+    animation: fadeInSlideUp 0.6s ease-out forwards;
+    opacity: 0;
+
+    // Responsive para .profile-container
+    @include mobile-only {
+        // En pantallas pequeñas (menos de 640px)
+        padding: $spacing-lg; // Ajustar padding (original era 20px)
+    }
+}
+
+.page-container { // Contenedor principal de la página (excluye sidebar)
+    // margin-left: $sidebar-width-collapsed; // Lo define la sidebar con selector de hermano
+    transition: margin-left $transition-speed-normal $transition-ease;
+    //flex-grow: 1; // Ocupa el espacio restante en el flex container (.dashboard-container si aplica)
+    padding: $spacing-xl $spacing-xxxl; // Padding interno de la página
+    background-color: $color-primary-blue; // Revisa si este fondo va aquí o en body/dashboard-container
+    display: flex;
+    flex-direction: column; // Contenido apilado verticalmente
+    box-sizing: border-box;
+    max-width: 1400px; // Ancho máximo opcional
+    width: 100%; // Asegura que ocupe el ancho disponible
+    margin-right: auto; // Centrar si tiene max-width
+    margin-left: auto; // Centrar si tiene max-width (revisar si esto entra en conflicto con el margen de la sidebar)
+
+    // Ajuste del margen izquierdo cuando la sidebar está colapsada/expandida
+    // Esto asume que .page-container es hermano de .sidebar
+    .sidebar + & { // Selector de hermano adyacente
+        margin-left: $sidebar-width-collapsed; // Margen cuando sidebar está colapsada
+    }
+    .sidebar:hover + & {
+         margin-left: $sidebar-width-expanded; // Ajustar al ancho expandido
+    }
+    // Si usas una clase JS para abrir/cerrar sidebar en móvil
+    // .sidebar.is-open + & { margin-left: $sidebar-width-expanded; }
+
+
+    // Responsive para el contenedor de página
+    @include lg-up { // En pantallas grandes, ajustar ancho y padding
+         max-width: 1200px;
+         padding: $spacing-xxl $spacing-xxxxl;
+    }
+
+    @include md-up { // En tabletas, ajustar padding
+        padding: $spacing-xl $spacing-xxxl;
+        // margin-left: auto; // Si body centra
+        // margin-right: auto; // Si body centra
+    }
+
+    @include mobile-only { // En móviles, eliminar margen de sidebar y ajustar padding
+         margin-left: 0 !important; // Forzar eliminación de margen en móvil
+         padding: $spacing-lg $spacing-md; // Menos padding
+    }
+}
+
+// Estilo base de la cabecera de página
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: $spacing-xxxl; // Espacio debajo
+    background-color: $color-header-bg; // Color de fondo
+    padding: $spacing-sm $spacing-xl; // Padding interno
+    border-radius: $border-radius-md;
+    box-shadow: $color-shadow;
+    flex-wrap: nowrap; // No permitir que se envuelvan
+    gap: $spacing-md; // Espacio entre elementos
+
+    // Grupo de título (avatar + h1)
+    .header-title-group {
+        display: flex;
+        align-items: center;
+        gap: $spacing-md;
+        flex-grow: 1;
+        justify-content: center;
+    
+
+        // Título principal de la página
+        h1 {
+            margin: 0;
+            font-size: 1.8em;
+            font-weight: 800;
+            color: $color-text-dark;
+            flex-grow: 1; // Ocupa espacio central
+            text-align: center;
+            white-space: nowrap;
+            @include text-ellipsis;
+        }
+
+        // Avatar en cabecera
+        .header-avatar-small {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid $color-text-light;
+            box-shadow: $box-shadow-sm;
+            background-color: #e0e0e0; // Usar variable
+
+            svg {
+            display: block;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            }
+        }
+    }
+
+    .header-actions-slot { // Contenedor para los botones de la derecha
+        display: flex;
+        align-items: center;
+        gap: $spacing-sm; // Espacio entre el actionButton y el botón de settings
+    }
+
+
+    // Responsive para la cabecera
+    @include mobile-only {
+        padding: $spacing-sm $spacing-md;
+        margin-bottom: $spacing-xl;
+        gap: $spacing-md;
+
+        .header-title-group {
+             gap: $spacing-sm;
+             h1 { font-size: 1.5em; }
+        }
+        .header-avatar-small { width: 35px; height: 35px; }
+        // Si implementas menú hamburguesa
+        .hamburger-btn { display: block; }
+    }
+
+     @include md-up {
+         // Ocultar hamburguesa en pantallas medianas+ si se muestra en móvil
+         .hamburger-btn { display: none; }
+     }
+}

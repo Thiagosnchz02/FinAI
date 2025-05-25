@@ -79,14 +79,20 @@ function calculateNextDueDate(currentDueDateStr: string, frequency: string, dayO
     const minimumNextDate = new Date(currentDueDate.getTime());
     minimumNextDate.setUTCDate(minimumNextDate.getUTCDate() + 1); // Al menos el día siguiente
 
-    if (nextDate < minimumNextDate) {
-         console.warn(`Calculated date ${nextDate.toISOString()} is not after ${minimumNextDate.toISOString()}. Re-calculating...`);
-         // Si la fecha calculada sigue siendo igual o anterior a la original + 1 día,
-         // intentar calcular de nuevo desde la fecha recién calculada.
+    if (nextDate.getTime() <= currentDueDate.getTime()) { // Asegurar que sea estrictamente después
+         console.warn(`Calculated date ${nextDate.toISOString()} is not after ${currentDueDate.toISOString()}. Re-calculating from current date + interval...`);
+         // Si la fecha calculada es igual o anterior, forzar el avance desde la fecha original
+         // Esto es un fallback, la lógica del switch debería avanzar la fecha.
+         // Re-evaluar la lógica del switch si esto ocurre frecuentemente.
+         // Por ahora, si esto pasa, es mejor añadir el intervalo a la fecha original directamente.
+         // Esta recursión podría ser peligrosa si la lógica base no avanza.
+         // Una mejor aproximación sería recalcular basado en la frecuencia desde currentDueDate + 1 día.
+         // Para simplificar, si la fecha no avanzó, se re-ejecutará con la misma fecha y la lógica de "minimumNextDate"
+         // en la siguiente llamada recursiva debería forzar el avance.
+         // O, más simple, si nextDate <= currentDueDate, simplemente añadir el intervalo de nuevo.
+         // Vamos a re-llamar con la fecha que se calculó, la condición de minimumNextDate en la siguiente llamada debería manejarlo.
          return calculateNextDueDate(nextDate.toISOString().split('T')[0], frequency, dayOfMonth);
     }
-
-
     console.log(`   New calculated date: ${nextDate.toISOString().split('T')[0]}`);
     return nextDate;
 }
@@ -148,7 +154,7 @@ Deno.serve(async (req) => {
                  continue; // Saltar al siguiente
              }
 
-
+             const processedDueDate = expense.next_due_date;
             // 3. Crear la transacción de gasto
              const transactionData = {
                  user_id: expense.user_id,
@@ -157,9 +163,10 @@ Deno.serve(async (req) => {
                  type: 'gasto',
                  // ¡OJO! Asegúrate de que en tu tabla 'transactions' guardas los gastos como NEGATIVOS
                  amount: -Math.abs(Number(expense.amount) || 0),
-                 transaction_date: expense.next_due_date, // Usar la fecha de vencimiento como fecha de transacción
+                 transaction_date: processedDueDate, // Usar la fecha de vencimiento como fecha de transacción
                  description: `Pago Fijo: ${expense.description}`,
-                 notes: `Gasto programado ID: ${expense.id}` // Nota automática opcional
+                 notes: `Gasto programado ID: ${expense.id}. Procesado el ${new Date().toISOString().split('T')[0]}.`, // Añadir fecha de procesamiento
+                 related_scheduled_expense_id: expense.id 
              };
 
              console.log("   Inserting transaction:", transactionData);
@@ -175,40 +182,58 @@ Deno.serve(async (req) => {
              console.log(`   Transaction inserted successfully for expense ID ${expense.id}.`);
 
              // 4. Calcular la siguiente fecha de vencimiento
-             const newNextDueDate = calculateNextDueDate(expense.next_due_date, expense.frequency, expense.day_of_month);
+             const newNextDueDateObject = calculateNextDueDate(processedDueDate, expense.frequency, expense.day_of_month);
 
-             if (!newNextDueDate) {
+             if (!newNextDueDateObject) {
                   console.warn(`   Could not calculate next due date for expense ID ${expense.id}. Deactivating?`);
-                  // Considerar desactivar el gasto si no se puede calcular la fecha?
-                  // O simplemente loguear y dejarlo para revisión manual.
-                  results.push({ id: expense.id, status: 'warning', reason: 'Could not calculate next due date' });
-                  continue; // No intentar actualizar si no hay fecha nueva
-             }
+                  if (expense.frequency === 'unico') {
+                    console.log(`    Expense ID ${expense.id} is a one-time expense. Attempting to deactivate.`);
+                    const { error: deactivateError } = await supabaseAdmin
+                        .from('scheduled_fixed_expenses')
+                        .update({ 
+                            is_active: false, 
+                            updated_at: new Date(),
+                            last_payment_processed_on: processedDueDate // También marcar como procesado
+                        })
+                        .eq('id', expense.id);
+                    if (deactivateError) {
+                        results.push({ id: expense.id, status: 'error', reason: `One-time expense processed, but failed to deactivate: ${deactivateError.message}` });
+                    } else {
+                        results.push({ id: expense.id, status: 'processed_and_deactivated' });
+                    }
+                } else {
+                    results.push({ id: expense.id, status: 'warning', reason: 'Transaction created, but could not calculate next due date. Manual review needed.' });
+                }
+                continue;
+            }
 
-             const newDateString = newNextDueDate.toISOString().split('T')[0];
+             const newNextDueDateString = newNextDueDateObject.toISOString().split('T')[0];
+
+             const updatePayload = { 
+                next_due_date: newNextDueDateString, 
+                last_payment_processed_on: processedDueDate, // Guardar la fecha del pago que se acaba de hacer
+                updated_at: new Date() 
+            };
 
              // 5. Actualizar la fecha del gasto fijo en la tabla original
-             console.log(`   Updating next_due_date for expense ID ${expense.id} to ${newDateString}`);
+             console.log(`    Updating expense ID ${expense.id} with payload:`, updatePayload)
              const { error: updateError } = await supabaseAdmin
-                 .from('scheduled_fixed_expenses')
-                 .update({ next_due_date: newDateString, updated_at: new Date() })
-                 .eq('id', expense.id); // Solo actualizar este registro
+                .from('scheduled_fixed_expenses')
+                .update(updatePayload) // Usar el payload actualizado
+                .eq('id', expense.id);
 
-             if (updateError) {
-                 console.error(`   Failed to update next_due_date for expense ID ${expense.id}:`, updateError);
-                 // ¡IMPORTANTE! La transacción se creó pero la fecha no se actualizó.
-                 // Puede causar doble procesamiento mañana si no se arregla.
-                 results.push({ id: expense.id, status: 'error', reason: `Transaction created BUT date update failed: ${updateError.message}` });
-             } else {
-                 console.log(`   Successfully updated next_due_date for expense ID ${expense.id}.`);
-                  results.push({ id: expense.id, status: 'processed' });
-             }
+            if (updateError) {
+                console.error(`    Failed to update scheduled_fixed_expense for ID ${expense.id}:`, updateError);
+                results.push({ id: expense.id, status: 'error', reason: `Transaction created BUT date/status update failed: ${updateError.message}` });
+            } else {
+                console.log(`    Successfully updated scheduled_fixed_expense for ID ${expense.id}.`);
+                results.push({ id: expense.id, status: 'processed_and_rescheduled' });
+            }
         } // Fin del bucle for
 
         // Devolver un resumen de lo que se hizo
         return new Response(JSON.stringify({ message: `Processed ${dueExpenses.length} expenses.`, results }), {
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            status: 200,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200,
         });
 
     } catch (error) {

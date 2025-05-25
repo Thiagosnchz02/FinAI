@@ -8,6 +8,8 @@ import { supabase } from '../services/supabaseClient';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { formatCurrency, formatDate } from '../utils/formatters.js';
 import Sidebar from '../components/layout/Sidebar.jsx'; 
+import PageHeader from '../components/layout/PageHeader.jsx';
+import '../styles/Loans.scss';
 // Iconos y estado ahora en LoanCard
 import LoanCard from '../components/Loans/LoanCard.jsx'; // Asume ruta src/components/
 import LoanModal from '../components/Loans/LoanModal.jsx'; // Asume ruta src/components/
@@ -58,8 +60,12 @@ function Loans() {
             const [profileRes, loansRes, accountsRes, categoriesRes] = await Promise.all([
                 supabase.from('profiles').select('avatar_url').eq('id', currentUserId).single(),
                 supabase.from('loans').select('*').eq('user_id', currentUserId).order('status').order('due_date'),
-                supabase.from('accounts').select('id, name').eq('user_id', currentUserId).order('name'),
-                supabase.from('categories').select('id, name') // Seleccionar categorías de INGRESO
+                supabase.from('accounts')
+                .select('id, name')
+                .eq('user_id', currentUserId)
+                .eq('is_archived', false)
+                .order('name'),
+                supabase.from('categories').select('id, name, type, parent_category_id, is_default, is_archived') // Seleccionar categorías de INGRESO
                     .or(`user_id.eq.${currentUserId},is_default.eq.true`) // Del usuario o default
                     .eq('type', 'ingreso') // <<<--- Tipo INGRESO
                     .order('name')
@@ -97,6 +103,46 @@ function Loans() {
         window.addEventListener('scroll', handleScroll);
         return () => window.removeEventListener('scroll', handleScroll);
     }, [user, authLoading, navigate, fetchData]); // Dependencias
+
+    const formattedIncomeCategoriesForSelect = useMemo(() => {
+        console.log("[Loans.jsx useMemo] Formateando categorías de INGRESO para CollectionModal. 'incomeCategories'.length:", incomeCategories ? incomeCategories.length : 0);
+        if (!incomeCategories || incomeCategories.length === 0) {
+            return [];
+        }
+        
+        // Asegurarse de que solo se procesan las de tipo 'ingreso' y no archivadas
+        // (Aunque fetchData ya podría haber filtrado por tipo, una doble verificación no hace daño y maneja 'is_archived')
+        const activeIncomeCategories = incomeCategories.filter(
+            cat => cat.type === 'ingreso' && !cat.is_archived
+        );
+
+        const categoryIdsInIncomeType = new Set(activeIncomeCategories.map(cat => cat.id));
+
+        const topLevelIncomeCategories = activeIncomeCategories.filter(
+            cat => !cat.parent_category_id || !categoryIdsInIncomeType.has(cat.parent_category_id)
+        ).sort((a, b) => a.name.localeCompare(b.name));
+        
+        const subIncomeCategories = activeIncomeCategories.filter(
+            cat => cat.parent_category_id && categoryIdsInIncomeType.has(cat.parent_category_id)
+        ).sort((a, b) => a.name.localeCompare(b.name));
+
+        const options = [];
+        topLevelIncomeCategories.forEach(parent => {
+            options.push({ 
+                id: parent.id, 
+                name: `${parent.name}${parent.is_default ? '' : ''}`
+            });
+            const children = subIncomeCategories.filter(sub => sub.parent_category_id === parent.id);
+            children.forEach(child => {
+                options.push({ 
+                    id: child.id, 
+                    name: `  ↳ ${child.name}` // Indentación con prefijo
+                });
+            });
+        });
+        console.log("[Loans.jsx useMemo] Opciones finales de INGRESO para CollectionModal:", options.length);
+        return options;
+    }, [incomeCategories]);
 
     // --- Cálculo Resumen Footer (useMemo) ---
     const summary = useMemo(() => {
@@ -254,6 +300,19 @@ function Loans() {
     const handleBack = useCallback(() => navigate(-1), [navigate]);
     const scrollToTop = useCallback(() => window.scrollTo({ top: 0, behavior: 'smooth' }), []);
 
+    const loanPageAction = (
+        <button 
+            onClick={() => handleOpenLoanModal('add')} 
+            id="addLoanBtn" // Es buena práctica tener IDs únicos si son necesarios
+            className="btn btn-primary btn-add" // Tus clases existentes
+            // disabled se maneja por isProcessingPage en PageHeader,
+            // o puedes añadir lógica específica aquí si es necesario
+            // disabled={isLoading || isSaving} 
+        >
+            <i className="fas fa-plus"></i> Añadir Préstamo
+        </button>
+    );
+
     // --- Renderizado ---
     // ... (JSX completo similar a Debts.jsx, adaptando nombres de clase, textos y lógica de renderizado) ...
     return (
@@ -266,12 +325,14 @@ function Loans() {
             {/* Contenido */}
             <div className="page-container">
                 {/* Cabecera */}
-                <div className="page-header loans-header">
-                   {/* ... Cabecera JSX ... */}
-                   <button onClick={handleBack} className="btn-icon"><i className="fas fa-arrow-left"></i></button>
-                   <div className="header-title-group"> <img src={avatarUrl} alt="Avatar" className="header-avatar-small" /> <h1>Mis Préstamos</h1> </div>
-                   <button onClick={() => handleOpenLoanModal('add')} className="btn btn-primary btn-add"> <i className="fas fa-plus"></i> Añadir Préstamo </button>
-                </div>
+                <PageHeader 
+                    pageTitle="Mis Préstamos"
+                    headerClassName="loans-header" // Tu clase específica si la necesitas
+                    showSettingsButton={false}    // No mostrar botón de settings aquí
+                    isProcessingPage={isLoading || isSaving} // Para deshabilitar botones de PageHeader si es necesario
+                    actionButton={loanPageAction}   // <-- Pasar el botón "Añadir Préstamo"
+                    // showBackButton={true} // Ya es true por defecto, no necesitas pasarlo si quieres el botón de volver
+                />
 
                 {/* Lista Préstamos */}
                 <div id="loanList" className="loan-list"> {/* Usa clase específica si tienes estilos */}
@@ -308,9 +369,14 @@ function Loans() {
                 mode={modalMode} initialData={selectedLoan} isSaving={isSaving} error={modalError}
             />
             <CollectionModal // <<< USA COMPONENTE CollectionModal
-                isOpen={isCollectionModalOpen} onClose={handleCloseCollectionModal} onSubmit={handleCollectionFormSubmit}
-                selectedLoan={selectedLoan} accounts={accounts} incomeCategories={incomeCategories} // Pasa categorías de INGRESO
-                isSaving={isSaving} error={modalError}
+                isOpen={isCollectionModalOpen} 
+                onClose={handleCloseCollectionModal} 
+                onSubmit={handleCollectionFormSubmit}
+                selectedLoan={selectedLoan} 
+                accounts={accounts} 
+                incomeCategories={formattedIncomeCategoriesForSelect} // Pasa categorías de INGRESO
+                isSaving={isSaving} 
+                error={modalError}
             />
             <ConfirmationModal // <<< USA COMPONENTE ConfirmationModal
                 isOpen={isConfirmModalOpen}

@@ -1,0 +1,539 @@
+// src/styles/Accounts.scss
+// Resumen Saldo Total (Mantener aquí, refactorizado)
+
+
+.total-balance-summary,
+.net-worth-summary { 
+  text-align: center;
+  padding: $spacing-md;
+  border-radius: $border-radius-md;
+  font-size: 1.2em; 
+  font-weight: 600; 
+  box-shadow: $box-shadow-sm;
+  flex: 1; // Para que intenten ocupar el mismo espacio
+  min-width: 280px; 
+  max-width: 400px; 
+  display: flex;
+  flex-direction: column; // Apilar título y monto
+  align-items: center;    // Centrar horizontalmente
+  gap: $spacing-xs / 2;   // Espacio entre título y monto
+
+  span { 
+    font-weight: 700; 
+    margin-left: $spacing-xs;
+    display: inline-block;
+  }
+  small {
+    display: block;
+    font-size: 0.75em; 
+    font-weight: 400;
+    color: $color-text-muted;
+    margin-top: $spacing-xs / 2;
+  }
+}
+
+.total-balance-summary { 
+  background-color: lighten($color-primary-blue, 10%);
+  color: darken($color-primary-blue, 20%);
+  span#totalBalanceAmount { 
+    color: $color-accent-purple;
+  }
+}
+
+.net-worth-summary { 
+  background-color: lighten($color-accent-green, 35%); 
+  color: darken($color-accent-green, 25%);
+  span#netWorthBalanceAmount { 
+    color: $color-accent-green; 
+  }
+}
+
+// Responsive para los resúmenes
+@include mobile-only {
+  .account-summaries-section {
+    flex-direction: column; 
+    align-items: stretch; 
+    gap: $spacing-md;
+  }
+  .total-balance-summary,
+  .net-worth-summary {
+    font-size: 1em;
+    padding: $spacing-sm;
+    max-width: none; 
+    span { font-size: 1.3em; }
+  }
+}
+
+.empty-list-message {
+    text-align: center;
+    margin-top: $spacing-xxl; // Usar variable
+    padding: $spacing-xxl $spacing-lg; // Usar variables
+    color: $color-text-muted; // Usar variable
+    background-color: $color-panel-bg; // Usar variable
+    border-radius: $border-radius-lg; // Usar variable
+    box-shadow: 0 6px 15px rgba($color-shadow, 0.07); // Usar variable y rgba
+    
+    // Si está dentro de un grid, puedes añadir:
+    // grid-column: 1 / -1;
+
+    
+
+    .welcome-actions {
+        display: flex;
+        flex-direction: column; // Apilar botones en móvil por defecto
+        gap: $spacing-md;     // Espacio entre botones
+        align-items: center;  // Centrar botones
+        width: 100%;
+        //max-width: 1000px;
+
+        p {
+        font-size: 1em;
+        color: $color-text-muted;
+        width: 100%;
+        //max-width: 500px; // Para que no sea demasiado ancho el texto
+        line-height: 1.6;
+        &:last-of-type { // El párrafo antes de los botones
+            margin-bottom: $spacing-xl;
+        }
+        }
+
+        @include md-up { // En pantallas más grandes, ponerlos lado a lado
+            flex-direction: row;
+            justify-content: center; // Centrar el grupo de botones
+            width: 100%;
+        }
+
+    }
+
+    &.welcome-options {
+        //padding: $spacing-xl $spacing-lg;
+        align-items: center; // Más padding si es un mensaje de bienvenida
+        display: flex; // Si no lo hereda de .empty-list-message
+        flex-direction: column; // Si no lo hereda
+        align-items: center; // Centra horizontalmente los hijos directos (h2, p, .empty-mascot, .welcome-actions)
+        text-align: center; // Centra el texto dentro de h2, p
+        
+        h2 {
+        font-size: 1.4em;
+        color: $color-text-dark;
+        margin-bottom: $spacing-sm;
+        }
+        .btn { // Estilos para los botones dentro de .welcome-actions
+            //width: 100%; // Hacer que los botones ocupen el ancho disponible en móvil
+            padding: $spacing-md $spacing-lg; // Botones un poco más grandes
+            font-size: 1em;
+            white-space: break-spaces;
+            min-height: 50px;
+            
+            @include md-up {
+            width: auto;      // Permitir que el ancho se ajuste al contenido (hasta el max-width)
+            flex-grow: 0;     // No hacer que crezcan para llenar el espacio necesariamente
+            flex-shrink: 1;   // Permitir que se encojan si es necesario
+            flex-basis: auto; // El ancho se basará en el contenido
+            max-width: 240px;
+            }
+
+            i {
+            margin-right: $spacing-sm;
+            }
+        }
+    }
+    
+}
+
+.account-summaries-section {
+  display: flex;
+  flex-wrap: wrap; 
+  justify-content: center; 
+  gap: $spacing-lg; 
+  margin-bottom: $spacing-xxxl; // O el margen que prefieras
+}
+
+
+// Grid Lista de Cuentas (Mantener aquí, refactorizado)
+.account-list-grid {
+   display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); // Base definida aquí
+    gap: $spacing-xl; // Usar variable
+    width: 100%; 
+    max-width: 1400px;
+
+    // Media Queries anidadas para responsividad del grid
+    // md-up ya definido en el selector padre
+    @include mobile-only {
+        // En móviles (menos de $breakpoint-sm)
+        grid-template-columns: 1fr; // Una columna: las tarjetas se apilan
+        gap: $spacing-md; // Menos espacio entre tarjetas
+    }
+}
+
+.account-list-grid.archived { // Si aplicas esta clase al contenedor cuando showArchived es true
+  background-color: rgba($color-border, 0.05);
+  margin-top: $spacing-xl;
+  border-top: 1px solid $color-border;
+  padding-top: $spacing-xl;
+}
+
+.accounts-controls-bar {
+  display: flex;
+  flex-wrap: wrap; // Para que se ajusten en pantallas pequeñas
+  //flex-direction:row;
+  justify-content: space-between; // Espacio entre grupos de control
+  align-items: center;
+  padding: $spacing-sm $spacing-md; // Un padding ligero
+  margin-bottom: $spacing-lg;
+  background-color: lighten($color-panel-bg, 2%); // Un fondo sutil si quieres
+  border-radius: $border-radius-md;
+  box-shadow: $box-shadow-sm;
+
+  .filter-control,
+  .sort-control,
+  .archive-toggle-control { // El botón de archivar ahora es parte de esta barra
+    display: flex;
+    align-items: center;
+    gap: $spacing-sm;
+  }
+
+  label {
+    font-weight: 500;
+    font-size: 0.9em;
+    color: $color-text-dark;
+  }
+
+  select {
+    padding: $spacing-xs $spacing-sm;
+    border: 1px solid $color-border;
+    border-radius: $border-radius-sm;
+    background-color: $color-panel-bg;
+    font-size: 0.9em;
+    min-width: 150px; // Para que los selectores tengan un tamaño decente
+    cursor: pointer;
+    color: $color-text-muted;
+
+    &:focus {
+      border-color: $color-accent-purple;
+      box-shadow: 0 0 0 2px rgba($color-accent-purple, 0.2);
+      outline: none;
+    }
+  }
+
+  // El botón de archivar ya tiene clases .btn .btn-secondary .btn-sm
+  // pero puedes añadir ajustes específicos si es necesario dentro de .archive-toggle-control
+  //.archive-toggle-control .btn { 
+    // Ejemplo: margin-left: auto; // si quieres empujarlo a la derecha dentro de su espacio
+  //}
+
+  // Responsive para la barra de controles
+  @include mobile-only {
+    flex-direction: column;
+    align-items: stretch; // Hacer que los controles ocupen el ancho
+    gap: $spacing-md; // Más espacio vertical en móvil
+
+    .filter-control,
+    .sort-control,
+    .archive-toggle-control {
+      justify-content: space-between; // Para que label y select se separen
+      width: 100%;
+    }
+    .archive-toggle-control .btn {
+        width: 100%; // Botón de archivar a ancho completo en móvil
+        justify-content: center;
+    }
+    select {
+      flex-grow: 1; // Permitir que el select ocupe espacio
+      min-width: 0; // Resetear min-width
+    }
+  }
+}
+
+.summary-title-container {
+  display: inline-flex; // O flex, si quieres más control sobre el espaciado
+  align-items: center;
+  gap: $spacing-xs; // Espacio entre el texto del título y el icono del tooltip
+  // El texto del título ("Saldo Total (aprox.)") ya tiene sus propios estilos por herencia
+}
+
+.tooltip-trigger-container {
+  position: relative; // Necesario para posicionar el .tooltip-text de forma absoluta
+  display: inline-block; // O inline-flex si el icono necesita alineación específica
+
+  .tooltip-icon {
+    color: $color-text-muted; // Un color discreto para el icono
+    font-size: 0.9em;      // Tamaño del icono
+    cursor: help;          // Cambia el cursor para indicar que es informativo
+
+    &:hover + .tooltip-text, // Mostrar tooltip al hacer hover sobre el icono
+    &:focus + .tooltip-text { // Mostrar tooltip al enfocar el icono (accesibilidad teclado)
+      visibility: visible;
+      opacity: 1;
+      transform: translateY(0) translateX(-50%); // Ajustar para centrar
+    }
+  }
+
+  .tooltip-text {
+    visibility: hidden; // Oculto por defecto
+    opacity: 0;
+    width: 280px; // Ancho del tooltip (ajústalo)
+    background-color: darken($color-panel-bg, 75%); // Fondo oscuro para el tooltip
+    color: $color-text-light; // Texto claro
+    text-align: left; // Alinear texto a la izquierda dentro del tooltip
+    border-radius: $border-radius-sm;
+    padding: $spacing-sm $spacing-md;
+    box-shadow: $box-shadow-md;
+    font-size: 0.8em; // Texto del tooltip un poco más pequeño
+    line-height: 1.4;
+    font-weight: normal; // Resetear peso de fuente si lo hereda del título
+    
+    // Posicionamiento del tooltip
+    position: absolute;
+    z-index: $zindex-modal-overlay + 10; // Asegurar que esté por encima de otros elementos
+    bottom: 100%; // Posicionar encima del icono
+    left: 50%;    // Centrar horizontalmente respecto al icono
+    transform: translateY(-10px) translateX(-50%); // Moverlo un poco hacia arriba y centrar
+    margin-bottom: $spacing-xs; // Pequeño espacio entre el icono y el tooltip
+    transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out;
+
+    // Flecha del tooltip (opcional, pero mejora la apariencia)
+    &::after {
+      content: "";
+      position: absolute;
+      top: 100%; // En la parte inferior del tooltip
+      left: 50%;
+      margin-left: -5px; // Centrar la flecha
+      border-width: 5px;
+      border-style: solid;
+      border-color: darken($color-panel-bg, 75%) transparent transparent transparent; // Color de la flecha igual al fondo del tooltip
+    }
+  }
+}
+
+/* --- Tarjeta de Cuenta (.account-card) --- */
+// Refactorizado y Anidado
+.account-card {
+   background-color: $color-panel-bg; // Usar variable de color
+   border-radius: $border-radius-lg; // Usar variable de border-radius
+   padding: $spacing-lg; // Usar variable de espaciado
+   box-shadow: 0 6px 15px rgba($color-shadow, 0.1); // Usar variable y rgba
+   display: flex;
+   flex-direction: column;
+   border-left: 6px solid; // Grosor y estilo del borde izquierdo (color por tipo)
+   transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.3s ease; // Usar variables
+   position: relative;
+
+   &.archived {
+        opacity: 0.6; // Hacerlo más tenue
+        background-color: lighten($color-border, 7%); // Un fondo ligeramente diferente
+        border-left-style: dashed !important; // Borde izquierdo punteado para distinguirlo
+        
+        &:hover {
+        opacity: 0.8;
+        // transform: none; // Quizás no quieres efecto de hover en archivadas
+        // box-shadow: $box-shadow-sm; 
+        }
+        // Ocultar ciertos botones si está archivada
+        .btn-edit, .btn-archive-account { // El botón de archivar no tiene sentido si ya está archivado
+            display: none !important;
+        }
+    }
+
+   // Hover para la tarjeta
+   &:hover {
+       transform: translateY(-5px); // Ligero desplazamiento hacia arriba
+       box-shadow: 0 12px 22px rgba($color-shadow, 0.15); // Sombra más pronunciada
+
+       // Puedes hacer que el borde izquierdo tenga un color de acento al pasar el ratón
+       // border-left-color: $color-accent-purple; // Ejemplo genérico al pasar el ratón
+   }
+
+
+   // Colores de borde izquierdo y sombra al pasar el ratón según el tipo de cuenta
+   &[data-type="corriente"] { border-left-color: $color-accent-blue; } // Usar variable de color
+   &:hover[data-type="corriente"] { border-left-color: $color-accent-blue; box-shadow: 0 1px 25px rgba($color-accent-blue, 0.4); } // Usar variable y rgba
+
+   &[data-type="ahorro"] { border-left-color: $color-accent-green; }
+   &:hover[data-type="ahorro"] { border-left-color: $color-accent-green; box-shadow: 0 1px 25px rgba($color-accent-green, 0.4); }
+
+   &[data-type="tarjeta_credito"] { border-left-color: $color-accent-red; }
+   &:hover[data-type="tarjeta_credito"] { border-left-color: $color-accent-red; box-shadow: 0 1px 25px rgba($color-accent-red, 0.4); }
+
+   &[data-type="efectivo"] { border-left-color: $color-text-muted; } // Usar variable
+   &:hover[data-type="efectivo"] { border-left-color: $color-text-muted; box-shadow: 0 1px 25px rgba($color-text-muted, 0.4); }
+
+   &[data-type="inversion"] { border-left-color: $color-accent-purple; }
+   &:hover[data-type="inversion"] { border-left-color: $color-accent-purple; box-shadow: 0 1px 25px rgba($color-accent-purple, 0.4); }
+
+   &[data-type="otro"] { border-left-color: $color-text-muted; } // Usar variable
+   &:hover[data-type="otro"] { border-left-color: $color-text-muted; box-shadow: 0 1px 25px rgba($color-text-muted, 0.4); }
+
+    &[data-type="ahorro_colchon"] { border-left-color: $color-accent-yellow; } // Usar variable
+    &:hover[data-type="ahorro_colchon"] { border-left-color: $color-accent-yellow; box-shadow: 0 1px 25px rgba($color-accent-yellow, 0.4); }
+
+    &[data-type="viajes"] { border-left-color: $color-accent-teal; } // Usar variable
+    &:hover[data-type="viajes"] { border-left-color: $color-accent-teal; box-shadow: 0 1px 25px rgba($color-accent-teal, 0.4); }
+
+
+   .card-header { // Estilo del encabezado de la tarjeta (anidado)
+       display: flex;
+       align-items: center;
+       gap: $spacing-md; // Usar variable de espaciado
+       margin-bottom: $spacing-sm; // Usar variable de espaciado
+       padding-bottom: $spacing-sm; // Usar variable de espaciado
+       border-bottom: 1px solid $color-border; // Usar variable de borde
+
+       .archived-badge-account {
+            margin-left: auto; // Empujar a la derecha
+            font-size: 0.7em;
+            background-color: rgba($color-text-muted, 0.7);
+            color: $color-text-light;
+            padding: 2px $spacing-xs;
+            border-radius: $border-radius-sm;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+       .account-icon { // Estilo del icono de la cuenta (anidado)
+           font-size: 1.6em; // Usar variable
+           color: $color-accent-purple; // Color base del icono (puede ser sobrescrito por tipo)
+           width: 30px; // Usar variable
+           text-align: center;
+           flex-shrink: 0;
+
+           // Colores específicos de icono según el tipo de cuenta (anidado)
+           .account-card[data-type="corriente"] & { color: $color-accent-blue; } // & se refiere al .account-icon
+           .account-card[data-type="ahorro"] & { color: $color-accent-green; }
+           .account-card[data-type="tarjeta_credito"] & { color: $color-accent-red; }
+           .account-card[data-type="efectivo"] & { color: $color-text-muted; }
+           .account-card[data-type="inversion"] & { color: $color-accent-purple; }
+           .account-card[data-type="otro"] & { color: $color-text-muted; }
+            .account-card[data-type="ahorro_colchon"] & { color: $color-accent-yellow; }
+            .account-card[data-type="viajes"] & { color: $color-accent-teal; }
+       }
+
+       .account-name { // Estilo del nombre de la cuenta (anidado)
+           margin: 0;
+           font-size: 1.15em;
+           font-weight: 700;
+           color: $color-text-dark; // Usar variable de color
+           flex-grow: 1;
+           word-break: break-word;
+       }
+   }
+
+   .card-body { // Estilo del cuerpo de la tarjeta (anidado)
+       flex-grow: 1;
+       text-align: right;
+       margin: $spacing-sm 0 $spacing-md 0; // Usar variables de espaciado
+
+        .account-target-progress {
+            margin-top: $spacing-md; // Espacio respecto al tipo de cuenta
+            padding-top: $spacing-sm;
+            border-top: 1px dashed lighten($color-border, 10%); // Separador sutil
+
+            .target-info {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                font-size: 0.8em;
+                color: $color-text-muted;
+                margin-bottom: $spacing-xs;
+
+                //span { // Estilo general para los textos dentro de target-info
+                    // Puedes añadir más estilos aquí
+                //}
+
+                .target-achieved {
+                color: $color-accent-green;
+                font-weight: 600;
+                i {
+                    margin-right: $spacing-xs / 2;
+                }
+                }
+            }
+
+            // Reutilizar estilos de .progress-bar-container y .progress-bar si son genéricos
+            // o crear unos específicos si es necesario.
+            .progress-bar-container.target-progress-bar-container {
+                height: $spacing-sm; // Una barra un poco más delgada para el objetivo
+                margin-top: $spacing-xs / 2;
+                background-color: lighten($color-border, 5%); // Fondo ligeramente diferente
+
+                .progress-bar {
+                // El color de fondo se establece inline con style
+                height: 100%;
+                border-radius: $border-radius-sm / 2; // Acorde a la altura
+                transition: width $transition-speed-normal $transition-ease;
+                }
+            }
+        }
+
+       .account-balance { // Estilo del saldo de la cuenta (anidado)
+           font-size: 1.9em;
+           font-weight: 800;
+           color: $color-text-dark; // Color base (neutral)
+           margin: 0 0 $spacing-xs 0; // Usar variables de espaciado
+           line-height: 1.2;
+
+           // Colores de saldo por estado (anidado)
+           &.positive { color: $color-accent-green; } // Usar variable de color
+           &.negative { color: $color-accent-red; } // Usar variable de color
+           &.neutral { color: $color-text-dark; } // Usar variable de color
+            &.error-text { color: $color-accent-red; } // Para errores de carga de saldo
+
+            .balance-indicator-icon {
+                margin-right: $spacing-xs; // Espacio entre el icono y el número del saldo
+                font-size: 0.5em;       // Tamaño del icono relativo al texto del saldo
+                // El color lo hereda de la clase .positive, .negative, etc. del <p> padre
+                
+                &.fa-spinner { // Si es el icono de carga
+                color: $color-text-muted; 
+                }
+            }
+       }
+
+       .account-type { // Estilo del tipo de cuenta (anidado)
+           font-size: 0.85em;
+           color: $color-text-muted; // Usar variable de color
+           margin: 0;
+           text-transform: capitalize;
+       }
+   }
+
+   .card-actions { // Estilo del contenedor de acciones (anidado)
+       display: flex;
+       justify-content: flex-end;
+       gap: $spacing-sm; // Usar variable de espaciado
+       padding-top: $spacing-sm; // Usar variable de espaciado
+       border-top: 1px solid $color-border; // Usar variable de borde
+
+        .btn-archive-account { // Mismo estilo que el delete o uno nuevo
+            color: $color-accent-orange;
+            &:hover { color: darken($color-accent-orange, 10%); }
+        }
+        .btn-unarchive-account {
+            color: $color-accent-green; // Verde para desarchivar
+            &:hover { color: darken($color-accent-green, 10%); }
+        }
+
+       .btn-icon { // Estilo de los botones icono dentro de card-actions (anidado)
+           font-size: 1.0em;
+           padding: $spacing-xs; // Usar variable
+           color: $color-text-muted; // Usar variable
+
+           &:hover { color: $color-accent-purple; } // Usar variable
+           &.btn-delete:hover { color: $color-accent-red; } // Usar variable
+       }
+   }
+
+   // Responsive para la tarjeta individual si necesita ajustes
+   @include mobile-only {
+        padding: $spacing-md; // Menos padding en móvil
+        .card-header { gap: $spacing-sm; } // Menos espacio en header
+        .account-icon { font-size: 1.4em; width: 25px; } // Icono más pequeño
+        .account-name { font-size: 1em; } // Nombre más pequeño
+        .card-body { margin: $spacing-sm 0; } // Ajustar margen body
+        .account-balance { font-size: 1.6em; } // Saldo más pequeño
+        .account-type { font-size: 0.8em; } // Tipo más pequeño
+        .card-actions { padding-top: $spacing-sm; gap: $spacing-xs; } // Ajustar acciones
+        .card-actions .btn-icon { font-size: 0.9em; padding: $spacing-xs/2; } // Iconos más pequeños
+   }
+}

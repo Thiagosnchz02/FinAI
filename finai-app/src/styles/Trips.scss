@@ -1,0 +1,783 @@
+/* --- Vistas Dinámicas --- */
+// .view (display/animation base) y @keyframes fadeIn DEBERÍAN estar en partials (_base.scss o _animations.scss)
+
+.view { display: none; animation: fadeIn 0.5s ease-out; }
+.view.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+
+
+/* --- Estilos Vista Lista de Viajes (.trip-list) --- */
+// Refactorizado y con Responsividad
+.trip-list {
+    display: flex;
+    flex-direction: column; // Apilados por defecto
+    gap: $spacing-xl; // Usar variable (original 20px)
+
+    // Responsive si necesitas ajustar el gap
+    @include mobile-only {
+        gap: $spacing-md;
+    }
+}
+
+.status-filters-container {
+  display: flex;
+  flex-direction: row;
+  justify-content: center; // Centrar los botones de filtro
+  gap: $spacing-sm;       // Espacio entre botones
+  margin-bottom: $spacing-lg; // Espacio debajo de los filtros
+  //flex-wrap: wrap; // Para que se ajusten en pantallas pequeñas
+
+  .btn-filter {
+    padding: $spacing-xs $spacing-md;
+    font-size: 0.9em;
+    border: 1px solid $color-border;
+    background-color: $color-panel-bg; // O un color base para botones no activos
+    color: $color-text-muted;
+    border-radius: $border-radius-md;
+    justify-content: center;
+    cursor: pointer;
+    @include transition-smooth(all);
+
+    &:hover {
+      background-color: lighten($color-border, 5%);
+      border-color: darken($color-border, 10%);
+    }
+
+    &.active {
+      background-color: $color-accent-blue; // O tu color de acento principal
+      color: $color-text-light;
+      border-color: darken($color-accent-blue, 10%);
+      font-weight: 600;
+      box-shadow: $box-shadow-sm;
+    }
+  }
+}
+
+.custom-toast-container {
+  
+  p {
+    margin: 0;
+    text-align: center;
+    &.toast-title { // Clase opcional para el título
+      font-weight: 600;
+      margin-bottom: 5px;
+    }
+    &.toast-body {
+      font-size: 0.9em;
+      margin-bottom: 10px;
+    }
+    &.toast-question {
+      font-size: 0.9em;
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+  }
+
+  .toast-actions { // Contenedor para los botones del toast
+    display: flex;
+    flex-direction: row;
+    gap: $spacing-sm; // Usa tu variable de espaciado, ej: 8px o 10px
+    width: 80%;
+    justify-content: center;
+
+    .btn { // Estilos específicos para botones DENTRO del toast
+      // Hereda de .btn y .btn-sm si esas clases ya se aplican en el JSX
+      // Si no, copia aquí los paddings y font-size de .btn-sm
+      padding: $spacing-xs $spacing-sm; // Ejemplo: 4px 8px
+      font-size: 0.85em;                 // Ejemplo
+      min-width: 100px; // Un ancho mínimo para que se vean más uniformes
+      justify-content: center; // Para centrar el texto si el botón es más ancho
+
+      // Si quieres que los iconos dentro de estos botones sean más pequeños
+      i {
+        font-size: 1em; // Ajusta según el font-size del botón
+      }
+      
+      // Para mantener los colores específicos (green-btn, btn-secondary)
+      // Esas clases ya deberían aplicar los colores.
+      // Si quieres sobreescribir algo, puedes hacerlo aquí.
+      // Por ejemplo, si .green-btn tiene un padding diferente, y aquí quieres el de .btn-sm
+      // &.green-btn {
+      //    padding: $spacing-xs $spacing-sm; 
+      // }
+    }
+  }
+}
+
+/* --- Tarjeta de Viaje (.trip-card) --- */
+// Refactorizado y Anidado
+.trip-card {
+    background-color: lighten($color-border, 5%); // Usar variable y función (original #f8f9fa)
+    border-radius: $border-radius-lg; // Usar variable (original 20px)
+    padding: $spacing-md $spacing-lg; // Usar variables (original 15px 20px)
+    box-shadow: 0 6px 15px rgba($color-shadow, 0.08); // Usar variable y rgba
+    display: flex;
+    align-items: center;
+    gap: $spacing-md; // Usar variable (original 15px)
+    @include transition-smooth((transform, box-shadow, border-color)); // Usar mixin
+    border: 1px solid $color-border; // Usar variable (original #e2e8f0)
+    position: relative;
+
+    &:hover {
+        // Estado hover
+        transform: translateY(-4px);
+        box-shadow: 0 0px 25px rgba($color-accent-orange, 0.4); // Usar variable y rgba (original #fca400)
+    }
+
+    // --- NUEVO: Estilo para viajes archivados ---
+    &.archived {
+        opacity: 0.65; // Hacerlo más tenue
+        // background-color: lighten($color-border, 8%); // Un fondo ligeramente diferente si quieres
+        border-style: dashed; // O un borde diferente
+
+        &:hover {
+        opacity: 0.85;
+        // transform: none; // Quizás no quieres efecto de hover en archivados
+        // box-shadow: $box-shadow-sm; 
+        }
+
+        // Ocultar algunos botones de acción para viajes archivados
+        .btn-add-expense-card,
+        .btn-edit-trip,
+        .btn-archive-trip { // El botón de archivar no tiene sentido si ya está archivado
+        display: none !important; // Ocultar completamente
+        }
+    }
+
+
+    .trip-icon-container {
+        // Contenedor del icono
+        flex-shrink: 0;
+        width: 55px;
+        height: 55px; // Usar variable
+        border-radius: $border-radius-md; // Usar variable (original 18px)
+        background-color: lighten($color-accent-purple, 20%); // Usar variable y función (original #d1c4e9)
+        @include flex-center; // Usar mixin
+
+        i {
+            font-size: 2.2em;
+            color: darken($color-accent-purple, 15%);
+        }
+
+        // Usar variable y función (original #673ab7)
+        // Color del icono si varía por tipo (gestionado por JS o style inline)
+    }
+
+    .trip-info {
+        // Contenedor de nombre, destino, fechas, presupuesto
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column; // Apilar elementos internos
+        min-width: 0; // Permite que el contenido se trunque con text-ellipsis
+
+        .trip-name-status-line {
+            display: flex;
+            align-items: baseline; // Alinea el texto del nombre y el badge
+            gap: $spacing-sm;      // Espacio entre el nombre y el badge
+            margin-bottom: $spacing-xs / 2; // Pequeño espacio debajo antes del destino
+            flex-wrap: wrap; // Si el nombre es muy largo y el badge no cabe, que el badge pase abajo
+          }
+          // --- FIN NUEVO ---
+      
+        .trip-name {
+            // Tus estilos existentes para .trip-name...
+            // Puede que quieras ajustar el margen si lo tenía, ahora el gap lo maneja
+            margin-bottom: 0; // Quitar margen inferior si lo tenía
+          }
+
+        // Responsive si es necesario
+        @include mobile-only {
+            align-items: center; // Centrar contenido en móvil
+            min-width: auto; // Quitar ancho mínimo
+        }
+    }
+
+    .trip-status-badge {
+        padding: $spacing-xs/2 $spacing-sm/1.5; // Ligeramente más pequeño para ir al lado del texto
+        font-size: 0.7em;         // Un poco más pequeño
+        font-weight: 600;         // Un poco menos de peso si está junto al título
+        color: $color-text-light;  
+        border-radius: $border-radius-sm; // Más pequeño y sutil
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        // display: inline-block; // Ya no es necesario si es hijo directo de un flex container (.trip-name-status-line)
+        // line-height: 1; // Para controlar su altura si es necesario
+    
+        // Colores de fondo según el estado (estos deben coincidir con las clases que genera getTripStatusInfo)
+        &.status-planned { background-color: $color-accent-blue; }
+        &.status-ongoing { background-color: $color-accent-orange; }
+        &.status-completed { background-color: $color-accent-green; }
+        &.status-unknown { background-color: $color-text-muted; }
+        // --- NUEVO: Estilo para badge de archivado ---
+        &.status-archived { // Nueva clase para el estado 'archivado'
+            background-color: $color-text-muted; // Un gris, por ejemplo
+            // color: $color-text-light; // Ya debería serlo
+        }
+      }
+
+    .trip-name {
+        // Nombre del viaje
+        font-size: 1.25em;
+        font-weight: 800;
+        color: $color-text-dark; // Usar variables (original #334)
+        margin: 0 0 2px 0; // Usar variable
+        @include text-ellipsis; // Usar mixin
+
+        // Responsive si es necesario
+        @include mobile-only {
+            font-size: 1.1em;
+        }
+    }
+
+    .trip-destination {
+        // Destino
+        font-size: 0.9em;
+        color: $color-text-muted; // Usar variables (original #718096)
+        margin-bottom: $spacing-xs; // Usar variable (original 5px)
+        @include text-ellipsis; // Usar mixin
+
+        // Responsive si es necesario
+        @include mobile-only {
+            font-size: 0.8em;
+        }
+    }
+
+    .trip-dates {
+        // Fechas
+        font-size: 0.8em;
+        color: $color-text-muted; // Usar variables (original #a0aec0)
+        margin-bottom: $spacing-sm; // Usar variable (original 8px)
+
+        &.dynamic-dates {
+            font-weight: 500; // Un poco más de énfasis si quieres
+            color: $color-accent-blue; // O un color diferente
+        }
+
+        // Responsive si es necesario
+        @include mobile-only {
+            font-size: 0.75em;
+            margin-bottom: $spacing-xs;
+        }
+    }
+
+    .trip-budget-saved {
+        // Presupuesto y ahorrado
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.85em;
+        color: $color-text-dark; // Usar variables (original #4a5568)
+        gap: $spacing-md; // Usar variable (original 15px)
+        margin-bottom: $spacing-xs * 1.5; // Usar variable (original 8px)
+
+        span strong {
+            font-weight: 700;
+        }
+
+        // Responsive si es necesario
+        @include mobile-only {
+            font-size: 0.8em;
+            gap: $spacing-sm;
+        }
+    }
+
+    /* Barra de Progreso */
+    // Estos estilos (.progress-bar-container, .progress-bar) DEBERÍAN estar en un partial común (ej. _components.scss).
+    // Si la barra mini es una variante, sus estilos deberían ir allí.
+    // Aquí solo si hay overrides muy específicos para la barra de progreso de viajes.
+    .trip-progress-bar-container {
+        // Contenedor de la barra (usará estilos base de _components.scss .mini)
+        width: 100%;
+        max-width: 200px; // Usar variable si aplica
+        // height: 8px; background-color: $color-border; border-radius: 4px; overflow: hidden; // Base en partial
+        margin-top: $spacing-xs; // Usar variable (original 5px)
+
+        .trip-progress-bar {
+            // Barra interior (usará estilos base de _components.scss .mini)
+            // height: 100%; width: 0%; border-radius: 4px; transition: width 0.5s ease-out; display: block !important; // Base en partial
+            background-color: $color-accent-orange;
+            /* Naranja claro */
+            // Usar variable
+            /*visibility: visible !important;*/
+            // Base en partial
+        }
+
+        // Puedes añadir estilos .near-complete, .complete si no están en el partial y se usan aquí
+    }
+
+    .trip-saving-suggestion {
+      margin-top: $spacing-xs; // Espacio respecto a la barra de progreso
+      padding-top: $spacing-xs / 2;
+      // border-top: 1px dashed lighten($color-border, 10%); // Opcional: un separador muy sutil
+      
+      small {
+        display: inline-flex; // Alinear icono y texto
+        align-items: center;
+        font-size: 0.8em;       // Tamaño más pequeño
+        font-style: italic;      // Cursiva
+        color: $color-text-muted; // Un color discreto
+        line-height: 1.3;
+
+        i.fa-piggy-bank { // Estilo para el icono de hucha
+           color: $color-accent-green; // O el color que prefieras para ahorro
+           opacity: 0.9;
+        }
+      }
+    }
+
+    .trip-list.archived {
+        background-color: rgba($color-border, 0.1);
+        padding-top: $spacing-md;
+        border-top: 1px dashed $color-border;
+    }
+
+    .trip-actions {
+        // Contenedor de acciones (anidado)
+        display: flex;
+        gap: $spacing-sm; // Usar variable (original 8px)
+        flex-shrink: 0;
+        align-items: center;
+        margin-left: auto; // Empuja a la derecha
+
+        // Responsive si es necesario
+        @include mobile-only {
+            justify-content: center; // Centrar acciones en móvil
+            margin-left: 0; // Quitar margin auto
+            margin-top: $spacing-md; // Espacio arriba
+            padding-top: $spacing-sm; // Padding arriba
+            border-top: 1px solid lighten($color-border, 10%); // Separador
+            gap: $spacing-xs; // Menos espacio
+        }
+    }
+
+    .trip-actions .btn-icon {
+        // Botones icono dentro de acciones (usarán estilos base de _buttons.scss)
+        background-color: lighten($color-accent-blue, 20%); // Usar variable y función (original #e3f2fd)
+        color: darken($color-accent-blue, 10%); // Usar variable y función (original #1e88e5)
+        border-radius: $border-radius-sm; // Usar variable (original 10px)
+        width: 36px;
+        height: 36px; // Usar variable
+        @include flex-center; // Usar mixin
+        font-size: 1em; // Usar variable
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); // Usar variable y rgba
+        @include transition-smooth((background-color, transform)); // Usar mixin
+        padding: 0; // Sin padding interno del botón icono
+
+        &:hover {
+            transform: scale(1.1);
+        }
+
+        .btn-archive-trip {
+        // Puedes darle un color específico si quieres, ej: naranja o gris
+            color: $color-accent-orange;
+            &:hover { color: darken($color-accent-orange, 10%); }
+        }
+        .btn-unarchive-trip {
+        // Puedes darle un color específico si quieres, ej: verde
+            color: $color-accent-green;
+            &:hover { color: darken($color-accent-green, 10%); }
+        }
+
+        // Hover
+
+        // Overrides específicos de color por acción
+        &.btn-view-expenses {
+            background-color: lighten($color-accent-blue, 20%);
+            color: darken($color-accent-blue, 10%);
+        }
+
+        &.btn-view-expenses:hover {
+            box-shadow: 0 0px 25px rgba($color-accent-blue, 0.4);
+        }
+
+        // Sombra hover
+
+        &.btn-edit-trip {
+            background-color: lighten($color-accent-orange, 20%);
+            color: darken($color-accent-orange, 10%);
+        }
+
+        &.btn-edit-trip:hover {
+            box-shadow: 0 0px 25px rgba($color-accent-orange, 0.4);
+        }
+
+        // Sombra hover
+
+        &.btn-delete-trip {
+            background-color: lighten($color-accent-red, 20%);
+            color: darken($color-accent-red, 10%);
+        }
+
+        &.btn-delete-trip:hover {
+            box-shadow: 0 0px 25px rgba($color-accent-red, 0.4);
+        }
+
+        // Sombra hover
+    }
+
+    // Responsive para la tarjeta de viaje individual
+    @include md-up {
+        // En tabletas y más grandes (menos de 768px)
+        // Si quieres que la info esté al lado del icono en tabletas+
+         flex-direction: row; // Poner icono/info/acciones en fila
+         align-items: center;
+         text-align: left; // Alinear texto a la izquierda
+
+         .trip-icon-container { margin: 0; } // Quitar margen auto
+         .trip-info { flex-direction: row; align-items: center; gap: 20px; flex-wrap: wrap; } // Poner info interna en fila
+         .trip-name, .trip-destination, .trip-dates { margin: 0; } // Quitar márgenes internos
+         .trip-budget-saved { flex-direction: column; } // Apilar presupuesto
+         .trip-progress-bar-container { margin: 0; } // Quitar margen
+         .trip-actions { margin-left: auto; margin-top: 0; padding-top: 0; border-top: none; } // Alinear acciones a la derecha
+    }
+
+    @include mobile-only {
+        // En móviles (menos de 600px)
+        flex-direction: column; // Apilar icono/info/acciones
+        align-items: stretch; // Estirar a ancho completo
+        text-align: center; // Centrar texto
+        gap: $spacing-md; // Espacio entre secciones
+
+        .trip-icon-container {
+            margin: 0 auto $spacing-xs auto;
+        }
+
+        // Centrar icono
+        .trip-info {
+            align-items: center;
+            gap: $spacing-xs;
+        }
+
+        // Centrar info y reducir gap
+        .trip-name,
+        .trip-destination,
+        .trip-dates {
+            margin: 0;
+        }
+
+        // Quitar márgenes internos
+        .trip-budget-saved {
+            flex-direction: column;
+            gap: $spacing-xs/2;
+        }
+
+        // Apilar presupuesto
+        .trip-progress-bar-container {
+            max-width: 150px;
+            margin: $spacing-xs auto 0 auto;
+        }
+
+        // Limitar ancho barra
+        .trip-actions {
+            justify-content: center;
+            margin-left: 0;
+            margin-top: $spacing-md;
+            padding-top: $spacing-sm;
+            border-top: 1px solid lighten($color-border, 10%);
+            gap: $spacing-xs;
+        }
+
+        // Centrar acciones, añadir separador
+        .trip-actions .btn-icon {
+            font-size: 0.9em;
+            width: 30px;
+            height: 30px;
+        }
+
+        // Reducir tamaño botones
+    }
+}
+
+
+/* --- Estilos Vista Detalle Viaje (.trip-detail-header, etc.) --- */
+// Refactorizado y con Variables/Responsividad
+.trip-detail-header {
+    background-color: lighten($color-primary-blue, 15%); // Usar variable y función (original #e8efff)
+    padding: $spacing-lg; // Usar variable (original 20px)
+    border-radius: $border-radius-md; // Usar variable (original 15px)
+    margin-bottom: $spacing-xl; // Usar variable (original 25px)
+    text-align: center;
+
+    h2 {
+        margin: 0 0 $spacing-xs 0;
+        font-size: 1.6em;
+        color: $color-text-dark;
+        font-weight: 800;
+    }
+
+    // Usar variables
+    p {
+        margin: 0 0 $spacing-md 0;
+        color: $color-text-muted;
+        font-size: 0.95em;
+    }
+
+    .trip-budget-chart-container {
+    margin-top: $spacing-lg; // Espacio respecto a los elementos anteriores
+    padding-top: $spacing-md;
+    // border-top: 1px solid lighten($color-border, 5%); // Opcional: separador
+    margin-bottom: $spacing-md; // Espacio antes de las notas o la tabla de gastos
+
+    h4 { // Si decides añadir un título aquí en lugar del título del plugin de Chart.js
+      text-align: center;
+      font-size: 1.1em;
+      color: $color-text-dark;
+      margin-bottom: $spacing-sm;
+      font-weight: 600;
+    }
+  }
+
+    .trip-detail-notes {
+    margin-top: $spacing-md; // Espacio respecto al resumen financiero
+    padding-top: $spacing-md;
+    border-top: 1px solid lighten($color-border, 5%); // Un separador ligero
+    text-align: left; // Alinear texto a la izquierda (o centro si prefieres)
+    font-size: 0.9em;
+    color: $color-text-muted;
+
+    h4 {
+      font-size: 1em; // Relativo al 0.9em del padre
+      color: $color-text-dark;
+      margin-bottom: $spacing-xs;
+      font-weight: 600;
+    }
+
+    p {
+      margin: 0;
+      white-space: pre-wrap; // Para respetar saltos de línea y espacios en las notas
+      line-height: 1.5;
+    }
+  }
+
+    // Usar variables
+
+    .detail-summary {
+        // Resumen de detalle (presupuesto, gastos, restante)
+        display: flex;
+        justify-content: center;
+        gap: $spacing-xl;
+        flex-wrap: wrap; // Usar variables
+        font-size: 0.9em; // Usar variable
+
+        div {
+            color: $color-text-dark;
+        }
+
+        // Usar variable (original #4a5568)
+        span {
+            color: $color-text-muted;
+            margin-right: $spacing-xs/2;
+        }
+
+        // Usar variables
+        strong {
+            font-weight: 800;
+            color: $color-text-dark;
+            font-size: 1.1em;
+        }
+
+        // Usar variables
+        #detailTripRemaining.negative {
+            color: $color-accent-red;
+        }
+
+        // Usar variable
+        #detailTripRemaining.positive {
+            color: $color-accent-green;
+        }
+
+        // Usar variable
+
+        // Responsive para el resumen de detalle
+        @include mobile-only {
+            gap: $spacing-md;
+            font-size: 0.85em;
+        }
+
+        // Ajustar espacio y fuente
+    }
+}
+
+.detail-actions-header {
+    // Contenedor de acciones en detalle (botón añadir gasto)
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: $spacing-lg; // Usar variable (original 20px)
+
+    // Botón añadir gasto (.btn-add) usará estilos base de _buttons.scss
+    // Si tiene estilos específicos aquí, anidarlos
+    // .btn-add { ... } // Overrides
+
+    // Responsive para las acciones de detalle
+    @include mobile-only {
+        flex-direction: column; // Apilar
+        gap: $spacing-sm; // Espacio
+        align-items: stretch; // Estirar
+        // .btn-add { width: 100%; box-sizing: border-box; } // Botón ancho completo
+    }
+}
+
+
+/* Tabla de Gastos (Anidada si está dentro de la vista detalle) */
+// Estos estilos base (.expenses-table y sus elementos internos) DEBERÍAN estar en un partial común (_tables.scss).
+// Aquí solo refactorizamos los overrides específicos y sus contenidos.
+#tripExpensesTableWrapper {
+    overflow-x: auto;
+}
+
+// Wrapper para scroll horizontal (puede estar en _tables.scss)
+
+.expenses-table {
+    // La tabla de gastos (usará estilos base de _tables.scss)
+     width: 100%; border-collapse: collapse; font-size: 0.95em; // Base en partial
+     background-color: $color-panel-bg; border-radius: $border-radius-md; box-shadow: $box-shadow-sm; overflow: hidden; // Base en partial
+
+    th,
+    td {
+        // Celdas (usarán estilos base de _tables.scss)
+         padding: 10px 12px; text-align: left; border-bottom: 1px solid lighten($color-border, 5%); // Base en partial
+    }
+
+    thead th {
+        // Encabezados (usarán estilos base de _tables.scss)
+         background-color: lighten($color-border, 5%); font-weight: 700; color: $color-text-dark; font-size: 0.9em; text-transform: uppercase; // Base en partial
+    }
+
+    tbody tr:hover {
+        // Fila hover (usará estilos base de _tables.scss)
+        background-color: lighten($color-border, 10%); // Base en partial
+    }
+
+    /* Estilos de elementos internos de las celdas (.expenses-table td ...) */
+    td {
+
+        // Anidar selectores dentro de td si son específicos de esta tabla
+        .amount-col {
+            // Celda de importe (gastos)
+            text-align: right; // Usar variable si aplica
+            font-weight: 700; // Usar variable
+            color: $color-accent-red; // Gastos en rojo (usar variable)
+        }
+
+        .actions-col {
+            // Celda de acciones
+            text-align: right; // Usar variable si aplica
+        }
+
+        .actions-col .btn-icon {
+            // Botones icono dentro de acciones (usarán estilos base de _buttons.scss)
+            font-size: 0.9em; // Usar variable
+            color: $color-text-muted; // Usar variable (original #a0aec0)
+            padding: 3px; // Usar variable
+            margin-left: $spacing-xs; // Usar variable (original 5px)
+            @include transition-smooth((color, transform)); // Usar mixin
+
+            &:hover {
+                color: $color-accent-purple;
+            }
+
+            // Usar variable (original #8a82d5)
+            &.btn-delete-expense:hover {
+                color: $color-accent-red;
+            }
+
+            // Usar variable (original #f56565)
+        }
+    }
+
+    // Responsive para la tabla de gastos
+    @include md-up {
+        // En tabletas
+        // Ajustes de columnas si es necesario mostrar/ocultar
+         th:nth-child(3), td:nth-child(3) { display: none; } // Ocultar categoría?
+    }
+
+    @include mobile-only {
+
+        // En móviles
+        // Ajustes generales de celdas/texto si es necesario
+        th,
+        td {
+            padding: $spacing-xs $spacing-sm;
+            font-size: 0.85em;
+        }
+
+        // Ajustar padding/fuente
+        // Ocultar columnas menos importantes
+        th:nth-child(3), td:nth-child(3) { display: none; } // Ocultar Categoría
+        th:nth-child(4), td:nth-child(4) { display: none; } // Ocultar Fecha
+        // .amount-col { white-space: nowrap; } // Evitar que importe se rompa
+        .actions-col .btn-icon {
+            font-size: 0.8em;
+            padding: 2px;
+            margin-left: $spacing-xs/2;
+        }
+
+        // Ajustar botones
+    }
+}
+
+
+/* --- Mensaje de Lista Vacía Pequeño (.small-empty) --- */
+// Este estilo DEBERÍA ser una variante (.small-empty) del componente .empty-list-message en _components.scss.
+
+    .small-empty {
+        font-size: 0.9em; // Usar variable
+        padding: $spacing-lg; // Usar variable (original 20px)
+        background: none;
+        box-shadow: none;
+        margin-top: $spacing-sm; // Usar variable (original 10px)
+    }
+    
+
+
+/* --- Resumen Footer Lista (.summary-footer) --- */
+// Este estilo base DEBERÍA estar en _layout.scss o _components.scss.
+// Aquí solo refactorizamos los overrides y el contenido de .summary-box.
+.summary-footer {
+    // Contenedor del resumen footer (usará estilos base de _layout.scss o _components.scss)
+     display: flex; flex-wrap: wrap; justify-content: space-between; // Base en partial (original era flex)
+     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); // Base en partial (si lo hiciste grid)
+     gap: $spacing-md; // Usar variable
+     margin-top: $spacing-xxxl; // Usar variable
+     padding-top: $spacing-lg; // Usar variable
+     border-top: 1px solid $color-border; // Usar variable
+
+    .summary-box {
+        // Caja de resumen individual (usará estilos base de .panel o _components.scss .summary-box)
+        // background-color: $color-panel-bg; border-radius: $border-radius-lg; padding: $spacing-md $spacing-lg; text-align: center; box-shadow: $box-shadow-sm; // Base en partial
+        flex-grow: 1; // Para layout flexbox
+        max-width: 32%; // Ajusta este porcentaje según necesites para 3 columnas en flex (o elimina si usas grid)
+        box-sizing: border-box;
+
+        // Colores de borde según tipo (Viajes)
+        &.blue {
+            background-color: lighten($color-accent-blue, 20%);
+            border-left: 5px solid $color-accent-blue;
+        }
+
+        &.purple {
+            background-color: lighten($color-accent-purple, 20%);
+            border-left: 5px solid $color-accent-purple;
+        }
+
+        &.orange {
+            background-color: lighten($color-accent-orange, 20%);
+            border-left: 5px solid $color-accent-orange;
+        }
+
+        // .summary-label { ... } // Base en partial
+        // strong { ... } // Base en partial
+        // strong.positive { ... } strong.negative { ... } // Base en partial
+        // small { ... } // Base en partial
+    }
+
+    // Responsive para el summary footer
+    // Los ajustes de grid-template-columns, gap, padding, strong font-size en media queries
+    // DEBERÍAN estar en los estilos base de .summary-footer y .summary-box en los partials.
+    /*
+        @include md-up { ... } // Si applies a .summary-footer en partial
+        @include mobile-only { ... } // Si applies a .summary-footer en partial
+        */
+}

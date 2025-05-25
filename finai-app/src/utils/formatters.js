@@ -131,3 +131,16 @@ export const timeAgo = (timestamp) => {
     if (diffInDays < 7) return `hace ${diffInDays} días`;
     return past.toLocaleDateString('es-ES'); // Formato fecha si es más antiguo
   };
+
+  export const getTripStatusInfo = (status) => {
+    switch (status) {
+        case 'planificado':
+            return { text: 'Planificado', className: 'status-planned' };
+        case 'en curso':
+            return { text: 'En Curso', className: 'status-ongoing' };
+        case 'finalizado':
+            return { text: 'Finalizado', className: 'status-completed' };
+        default:
+            return { text: status || 'Desconocido', className: 'status-unknown' };
+    }
+};

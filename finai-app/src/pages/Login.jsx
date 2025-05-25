@@ -6,6 +6,7 @@ Propósito: Componente para la página de inicio de sesión y registro,
 import React, { useState, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../services/supabaseClient';
+import '../styles/Login.scss';
 import toast from 'react-hot-toast'; // Importar toast
 
 // Importa la imagen de la mascota/logo desde la carpeta de assets

@@ -1,0 +1,263 @@
+// Refactorizado y con Variables/Responsividad
+.filter-bar {
+    display: flex;
+    flex-wrap: wrap; // Para que caigan en pantallas pequeñas
+    gap: $spacing-sm; // Usar variable (original 10px)
+    margin-bottom: $spacing-xl; // Usar variable (original 25px)
+    padding: $spacing-md; // Usar variable (original 15px)
+    background-color: lighten($color-primary-blue, 10%); // Usar variable y función (original $primary-blue)
+    border-radius: $border-radius-md; // Usar variable (original 15px)
+    box-shadow: $box-shadow-sm; // Usar variable
+
+
+    .filter-select {
+        // Selectores de filtro
+        padding: $spacing-xs * 1.5 $spacing-sm; // Usar variables (original 8px 12px)
+        border: 1px solid $color-border; // Usar variable (original #ccc)
+        border-radius: $border-radius-sm; // Usar variable (original 10px)
+        font-size: 0.9em; // Usar variable
+        background-color: $color-panel-bg; // Usar variable (original #f8f9fa)
+        flex-grow: 1; // Ocupan espacio disponible
+        min-width: 120px; // Usar variable si aplica
+        cursor: pointer;
+        @include transition_smooth((border-color, box-shadow, background-color)); // Usar mixin
+
+        &:focus {
+            border-color: $color-accent-purple; // Usar variable
+            box-shadow: 0 0 0 2px rgba($color-accent-purple, 0.2);
+            outline: none;
+        }
+
+        // Estilos select con flecha ya en _forms.scss o _modals.scss
+    }
+
+    .btn-filter {
+        // Botón de filtro (usará estilos base de _buttons.scss)
+        padding: $spacing-xs * 1.5 $spacing-md; // Usar variables (original 8px 15px)
+        font-size: 0.9em; // Usar variable
+        flex-shrink: 0; // Evita que se encoja
+        // Los colores y hover ya en _buttons.scss
+    }
+
+    // Responsive para la barra de filtros
+    @include md-up {
+        // En tabletas (menos de 768px)
+        // Ajustes específicos si es necesario
+    }
+
+    @include mobile-only {
+        // En móviles (menos de 600px)
+        flex-direction: column; // Apilar filtros
+        align-items: stretch; // Estirar a ancho completo
+        gap: $spacing-sm; // Menos espacio
+        padding: $spacing-sm; // Menos padding
+
+        .filter-select,
+        .btn-filter {
+            width: 100%; // Ocupan todo el ancho
+            min-width: auto; // Quitar ancho mínimo
+            margin-left: 0; // Asegurar sin margen izquierdo
+        }
+    }
+}
+
+
+/* --- Tabla de Transacciones (.table-container, .transactions-table) --- */
+// Estos estilos base (.table-container, .data-table, th, td, etc.) DEBERÍAN estar en un partial común (ej. _tables.scss).
+// Aquí solo refactorizamos los overrides específicos y sus contenidos.
+.table-container {
+    // Contenedor de la tabla (usará estilos base de _tables.scss)
+    // background-color: $color-panel-bg; // Base en partial
+    border-radius: $border-radius-md; // Usar variable (original 15px)
+    box-shadow: 0 6px 15px rgba($color-shadow, 0.07); // Usar variable y rgba
+    overflow-x: auto; // Scroll horizontal
+    padding: $spacing-sm 0; // Usar variable (original 10px 0)
+    // Quitar el background-color: $primary-blue; que estaba antes si _layout maneja el fondo general
+}
+
+.transactions-table {
+    // La tabla en sí (usará estilos base de _tables.scss)
+     width: 100%; border-collapse: collapse; font-size: 0.95em; // Base en partial
+
+    th,
+    td {
+        // Celdas (usarán estilos base de _tables.scss)
+         padding: 12px 15px; text-align: left; border-bottom: 1px solid #e8e8e8; white-space: nowrap; // Base en partial
+    }
+
+    thead th {
+        // Encabezados de columna (usarán estilos base de _tables.scss)
+         background-color: $color-panel-bg; font-weight: 700; color: $color-text-dark; position: sticky; top: 0; // Base en partial
+    }
+
+    tbody tr:hover {
+        // Fila al pasar el ratón (usará estilos base de _tables.scss)
+         background-color: lighten($color-border, 5%); // Base en partial
+    }
+
+    /* Estilos de elementos internos de las celdas de la tabla (.transactions-table td ...) */
+    td {
+
+        // Anidar selectores dentro de td si son específicos de la tabla
+        .btn-icon {
+            // Botones icono dentro de las celdas (usarán estilos base de _buttons.scss)
+            font-size: 1.1em; // Usar variable
+            color: $color-text-muted; // Usar variable (original #aaa)
+            padding: $spacing-xs/2 $spacing-xs; // Usar variables (original 2px 4px)
+            @include transition_smooth((color, transform)); // Usar mixin
+
+            &:hover {
+                color: $color-accent-purple;
+            }
+
+            // Usar variable (original #8a82d5)
+            &.btn-delete:hover {
+                color: $color-accent-red;
+            }
+
+            // Usar variable (original #e74c3c)
+        }
+
+        .trans-cat {
+            // Icono y nombre de categoría
+            display: flex;
+            align-items: center;
+            gap: $spacing-sm; // Usar variable (original 8px)
+
+            i {
+                font-size: 1.2em;
+                width: 20px;
+                text-align: center;
+                opacity: 0.7;
+                color: $color-accent-purple;
+            }
+
+            // Usar variables (color base)
+        }
+
+        .trans-acc {
+            // Nombre de cuenta (itálica)
+            font-style: italic;
+            color: $color-text-dark; // Usar variable (original #555)
+            font-size: 0.9em; // Usar variable
+        }
+
+        .amount-col {
+            // Celda de importe (texto alineado a la derecha)
+            text-align: right !important; // Forzar alineación
+            font-weight: 700; // Usar variable
+            // Color definido por clase .income/.expense/.transfer
+        }
+
+        .trans-amount.income {
+            color: $color-accent-green;
+        }
+
+        // Usar variable
+        .trans-amount.expense {
+            color: $color-accent-red;
+        }
+
+        // Usar variable
+        .trans-amount.transfer {
+            color: $color-text-muted;
+        }
+
+        // Usar variable
+
+
+        // Responsive para elementos dentro de celdas si es necesario
+        @include mobile-only {
+            .btn-icon {
+                font-size: 1em;
+                padding: $spacing-xs/2;
+            }
+
+            // Ajustar tamaño botones
+            .trans-cat {
+                gap: $spacing-xs;
+
+                i {
+                    font-size: 1em;
+                    width: 15px;
+                }
+            }
+
+            // Ajustar categoría
+            .trans-acc {
+                font-size: 0.85em;
+            }
+
+            // Ajustar cuenta
+        }
+    }
+
+
+    // Responsive para la tabla
+    // Los ajustes generales de padding, font-size, white-space, etc. en media queries
+    // DEBERÍAN estar en los estilos base de tabla en _tables.scss.
+    // Aquí solo anidamos si hay ajustes específicos de la tabla de transacciones.
+
+    @include md-up {
+        // En tabletas (menos de 768px)
+        // Ajustes específicos de columnas si es necesario mostrar/ocultar
+         th:nth-child(3), td:nth-child(3) { display: none; } // Ocultar categoría
+    }
+
+    @include mobile-only {
+        // En móviles (menos de 600px)
+        // Ajustes específicos de columnas si es necesario mostrar/ocultar
+         th:nth-child(3), td:nth-child(3), // Ocultar Categoría
+         th:nth-child(4), td:nth-child(4) // Ocultar Cuenta
+         { display: none; }
+         th:nth-child(5), td:nth-child(5) { text-align: left !important; } // Alinear fecha a la izquierda
+         .amount-col { white-space: nowrap; } // Asegurar que el importe no se rompa
+    }
+}
+// Responsive para el modal si necesita ajustes (DEBERÍA estar en _modals.scss)
+
+@include mobile-only {
+
+    // Ajustes para pantallas pequeñas (menos de 600px)
+    .modal-content {
+        padding: $spacing-lg; // Ajustar padding (original 20px)
+        // Puedes añadir otros ajustes específicos para el modal aquí si son necesarios en móvil
+        max-width: 95%; // Ocupar más ancho en móvil
+        border-radius: $border-radius-md; // Menos redondeado
+    }
+}
+
+
+// Responsive General (Movida y Anidada)
+// @media (max-width: 768px) { ... } // Se convierte en @include md-up
+
+@include md-up {
+
+    // Ajustes para tabletas y pantallas medianas (menos de 768px)
+    // Estos ajustes aplican a elementos generales del layout
+    .page-container {
+         max-width: 95%; // Ajustar ancho máximo del contenedor de página
+         padding: $spacing-xl $spacing-xxl; // Ajustar padding si es diferente al base
+    }
+
+    .page-header h1 { font-size: 1.6em; } // Ajustar tamaño del título de cabecera
+}
+
+// @media (max-width: 600px) { ... } // Se convierte en @include mobile-only
+
+@include mobile-only {
+
+    // Ajustes para móviles (menos de 600px)
+    // Estos ajustes aplican a elementos generales del layout
+    body { padding-top: 0; padding-bottom: 0; } // Eliminar padding vertical del body
+    .page-container {
+        max-width: 100%; // Ocupar todo el ancho
+        border-radius: 0; // Eliminar border-radius
+        padding: $spacing-md; // Ajustar padding (original 15px)
+        min-height: 100vh; // Asegurar altura mínima
+    }
+
+    .page-header h1 {
+        font-size: 1.5em; // Ajustar tamaño del título de cabecera
+    }
+}

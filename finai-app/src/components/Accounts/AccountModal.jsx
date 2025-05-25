@@ -1,13 +1,23 @@
 import React, { useState, useEffect } from 'react';
 
+const TARGET_BALANCE_ACCOUNT_TYPES = ['ahorro', 'ahorro_colchon', 'viajes', 'inversion'];
+
 // El componente recibe el estado y los manejadores como props
-function AccountModal({ isOpen, onClose, onSubmit, mode = 'add', initialData = null, isSaving = false, error = '' }) {
+function AccountModal({ 
+  isOpen, 
+  onClose, 
+  onSubmit, 
+  mode = 'add', 
+  initialData = null, 
+  isSaving = false, 
+  error = '' }) {
   const [formData, setFormData] = useState({
     accountName: '',
     accountBank: '',
     accountType: '',
     accountBalance: '0.00', // Solo relevante para 'add'
     accountCurrency: 'EUR',
+    target_balance: '',
   });
   const [localError, setLocalError] = useState('');
 
@@ -22,11 +32,18 @@ function AccountModal({ isOpen, onClose, onSubmit, mode = 'add', initialData = n
           accountType: initialData.type || '',
           accountBalance: '0.00', // No editable en edit
           accountCurrency: initialData.currency || 'EUR',
+          target_balance: initialData.target_balance !== null && initialData.target_balance !== undefined 
+                                    ? String(initialData.target_balance) // Convertir a string para el input
+                                    : '', // Si es null o undefined, dejar vacío
         });
       } else { // Modo 'add' o sin initialData
         setFormData({
-          accountName: '', accountBank: '', accountType: '',
-          accountBalance: '0.00', accountCurrency: 'EUR',
+          accountName: '', 
+          accountBank: '', 
+          accountType: '',
+          accountBalance: '0.00', 
+          accountCurrency: 'EUR',
+          target_balance: '',
         });
       }
     } else {
@@ -48,20 +65,37 @@ function AccountModal({ isOpen, onClose, onSubmit, mode = 'add', initialData = n
     if (!formData.accountName || !formData.accountType || !formData.accountCurrency || formData.accountCurrency.length !== 3) {
       setLocalError('Nombre, Tipo y Moneda (3 letras, ej: EUR) son obligatorios.'); return;
     }
-    if (mode === 'add' && (isNaN(parseFloat(formData.accountBalance)) || formData.accountBalance === '')) {
-       if (formData.accountBalance !== '0' && formData.accountBalance !== '0.00') {
-          setLocalError('El saldo inicial debe ser un número válido (puede ser 0).'); return;
-       }
+    const initialBalance = parseFloat(formData.accountBalance) || 0;
+    if (mode === 'add' && isNaN(initialBalance)) {
+      if (formData.accountBalance !== '0' && formData.accountBalance !== '0.00' && formData.accountBalance !== '') { // Permitir vacío si es opcional
+        setLocalError('El saldo inicial debe ser un número válido (puede ser 0 o vacío).'); return;
+      }
     }
+
+    let targetBalanceValue = null; // Por defecto null para la BD si no se introduce o no aplica
+    if (TARGET_BALANCE_ACCOUNT_TYPES.includes(formData.accountType) && formData.target_balance.trim() !== '') {
+      const parsedTarget = parseFloat(formData.target_balance);
+      if (isNaN(parsedTarget) || parsedTarget < 0) {
+        setLocalError('El Saldo Objetivo debe ser un número positivo o cero.'); return;
+      }
+      targetBalanceValue = parsedTarget;
+    }
+
     setLocalError('');
-    // Llama a la función onSubmit pasada desde Accounts.jsx
-    onSubmit(formData);
+        // Enviar el formData completo, incluyendo target_balance procesado
+    onSubmit({ 
+        ...formData,
+        target_balance: targetBalanceValue // Enviar el valor numérico o null
+    });
   };
 
   // No renderizar nada si el modal no está abierto
   if (!isOpen) {
     return null;
   }
+
+  // Determinar si se debe mostrar el campo de Saldo Objetivo
+    const showTargetBalanceField = TARGET_BALANCE_ACCOUNT_TYPES.includes(formData.accountType);
 
   // Renderizado del JSX del modal (similar al que tenías en Accounts.jsx)
   return (
@@ -83,7 +117,6 @@ function AccountModal({ isOpen, onClose, onSubmit, mode = 'add', initialData = n
             <label htmlFor="modalAccountType">Tipo</label>
             <select id="modalAccountType" name="accountType" required value={formData.accountType} onChange={handleInputChange} disabled={isSaving}>
               <option value="" disabled>Selecciona...</option>
-              <option value="nomina">Nómina</option>
               <option value="corriente">Corriente</option>
               <option value="ahorro">Ahorro</option>
               <option value="ahorro_colchon">Ahorro Colchón</option>
@@ -100,6 +133,24 @@ function AccountModal({ isOpen, onClose, onSubmit, mode = 'add', initialData = n
               <label htmlFor="modalAccountBalance">Saldo Inicial</label>
               <input type="number" id="modalAccountBalance" name="accountBalance" required step="0.01" value={formData.accountBalance} onChange={handleInputChange} disabled={isSaving} />
               <small>Saldo actual al crear.</small>
+            </div>
+          )}
+
+          {showTargetBalanceField && (
+            <div className="input-group">
+              <label htmlFor="modalTargetBalance">Saldo Objetivo (Opcional)</label>
+              <input 
+                type="number" 
+                id="modalTargetBalance" 
+                name="target_balance" 
+                step="0.01" 
+                min="0" 
+                placeholder="Ej: 1000"
+                value={formData.target_balance} 
+                onChange={handleInputChange} 
+                disabled={isSaving} 
+              />
+                <small>Define un saldo que te gustaría alcanzar para esta cuenta.</small>
             </div>
           )}
 

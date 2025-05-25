@@ -1,0 +1,388 @@
+
+
+/* --- Grid Lista de Metas (.goal-list-grid) --- */
+// Refactorizado y con Responsividad
+.goal-list-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); // Base
+    gap: $spacing-xl; // Usar variable
+
+    // Media Queries anidadas para ajustar el grid
+    @include md-up {
+        // En tabletas o más grandes
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); // Ajustar min-width
+        gap: $spacing-xl;
+    }
+
+    @include mobile-only {
+        // En móviles pequeños
+        grid-template-columns: 1fr; // Una columna
+        gap: $spacing-md; // Menos espacio
+    }
+}
+
+/* --- Tarjeta de Meta (.goal-card) --- */
+// Refactorizado y Anidado
+.goal-card {
+    background-color: $color-panel-bg; // Usar variable
+    border-radius: $border-radius-lg; // Usar variable
+    padding: $spacing-xl; // Usar variable
+    box-shadow: 0 6px 15px rgba($color-shadow, 0.07); // Usar variable y rgba
+    display: flex;
+    flex-direction: column;
+    @include transition-smooth((transform, box-shadow)); // Usar mixin
+    position: relative;
+    /* Para acciones o badges */
+
+    &:hover {
+        // Estado hover
+        transform: translateY(-5px);
+        box-shadow: 0 0px 25px rgba($color-accent-orange, 0.4); // Usar variable y rgba
+        // Puedes añadir un borde de color al pasar el ratón
+        // border-color: $color-accent-orange;
+    }
+
+
+    .card-header {
+        // Encabezado de la tarjeta
+        display: flex;
+        align-items: flex-start; // Alinear icono arriba con texto
+        gap: $spacing-md; // Usar variable
+        margin-bottom: $spacing-md; // Usar variable
+        // Si tiene separador: border-bottom: 1px solid $color-border; padding-bottom: $spacing-sm;
+    }
+
+    .goal-icon {
+        // Icono de la meta
+        font-size: 1.5em;
+        color: $color-accent-purple; // Color base (puede venir de JS)
+        line-height: 1; // Ajustar línea para icono
+        flex-shrink: 0;
+        width: 20px; // Ancho fijo si necesitas alinear
+        height: 20px;
+
+        // Color del icono si varía por tipo de meta (gestionado por JS o style inline)
+    }
+
+    .header-text {
+        // Contenedor de nombre y fecha objetivo
+        flex-grow: 1;
+        @include text-ellipsis; // Aplicar a este contenedor si quieres truncar nombre largo
+    }
+
+    .goal-name {
+        // Nombre de la meta
+        margin: 0 0 $spacing-xs 0; // Usar variables
+        font-size: 1.3em;
+        font-weight: 800;
+        color: $color-text-dark; // Usar variable
+        @include text-ellipsis; // Usar mixin si el nombre puede ser muy largo
+    }
+
+    .goal-target-date {
+        // Fecha objetivo
+        font-size: 0.85em; // Usar variable
+        color: $color-text-muted; // Usar variable
+        margin: 0;
+    }
+
+
+    .card-body {
+        // Cuerpo de la tarjeta
+        flex-grow: 1;
+        margin-bottom: $spacing-md; // Usar variable
+    
+        .saving-suggestion-text {
+            margin-top: $spacing-sm; // Espacio respecto al "Restante" o la barra
+            text-align: center; // O left, según prefieras
+            
+            small {
+                font-size: 0.8em;
+                color: $color-text-muted; // Un color discreto
+                font-style: italic;
+                display: inline-flex; // Para alinear icono y texto
+                align-items: center;
+
+                //i.fa-lightbulb {
+                // El color se aplica inline, pero puedes añadir más estilos aquí si es necesario
+                // font-size: 1.1em; // Si quieres el icono un poco más grande que el texto
+                //))}
+            }
+    }
+
+
+    }
+
+    .goal-amounts {
+        // Contenedor de montos (Ahorrado / Objetivo)
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: $spacing-md; // Usar variable
+        font-size: 0.9em; // Usar variable
+        flex-wrap: wrap;
+        /* Para móvil */
+        gap: $spacing-sm; // Usar variable
+        color: $color-text-dark; // Color base para el texto de montos (etiquetas)
+
+        .amount-pair {
+            // Cada par Etiqueta/Monto
+            display: flex;
+            flex-direction: column; // Apilar etiqueta y monto
+            // align-items: flex-end; // Alinear a la derecha si quieres los montos apilados a la derecha
+        }
+
+        .amount-pair .label {
+            // Etiqueta (Ahorrado:, Objetivo:)
+            color: $color-text-muted; // Usar variable
+            font-size: 0.9em; // Usar variable
+            margin-bottom: $spacing-xs/2; // Usar variable
+        }
+
+        .amount {
+            // Valor del monto
+            font-weight: 700;
+            font-size: 1.1em; // Usar variable
+        }
+
+        .amount-pair .target {
+            color: $color-text-dark;
+        }
+
+        // Objetivo (color normal)
+        .amount-pair .current {
+            color: $color-accent-green;
+        }
+
+        // Ahorrado (verde)
+
+        // Responsive para los montos (flex-wrap ya ayuda, ajustar si es necesario)
+        @include mobile-only {
+            // Ajustes si es necesario
+        }
+    }
+
+    /* Barra de Progreso */
+    .progress-bar-container {
+        // Contenedor de la barra (usar estilos de _components.scss si aplica)
+        //height: 100%;
+        width: 100%;
+        height: $spacing-sm * 1.5; // Grosor barra (usar variable)
+        background-color: $color-border; // Fondo gris claro (usar variable)
+        border-radius: $border-radius-sm; // Bordes redondeados (usar variable)
+        overflow: hidden;
+        margin-top: $spacing-sm; // Usar variable
+        position: relative; // Para el porcentaje
+    }
+
+    .progress-bar {
+        // Barra de progreso interior (usar estilos de _components.scss si aplica)
+        height: 100%;
+        width: 0%;
+        /* Ajustado por JS */
+        background-color: $color-accent-green; // Color verde por defecto (ajustado por JS o clase)
+        border-radius: $border-radius-sm;
+        transition: width $transition-speed-slow $transition-ease, background-color $transition-speed-slow $transition-ease;
+        display: block;
+        // Colores barra según porcentaje (Gestionado por JS añadiendo clases o estilos inline)
+        // &.medium { background-color: $color-accent-yellow; }
+        // &.high { background-color: $color-accent-red; }
+        // &.complete { background-color: $color-accent-purple; }
+    }
+
+    .progress-percentage {
+        // Porcentaje superpuesto
+        position: absolute;
+        right: $spacing-sm; // Usar variable
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 0.75em; // Usar variable
+        font-weight: 600; // Usar variable
+        color: rgba($color-text-dark, 0.5); // Color por defecto (oscuro semitransparente)
+        transition: color $transition-speed-fast $transition-ease;
+    }
+
+    // Color blanco si la barra es oscura y está avanzada (gestionado por JS añadiendo clase)
+    /*
+    .progress-bar.medium + &,
+    .progress-bar.high + &,
+    .progress-bar.complete + & { color: rgba($color-text-light, 0.9); }
+    */
+
+
+    .amount-remaining {
+        // Texto de restante/completado
+        text-align: center;
+        margin-top: $spacing-sm; // Usar variable
+        font-weight: 700;
+        font-size: 0.9em; // Usar variable
+        color: $color-text-muted; // Color base (gris)
+
+        &.positive {
+            color: $color-text-muted;
+        }
+
+        // Gris si falta
+        &.negative {
+            color: $color-accent-red;
+        }
+
+        // No debería ser negativo, pero por si acaso
+        &.complete {
+            color: $color-accent-green;
+            font-weight: bold;
+        }
+
+        // Verde y negrita si completado
+    }
+
+
+    .card-actions {
+        // Contenedor de acciones
+        display: flex;
+        justify-content: flex-end;
+        gap: $spacing-sm; // Usar variable
+        padding-top: $spacing-md; // Usar variable
+        border-top: 1px solid $color-border; // Usar variable
+
+        .btn-icon {
+            // Botones icono dentro de acciones (usarán estilos de _buttons.scss)
+            font-size: 1.1em; // Usar variable
+            color: $color-text-muted; // Usar variable
+            padding: $spacing-xs; // Usar variable
+            @include transition-smooth((color, transform)); // Usar mixin
+
+            &:hover {
+                color: $color-accent-purple;
+            }
+
+            // Usar variable
+            &.btn-delete:hover {
+                color: $color-accent-red;
+            }
+
+            // Usar variable
+            &.btn-edit:hover {
+                color: $color-accent-purple;
+            }
+
+            // Usar variable (si editar es morado)
+            &.btn-add-savings {
+                color: $color-accent-green;
+            }
+
+            // Color específico para añadir ahorro
+            &.btn-add-savings:hover {
+                color: darken($color-accent-green, 10%);
+            }
+
+            // Usar variable y función
+        }
+    }
+
+    // Responsive para la tarjeta de meta individual
+    @include mobile-only {
+        // En pantallas pequeñas
+        padding: $spacing-md; // Menos padding
+
+        .card-header {
+            gap: $spacing-sm;
+            margin-bottom: $spacing-sm;
+        }
+
+        .goal-icon {
+            font-size: 2em;
+            width: 30px;
+        }
+
+        // Ajustar tamaño icono
+        .goal-name {
+            font-size: 1.1em;
+        }
+
+        // Nombre más pequeño
+        .goal-target-date {
+            font-size: 0.8em;
+        }
+
+        // Fecha más pequeña
+        .card-body {
+            margin-bottom: $spacing-md;
+        }
+
+        .goal-amounts {
+            font-size: 0.85em;
+            gap: $spacing-xs;
+        }
+
+        // Ajustar montos
+        .amount-pair .amount {
+            font-size: 1em;
+        }
+
+        // Ajustar valor monto
+        .progress-bar-container {
+            height: $spacing-sm;
+        }
+
+        // Ajustar grosor barra
+        .progress-bar {
+            border-radius: $border-radius-sm;
+        }
+
+        // Ajustar border-radius de barra
+        .progress-percentage {
+            font-size: 0.7em;
+            right: $spacing-xs/2;
+        }
+
+        // Ajustar porcentaje
+        .amount-remaining {
+            margin-top: $spacing-xs;
+            font-size: 0.8em;
+        }
+
+        // Ajustar texto restante
+        .card-actions {
+            padding-top: $spacing-sm;
+            gap: $spacing-xs;
+        }
+
+        .card-actions .btn-icon {
+            font-size: 1em;
+            padding: $spacing-xs/2;
+        }
+
+        // Iconos más pequeños
+    }
+}
+
+
+// Estilos para el Modal Añadir Ahorro (#addSavingsForm)
+// Si estos estilos son genéricos de modales, muévelos a _modals.scss.
+// Si son específicos de este modal, refactorízalos y anídalos.
+#addSavingsForm {
+    // Anidado si es específico
+    // ... estilos del formulario del modal de añadir ahorro ...
+    // Los inputs y botones usarán estilos de _modals.scss y _buttons.scss
+
+    p {
+        // Párrafos dentro del formulario (ej. "Deuda con:")
+        margin: $spacing-sm 0 $spacing-lg 0; // Usar variables
+        text-align: center;
+        color: $color-text-dark; // Usar variable
+        font-size: 0.95em; // Usar variable
+    }
+
+    strong {
+        // Texto fuerte dentro de párrafos (ej. nombre de la meta)
+        color: $color-accent-purple; // Usar variable
+    }
+
+    // Los .input-group y .modal-actions dentro de este formulario
+    // DEBERÍAN usar los estilos definidos en _modals.scss.
+    // Si tienen alguna particularidad SÓLO en este modal, anidarla aquí:
+    // .input-group { ... overrides ... }
+    // .modal-actions { ... overrides ... }
+}
+    
+

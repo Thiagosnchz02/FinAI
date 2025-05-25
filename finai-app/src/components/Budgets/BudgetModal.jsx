@@ -1,4 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react'; // Añadido useCallback
+import { supabase } from '../../services/supabaseClient'; // Importar supabase para RPC
+import { useAuth } from '../../contexts/AuthContext.jsx'; // Importar useAuth para user.id
+import { formatCurrency } from '../../utils/formatters.js'; // Para mostrar la sugerencia formateada
 
 function BudgetModal({
   isOpen,
@@ -9,16 +12,24 @@ function BudgetModal({
   isSaving = false,
   error = '',
   availableCategories = [], // Lista de categorías que se pueden seleccionar
-  displayPeriod = '' // Para mostrar en el título
+  displayPeriod = '',
+  selectedPeriod // Para mostrar en el título
 }) {
+
+  const { user } = useAuth();
 
   const [formData, setFormData] = useState({ categoryId: '', amount: '' });
   const [localError, setLocalError] = useState('');
+
+  const [suggestedAmount, setSuggestedAmount] = useState(null);
+  const [isLoadingSuggestion, setIsLoadingSuggestion] = useState(false);
 
   // Sincronizar estado interno con props cuando el modal se abre o cambian los datos iniciales/error
   useEffect(() => {
     setLocalError(error); // Mostrar error pasado desde el padre
     if (isOpen) {
+      setSuggestedAmount(null); 
+      setIsLoadingSuggestion(false);
       if (mode === 'edit' && initialData) {
         setFormData({
           categoryId: initialData.category_id || '', // Asegúrate que initialData tenga category_id
@@ -32,11 +43,66 @@ function BudgetModal({
     }
   }, [isOpen, mode, initialData, error]);
 
+  // --- NUEVO useEffect PARA OBTENER SUGERENCIA ---
+    useEffect(() => {
+        // Solo en modo 'add', cuando se selecciona una categoría, y tenemos usuario y periodo
+        if (isOpen && mode === 'add' && formData.categoryId && user?.id && selectedPeriod) {
+            const fetchSuggestion = async () => {
+                setIsLoadingSuggestion(true);
+                setSuggestedAmount(null); // Limpiar sugerencia anterior
+                console.log(`BudgetModal: Obteniendo sugerencia para categoría ${formData.categoryId}, periodo ${selectedPeriod}`);
+
+                // La p_reference_date es el primer día del mes del selectedPeriod
+                const [year, month] = selectedPeriod.split('-').map(Number);
+                const referenceDate = new Date(Date.UTC(year, month - 1, 1)).toISOString().split('T')[0];
+                const monthsLookback = 3; // Mirar los últimos 3 meses, puedes hacerlo configurable
+
+                try {
+                    const { data, error: rpcError } = await supabase.rpc('get_category_spending_suggestion', {
+                        p_user_id: user.id,
+                        p_target_category_id: formData.categoryId,
+                        p_reference_date: referenceDate,
+                        p_months_lookback: monthsLookback
+                    });
+
+                    if (rpcError) {
+                        throw rpcError;
+                    }
+                    
+                    console.log("BudgetModal: Sugerencia recibida:", data);
+                    if (data !== null && data > 0) { // Solo mostrar si es un valor positivo
+                        setSuggestedAmount(data);
+                    } else {
+                        setSuggestedAmount(0); // Indicar que no hay gasto o es 0
+                    }
+
+                } catch (err) {
+                    console.error("BudgetModal: Error obteniendo sugerencia de gasto:", err);
+                    // No mostrar error al usuario por esto, es solo una sugerencia
+                    setSuggestedAmount(null); // O 0 si prefieres
+                } finally {
+                    setIsLoadingSuggestion(false);
+                }
+            };
+
+            fetchSuggestion();
+        } else {
+            // Si no se cumplen las condiciones (ej. se deselecciona categoría), limpiar sugerencia
+            setSuggestedAmount(null);
+        }
+    // formData.categoryId es la dependencia clave para disparar esto
+    // user?.id y selectedPeriod deben estar disponibles
+    }, [isOpen, mode, formData.categoryId, user?.id, selectedPeriod, supabase]); 
+
   // Manejador local de cambios
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
     if (localError) setLocalError(''); // Limpiar error al escribir
+    if (name !== 'categoryId') {
+            // Si el usuario empieza a escribir su propio importe, podríamos ocultar la sugerencia
+            // o dejarla visible como referencia. Por ahora, la dejamos.
+        }
   };
 
   // Manejador local de submit
@@ -74,7 +140,7 @@ function BudgetModal({
               required
               value={formData.categoryId}
               onChange={handleInputChange}
-              disabled={mode === 'edit' || isSaving} // Deshabilitar categoría al editar
+              disabled={mode === 'edit' || isSaving || availableCategories.length === 0}
             >
               {/* Opción por defecto */}
               <option value="" disabled>Selecciona...</option>
@@ -88,10 +154,9 @@ function BudgetModal({
 
               {/* Mostramos las categorías disponibles */}
               {availableCategories.map(cat => (
-                 // Evitar duplicar la opción si estamos editando
-                 (mode !== 'edit' || cat.id !== initialData?.category_id) && (
-                     <option key={cat.id} value={cat.id}>{cat.name}</option>
-                 )
+                <option key={cat.id} value={cat.id}>
+                  {cat.name} {/* El 'name' ya viene con "↳ " si es subcategoría */}
+                </option>
               ))}
 
               {/* Mensaje si no hay categorías disponibles (solo en modo 'add') */}
@@ -99,7 +164,7 @@ function BudgetModal({
                  <option disabled>No hay más categorías disponibles.</option>
               )}
             </select>
-            <small>Un presupuesto por categoría/mes.</small>
+            <small>Un presupuesto por categoría/mes. Las categorías de gasto se muestran aquí.</small>
           </div>
 
           <div className="input-group">
@@ -109,7 +174,22 @@ function BudgetModal({
               required step="0.01" placeholder="0.00" min="0.01"
               value={formData.amount} onChange={handleInputChange}
               disabled={isSaving}
+              autoFocus={mode === 'edit'}
             />
+            {/* --- MOSTRAR SUGERENCIA --- */}
+              {mode === 'add' && formData.categoryId && !isLoadingSuggestion && suggestedAmount !== null && (
+                <small className="input-suggestion" style={{ display: 'block', marginTop: '5px', color: '#007bff' }}>
+                  <i className="fas fa-lightbulb" style={{marginRight: '5px'}}></i>
+                  Sugerencia (gasto promedio últimos 3 meses): 
+                  <strong> {formatCurrency(suggestedAmount)}</strong>
+                </small>
+              )}
+              {mode === 'add' && formData.categoryId && isLoadingSuggestion && (
+                <small className="input-suggestion loading" style={{ display: 'block', marginTop: '5px', color: '#6c757d' }}>
+                  <i className="fas fa-spinner fa-spin" style={{marginRight: '5px'}}></i>
+                  Calculando sugerencia...
+                </small>
+              )}
           </div>
 
           {/* Mostrar error local o el pasado por props */}

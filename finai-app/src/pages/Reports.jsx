@@ -7,10 +7,12 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../services/supabaseClient';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import Sidebar from '../components/layout/Sidebar.jsx'; 
+import PageHeader from '../components/layout/PageHeader.jsx';
 //import { formatCurrency, formatDate } from '../utils/formatters.js'; // Importar utils
 import toast from 'react-hot-toast'; // Importar toast
 import SelectionModal from '../components/common/SelectionModal.jsx'; // Asume componente genérico
 import InfoModal from '../components/common/InfoModal.jsx'; 
+import '../styles/Reports.scss';
 
 // Importa imágenes
 import defaultAvatar from '../assets/avatar_predeterminado.png';
@@ -265,7 +267,7 @@ function Reports() {
     const scrollToTop = useCallback(() => window.scrollTo({ top: 0, behavior: 'smooth' }), []);
 
     // --- Renderizado ---
-    if (isLoading && !userId) { // Mostrar carga inicial
+    if (isLoading && !user) { // Mostrar carga inicial
         return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}><p>Cargando...</p></div>;
     }
 
@@ -281,14 +283,14 @@ function Reports() {
             {/* --- Contenido Principal --- */}
             <div className="page-container">
                 {/* --- Cabecera --- */}
-                <div className="page-header reports-header">
-                    <button onClick={handleBack} id="backButton" className="btn-icon" aria-label="Volver" disabled={isGenerating}><i className="fas fa-arrow-left"></i></button>
-                    <div className="header-title-group">
-                        <img id="userAvatarHeader" src={userAvatarUrl} alt="Avatar" className="header-avatar-small" />
-                        <h1>Generar Informes</h1>
-                    </div>
-                    <div style={{ width: '40px' }}></div> {/* Spacer */}
-                </div>
+                <PageHeader 
+                    pageTitle="Generar Informes"
+                    headerClassName="reports-header" // Tu clase específica si la necesitas
+                    showSettingsButton={false}       // No mostrar botón de settings aquí
+                    isProcessingPage={isGenerating}  // Para deshabilitar botones de PageHeader si es necesario
+                    actionButton={null} // No hay botón de acción principal aquí
+                    // showBackButton={true} // Ya es true por defecto
+                />
 
                 {/* --- Contenedor Generador --- */}
                 <div className="report-generator-container">

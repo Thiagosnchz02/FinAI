@@ -1,0 +1,779 @@
+// src/styles/_modals.scss
+
+
+@import 'mixins';
+
+.modal-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background-color: rgba(0, 0, 0, 0.6); // Fondo oscuro semi-transparente
+    display: flex; @include flex-center; // Centrar contenido
+    z-index: $zindex-modal-overlay; // Z-index
+    opacity: 0; // Invisible por defecto
+    transition: opacity $transition-speed-normal $transition-ease; // Transición suave
+    padding: $spacing-md; // Padding del overlay
+    box-sizing: border-box;
+    pointer-events: none; // No interactuable cuando está oculto
+
+    // Estado activo
+    &.active {
+        opacity: 1;
+        pointer-events: auto; // Interactuable cuando está visible
+    }
+}
+
+.icon-selector-container {
+    display: flex;
+    flex-wrap: wrap; // Permite que los iconos pasen a la siguiente línea
+    gap: $spacing-xs; // Espacio entre botones de icono
+    margin-bottom: $spacing-sm; // Espacio antes del input de texto para el icono
+    padding: $spacing-xs;
+    border: 1px solid $color-border; // Opcional: un borde alrededor del selector
+    border-radius: $border-radius-md;
+    max-height: 150px; // Altura máxima con scroll si hay muchos iconos
+    overflow-y: auto; // Scroll vertical si es necesario
+}
+
+.icon-selector-btn {
+    background-color: lighten($color-panel-bg, 5%);
+    border: 1px solid $color-border;
+    color: $color-text-dark;
+    border-radius: $border-radius-sm;
+    padding: $spacing-sm; // Ajusta para tamaño del botón
+    cursor: pointer;
+    @include transition-smooth((background-color, border-color, transform));
+    display: inline-flex; // Para centrar el icono dentro
+    align-items: center;
+    justify-content: center;
+    width: 40px;  // Ancho fijo
+    height: 40px; // Alto fijo
+  
+    i { // El icono Font Awesome dentro del botón
+      font-size: 1.2em; // Tamaño del icono
+    }
+  
+    &:hover {
+      background-color: lighten($color-border, 2%);
+      border-color: darken($color-border, 10%);
+    }
+  
+    &.selected {
+      background-color: $color-accent-blue; // Color para el icono seleccionado
+      color: $color-text-light; // Texto/icono blanco en el seleccionado
+      border-color: darken($color-accent-blue, 10%);
+      transform: scale(1.05); // Un poco más grande
+    }
+  
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      &:hover {
+        background-color: lighten($color-panel-bg, 5%); // Sin cambio de hover si está deshabilitado
+      }
+    }
+}
+
+.color-palette-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $spacing-xs; // Espacio entre muestras de color
+    margin-bottom: $spacing-sm; // Espacio antes del selector de color personalizado
+    padding: $spacing-xs;
+    // border: 1px solid $color-border; // Opcional: borde alrededor
+    // border-radius: $border-radius-md;
+}
+
+// Botón/muestra individual de la paleta de colores
+.color-palette-btn {
+    width: 30px;  // Ancho de la muestra de color
+    height: 30px; // Alto de la muestra de color
+    border-radius: 50%; // Círculos (o $border-radius-sm para cuadrados)
+    border: 2px solid transparent; // Borde inicial transparente
+    cursor: pointer;
+    @include transition-smooth((border-color, transform, box-shadow));
+    display: inline-flex; // Para centrar el checkmark si lo usas
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+  
+    // El color de fondo se establece inline con style={{ backgroundColor: color.value }}
+  
+    &:hover {
+      border-color: darken($color-border, 20%); // Borde más oscuro al pasar el ratón
+      transform: scale(1.1);
+    }
+  
+    &.selected {
+      border-color: $color-text-dark; // Borde distintivo para el seleccionado
+      box-shadow: 0 0 0 2px $color-text-dark, inset 0 0 0 2px $color-panel-bg; // Doble borde para mejor visibilidad
+      transform: scale(1.1);
+  
+      i.fa-check { // Estilo para el checkmark
+        font-size: 0.8em;
+        // El color del checkmark se establece inline basado en isColorDark
+      }
+    }
+  
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      &:hover {
+        border-color: transparent; // Sin cambio de hover si está deshabilitado
+      }
+    }
+}
+
+.modal-content.trip-summary-modal-content {
+  width: 90%;
+  max-width: 650px; // Un poco más ancho para el gráfico y detalles
+  padding: $spacing-lg $spacing-xl;
+
+  h2 {
+    margin-top: 0;
+    margin-bottom: $spacing-lg;
+    text-align: center;
+    color: $color-text-dark;// O el color de tu cabecera
+    font-size: 1.4em; 
+  }
+
+  .trip-summary-details {
+    margin-bottom: $spacing-lg;
+    p {
+      margin: $spacing-xs 0;
+      font-size: 0.95em;
+      color: $color-text-muted;
+      strong {
+        color: $color-text-dark;
+        font-weight: 600;
+      }
+    }
+  }
+
+  .financial-summary {
+    margin-top: $spacing-md;
+    padding-top: $spacing-md;
+    border-top: 1px solid ; // Separador ligero
+
+    .summary-item {
+      display: flex;
+      justify-content: space-between;
+      padding: $spacing-sm / 2 0;
+      font-size: 1em;
+
+      .summary-label {
+        color: $color-text-muted;
+      }
+      .summary-value {
+        font-weight: 700;
+        color: $color-text-dark;
+      }
+
+      // Clases para la diferencia
+      &.positive-diff .summary-value,
+      .diff-text { // Estilo para el texto (Ahorro) / (Sobrecoste)
+        font-weight: normal; // Puede que no quieras que sea negrita
+        font-size: 0.9em;
+        margin-left: $spacing-xs;
+      }
+      &.positive-diff .summary-value {
+        color: $color-accent-green !important; // !important para asegurar si hay otros estilos
+         .diff-text { color: $color-accent-green; }
+      }
+      &.negative-diff .summary-value {
+        color: $color-accent-red !important;
+         .diff-text { color: $color-accent-red; }
+      }
+    }
+  }
+
+  .trip-summary-chart-container {
+    margin-top: $spacing-lg;
+    margin-bottom: $spacing-xl;
+    h3 {
+      text-align: center;
+      font-size: 1.1em;
+      color: $color-text-dark;
+      margin-bottom: $spacing-md;
+      font-weight: 600;
+    }
+    
+  }
+
+    .modal-close-btn {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    background: none;
+    border: none;
+    font-size: 1.5rem; // Tamaño del icono
+    color: #777; // Color del icono
+    cursor: pointer;
+    padding: 5px;
+    line-height: 1;
+    z-index: 1050; // Asegurar que esté por encima
+
+    &:hover {
+        color: #333;
+    }
+}
+  
+  .empty-chart-message,
+  p.empty-chart-message { // Para cubrir ambos casos
+    text-align: center;
+    color: $color-text-muted;
+    padding: $spacing-xl 0; // Más padding vertical
+    font-style: italic;
+    font-size: 0.9em;
+  }
+
+  // Estilos para la lista detallada opcional (si la descomentas)
+  .expenses-by-category-list {
+    margin-top: $spacing-md;
+    h4 {
+        font-size: 1em;
+        margin-bottom: $spacing-sm;
+        color: $color-text-dark;
+    }
+    .category-expense-item {
+        display: flex;
+        align-items: center;
+        padding: $spacing-xs / 2 0;
+        font-size: 0.9em;
+        color: $color-text-muted;
+        i {
+            width: 20px; // Para alinear
+            text-align: center;
+        }
+        strong {
+            margin-left: auto; // Empuja el importe a la derecha
+            color: $color-text-dark;
+        }
+    }
+  }
+
+  .modal-actions {
+    margin-top: $spacing-lg; // Asegurar espacio antes de los botones
+  }
+}
+
+.modal-content {
+    background-color: $color-panel-bg; // Fondo blanco
+    padding: $spacing-xxl $spacing-xxxl; // Padding interno
+    border-radius: $border-radius-lg; // Bordes redondeados
+    box-shadow: $box-shadow-md; // Sombra
+    width: 100%;
+    max-width: 500px; // Ancho máximo por defecto
+    box-sizing: border-box;
+    transform: scale(0.95); // Empieza ligeramente más pequeño
+    transition: transform $transition-speed-normal $transition-ease; // Transición con escala
+
+    // Para limitar altura y añadir scroll interno
+    max-height: 90vh;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column; // Apilar contenido en columna
+
+    // Aplicar transform cuando el overlay está activo
+    .modal-overlay.active & { // & se refiere a .modal-content
+         transform: scale(1); // Escala normal
+    }
+
+    h2 { // Título del modal
+        text-align: center;
+        margin-top: 0;
+        margin-bottom: $spacing-xxl;
+        color: $color-accent-purple; // Color del título
+        font-weight: 800;
+    }
+
+    .input-group { // Grupo de input en modal
+        margin-bottom: $spacing-md;
+
+        label { // Etiqueta del input
+            display: block;
+            margin-bottom: $spacing-xs * 1.5;
+            color: $color-text-dark; // O un gris
+            font-weight: 700;
+            font-size: 0.9em;
+        }
+        
+        .input-suggestion {
+            display: block; // Para que ocupe su propia línea
+            margin-top: $spacing-xs; // Espacio respecto al input
+            font-size: 0.8em;
+            color: $color-sidebar-bg; // Un color distintivo para sugerencias (ej. azul)
+            font-style: italic;
+
+            i { // Estilo para el icono de bombilla o spinner
+                margin-right: $spacing-xs / 2;
+            }
+
+            &.loading { // Si quieres un estilo diferente mientras carga
+                color: $color-text-muted;
+            }
+        }
+
+        input:not([type="checkbox"]):not([type="radio"]):not([type="color"]), // Inputs de texto, número, fecha, etc.
+        select,
+        textarea {
+             width: 100%;
+             padding: $spacing-sm $spacing-md;
+             border: 1px solid $color-border;
+             border-radius: $border-radius-sm;
+             font-size: $base-font-size;
+             box-sizing: border-box;
+             margin-top: $spacing-xs;
+             font-family: $font-family-base;
+             color: $color-text-dark;
+             background-color: $color-panel-bg;
+             @include transition-smooth((border-color, box-shadow, background-color));
+        }
+
+         input[type="color"] { // Estilo específico input color
+             height: 45px;
+             padding: $spacing-xs;
+             cursor: pointer;
+         }
+
+
+        input:focus, select:focus, textarea:focus { // Estado focus
+            border-color: $color-accent-purple;
+            box-shadow: 0 0 0 2px rgba(lighten($color-accent-purple, 15%), 0.2);
+            outline: none;
+        }
+
+        select { // Estilo select con flecha personalizada
+            cursor: pointer;
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%238a82d5' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3E%3Csvg%3E"); // SVG de la flecha
+            background-repeat: no-repeat;
+            background-position: right $spacing-md center;
+            background-size: 16px 12px;
+            padding-right: $spacing-xl;
+        }
+
+        textarea { resize: vertical; min-height: 60px; }
+        small { font-size: 0.8em; color: $color-text-muted; display: block; margin-top: $spacing-xs; }
+        small a { color: $color-accent-purple; }
+
+        // Grupo de radio buttons
+        .radio-group { display: flex; gap: $spacing-lg; margin-top: $spacing-sm; }
+        .radio-group label { font-weight: normal; display: flex; align-items: center; gap: $spacing-xs; cursor: pointer; margin: 0; }
+         .radio-group input[type="radio"] { width: auto; margin: 0; cursor: pointer;}
+
+         // Estilos de los botones tipo (si los usas como en Transactions.css)
+         .type-toggle { display: flex; border: 1px solid $color-border; @include pill-shape; overflow: hidden; margin-top: $spacing-sm; }
+         .type-toggle label { flex: 1; text-align: center; padding: $spacing-sm $spacing-md; cursor: pointer; background-color: lighten($color-border, 5%); color: $color-text-muted; font-weight: 700; @include transition-smooth((background-color, color)); margin: 0; font-size: 0.9em; }
+         .type-toggle input[type="radio"] { display: none; }
+         .type-toggle label.active { color: $color-text-light; }
+         .type-toggle label.expense-btn.active { background-color: $color-accent-red; }
+         .type-toggle label.income-btn.active { background-color: $color-accent-green; }
+         .type-toggle label.transfer-btn.active { background-color: $color-text-muted; } // O un gris azulado
+
+        // Grupo de checkbox
+        .checkbox-group { display: flex; align-items: center; gap: $spacing-sm; margin-top: $spacing-sm; }
+        .checkbox-group input[type="checkbox"] { width: auto; margin: 0; cursor: pointer;}
+        .checkbox-group label { margin: 0; font-weight: normal; cursor: pointer; }
+    }
+
+    .modal-actions { // Botones de acción del modal
+        margin-top: $spacing-xxl;
+        padding-top: $spacing-lg; // Espacio sobre los botones
+        border-top: 1px solid $color-border; // Separador
+        display: flex; justify-content: flex-end;
+        gap: $spacing-md;
+        flex-shrink: 0; // No permitir que se encoja
+        // Los botones usarán estilos de _buttons.scss
+    }
+
+    .error-message { // Mensaje de error
+        color: $color-accent-red;
+        font-size: 0.9em;
+        margin-top: $spacing-sm;
+        text-align: center;
+        min-height: 1.2em;
+    }
+
+    // Variaciones de modales (pequeño, información, confirmación)
+    &.small-modal { max-width: 420px; } // Ancho menor
+    &.info-modal-content { border-left: 5px solid $color-accent-blue; } // Borde de color
+    &.confirmation-modal-content { border-left: 5px solid $color-accent-orange; } // Borde de color
+    &.danger-modal { border-left: 5px solid $color-accent-red; } // Borde de color
+
+    // Estilos específicos de los modales de Info y Confirmación
+    .info-modal-content, .confirmation-modal-content {
+        h2 { // Título con icono
+            display: flex; align-items: center; justify-content: center; gap: $spacing-sm;
+            font-size: 1.3em;
+            i { font-size: 0.9em; }
+        }
+        .modal-instructions { // Párrafos con instrucciones/mensajes
+            text-align: center; margin: $spacing-xxl 0;
+            line-height: 1.6;
+            color: $color-text-dark;
+            font-size: 0.95em;
+        }
+    }
+
+    // Estilos específicos del modal de Eliminar Cuenta
+    &.danger-modal {
+        h2 { color: $color-accent-red; } // Color del título de peligro
+        .modal-instructions.danger-text {
+             color: darken($color-accent-red, 10%);
+             font-weight: 600;
+             background-color: lighten($color-accent-red, 25%);
+             padding: $spacing-sm;
+             border-radius: $border-radius-sm;
+             border: 1px solid lighten($color-accent-red, 15%);
+        }
+    }
+
+    // Estilos específicos del modal 2FA
+    #setup2faModal & { // Selector si tiene un ID específico
+        max-width: 480px;
+        .mfa-setup-details { display: flex; flex-direction: column; align-items: center; gap: $spacing-lg; margin-bottom: $spacing-xl; }
+        .qr-code-container { padding: $spacing-md; background-color: $color-panel-bg; border: 1px solid $color-border; border-radius: $border-radius-sm; box-shadow: $box-shadow-sm; max-width: 220px; margin: 0 auto; svg { display: block; width: 100%; height: auto; } }
+        .secret-key-container { display: flex; align-items: center; gap: $spacing-sm; width: 100%; max-width: 350px; label { font-size: 0.8em; color: $color-text-muted; margin-bottom: $spacing-xs * 0.5; display: block; flex-shrink: 0; } #secretCodeDisplay { flex-grow: 1; font-family: monospace; font-size: 0.9em; padding: $spacing-xs $spacing-sm; border: 1px solid $color-border; border-radius: $border-radius-sm; background-color: lighten($color-border, 5%); overflow-x: auto; } }
+        #verify2faForm .input-group { margin-bottom: $spacing-lg; }
+        #verificationCodeInput { font-size: 1.4em; text-align: center; letter-spacing: 0.2em; }
+    }
+
+
+    // Responsive para modales
+    @include mobile-only {
+         padding: $spacing-lg $spacing-md;
+         max-width: 95%;
+         h2 { font-size: 1.3em; }
+         .modal-actions {
+              flex-direction: column-reverse;
+              gap: $spacing-sm;
+              .btn { width: 100%; box-sizing: border-box; }
+         }
+         &.small-modal { max-width: 90%; }
+         .input-group { margin-bottom: $spacing-md; }
+         .input-group label { font-size: 0.85em; }
+         input, select, textarea { padding: $spacing-sm $spacing-md; font-size: 0.95em; }
+         .radio-group { gap: $spacing-md; }
+    }
+}
+.password-display {
+    // Contenedor para mostrar asteriscos y botón "Cambiar"
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: $spacing-md $spacing-lg; // Usar variables
+    border: 1px solid $color-border; // Usar variable
+    border-radius: $border-radius-md; // Usar variable
+    background-color: lighten($color-border, 5%); // Usar variable y función
+
+    span {
+        // Texto de asteriscos
+        font-size: $base-font-size; // Usar variable
+        color: $color-text-dark; // Usar variable
+        font-family: monospace;
+    }
+
+    .btn-link {
+        // El botón "Cambiar Contraseña" (usará estilos base de _buttons.scss)
+        // background: none; border: none; // Heredado de _buttons.scss
+        color: $color-accent-orange; // Usar variable
+        cursor: pointer;
+        font-weight: 700; // Usar variable
+        padding: 0;
+        font-size: 0.9em; // Usar variable
+        text-decoration: none;
+        @include transition-smooth(color);
+
+        &:hover {
+            text-decoration: underline;
+            color: darken($color-accent-orange, 10%);
+        }
+
+        &:disabled {
+            // Estado deshabilitado si aplica
+            color: lighten($color-accent-orange, 15%);
+            cursor: not-allowed;
+        }
+    }
+
+    // Responsive para .password-display (¡aquí se anida la regla!)
+    @include mobile-only {
+        // En pantallas pequeñas (menos de 640px)
+        padding: $spacing-sm $spacing-md; // Ajustar padding
+        font-size: 0.95em; // Ajustar tamaño fuente
+    }
+}
+.type-toggle {
+    display: flex;
+    border: 1px solid $color-border; // Usar variable
+    border-radius: $border-radius-pill; // Usar variable (Muy redondeado)
+    overflow: hidden; // Para que el fondo del hijo no sobresalga
+    // margin-top: $spacing-xs; // Usar variable si tiene margen superior consistente (original 5px)
+
+    label { // Cada opción (Gasto, Ingreso, Transferencia)
+        flex: 1; // Ocupa espacio disponible equitativamente
+        text-align: center;
+        padding: $spacing-sm $spacing-md; // Usar variables (original 10px 15px)
+        cursor: pointer;
+        background-color: lighten($color-border, 5%); // Usar variable y función (original #f8f9fa)
+        color: $color-text-muted; // Usar variable (original #666)
+        font-weight: 700; // Usar variable
+        @include transition-smooth((background-color, color)); // Usar mixin
+        margin: 0 !important; // Sobrescribir margen de label si está en un input-group
+        font-size: 0.9em; // Usar variable
+    }
+
+    input[type="radio"] {
+        display: none; // Ocultar radio button real
+    }
+
+    // Hover para las opciones individuales
+    label.expense-btn:hover { background-color: lighten($color-accent-red, 25%); color: darken($color-accent-red, 10%); } // Usar variables y función
+    label.income-btn:hover { background-color: lighten($color-accent-green, 25%); color: darken($color-accent-green, 10%); } // Usar variables y función
+    // Si tienes Transferencia, añade su hover
+    label.transfer-btn:hover { background-color: lighten($color-text-muted, 10%); color: darken($color-text-muted, 15%); } // Usar variables y función
+
+
+    // Estilo cuando una opción está activa (seleccionada)
+    input[type="radio"]:checked + label, // Usando adjacent sibling selector
+    label.active // Usando clase añadida por JS (recomendado)
+    {
+        color: $color-text-light; // Usar variable (texto blanco)
+        // El background-color se define por la combinación de clase de tipo y .active
+    }
+
+    // Colores de fondo cuando la opción está activa
+    label.expense-btn.active { background-color: $color-accent-red; } // Usar variable (Rojo)
+    label.income-btn.active { background-color: $color-accent-green; } // Usar variable (Verde)
+    label.transfer-btn.active { background-color: $color-text-muted; } // Usar variable (Gris)
+
+    // Responsive para el toggle si es necesario (flexbox ya ayuda)
+    @include mobile-only {
+        label { padding: $spacing-xs $spacing-sm; font-size: 0.85em; } // Ajustar padding/fuente
+    }
+}
+
+.modal-content.avatar-creator-modal-content {
+  width: 90%;
+  max-width: 750px; // Un modal un poco más ancho para acomodar preview y opciones
+  max-height: 90vh; // Evitar que sea más alto que la pantalla
+  display: flex;    // Permitir que el contenido interno use flex
+  flex-direction: column; // Apilar título, layout del editor y acciones
+
+  h2 { // Título del modal
+    text-align: center;
+    font-size: 1.5em; // Ajusta según tu .profile-title
+    font-weight: 700; // Usando tu variable $font-weight-bold si la tienes
+    color: $color-accent-purple; // O tu color primario para títulos de modal
+    margin-top: 0;
+    margin-bottom: $spacing-lg; // Espacio debajo del título
+  }
+
+  .avatar-editor-layout {
+    display: flex;
+    flex-direction: column; // Apilado por defecto para móviles
+    gap: $spacing-lg;       // Espacio entre la preview y el panel de opciones
+    flex-grow: 1;         // Para que ocupe el espacio vertical disponible
+    overflow: hidden;       // El scroll estará en el panel de opciones
+
+    @include md-up { // En pantallas medianas y más grandes, lado a lado
+      flex-direction: row;
+    }
+  }
+
+  .avatar-preview-pane {
+    flex-basis: 220px; // Ancho fijo para la columna de la vista previa
+    flex-shrink: 0;     // Evitar que se encoja
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: $spacing-md;
+    padding: $spacing-md;
+    background-color: lighten($color-border, 7%); // Un fondo muy sutil
+    border-radius: $border-radius-md;
+    border: 1px solid $color-border;
+
+    .preview-title {
+      font-weight: 600;
+      color: $color-text-dark;
+      margin: 0 0 $spacing-xs 0;
+      font-size: 0.9em;
+    }
+
+    .avatar-live-preview {
+      width: 180px; // Tamaño de la preview del avatar (ajusta el style en el JSX también)
+      height: 180px;
+      background-color: darken($color-border, 3%); // Fondo para el avatar
+      border-radius: $border-radius-md; // O 50% si el avatarStyle es 'Circle' y quieres que el fondo también lo sea
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      border: 1px solid $color-border;
+      box-shadow: inset 0 0 5px rgba(0,0,0,0.05);
+
+      // El componente <Avatar/> de react-nice-avatar se renderiza como SVG
+      svg {
+        display: block; // Asegurar buen comportamiento
+      }
+    }
+    .randomize-btn { // Botón para generar aleatorio
+      @extend .btn; // Hereda estilos base de .btn
+      @extend .btn-secondary; // Usa tu estilo de botón secundario
+      @extend .btn-sm; // Usa el tamaño pequeño
+      width: 100%; // Ocupa el ancho del panel de preview
+      margin-top: auto; // Empuja el botón hacia abajo si hay espacio extra
+      
+      i {
+        margin-right: $spacing-xs;
+      }
+    }
+  }
+
+  .avatar-options-pane {
+    flex-grow: 1; // Ocupa el espacio restante
+    // padding: $spacing-sm $spacing-md; // Padding si no lo tiene el .input-group
+    // background-color: lighten($color-panel-bg, 2%); // Si quieres un fondo diferente
+    // border-radius: $border-radius-md;
+    overflow-y: auto; // Scroll vertical para las opciones si exceden la altura
+    // border: 1px solid $color-border; // Opcional
+    padding-right: $spacing-sm; // Para que la barra de scroll no pegue con los inputs
+
+    .options-title {
+      font-weight: 600;
+      color: $color-text-dark;
+      margin: 0 0 $spacing-md 0;
+      text-align: center;
+      font-size: 0.9em;
+    }
+
+    .options-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); // 1 o 2 columnas de opciones
+      gap: $spacing-sm $spacing-lg; // gap vertical y horizontal
+    }
+  }
+
+  // Estilos para los .input-group dentro del avatar-options-pane
+  // Estos heredarán de tu .input-group global, pero puedes ajustarlos
+  .avatar-option-group {
+    // margin-bottom: $spacing-sm; // Ya lo tiene .input-group
+    //label {
+      // font-size: 0.85em; // Ya lo tiene .input-group label
+      // color: $color-text-muted; // Ya lo tiene .input-group label
+      // margin-bottom: $spacing-xs / 2; // Ya lo tiene .input-group label
+      // text-transform: capitalize; // Para que la primera letra sea mayúscula
+    //}
+    select {
+      width: 100%;
+      // Hereda estilos de input/select globales de _forms.scss o de .input-group input
+      // Si necesitas un padding o font-size específico para estos selectores:
+      padding: $spacing-xs $spacing-sm;
+      font-size: 0.9em;
+      background-color: $color-panel-bg;
+      border: 1px solid $color-border;
+      border-radius: $border-radius-sm; // Usa tu variable de radio
+      color: $color-text-dark;
+
+      &:focus {
+        border-color: $color-accent-purple;
+        box-shadow: 0 0 0 2px rgba($color-accent-purple, 0.2);
+        outline: none;
+      }
+
+      //option {
+        // Estilos para las opciones si es necesario
+        // Algunos navegadores no permiten mucho estilo en las opciones
+      //}
+    }
+  }
+
+  .modal-actions {
+    margin-top: $spacing-lg; // Asegurar espacio antes de los botones
+    // Tus estilos de .modal-actions (ej. display: flex, justify-content: flex-end) deberían aplicar
+  }
+}
+
+.modal-content.small { // Si usas la clase 'small' o una específica
+  .expense-description-title {
+    font-size: 1.1em;
+    font-weight: 600;
+    color: $color-primary-blue; // O tu color de acento
+    margin-top: -$spacing-sm;
+    margin-bottom: $spacing-md;
+    text-align: center;
+  }
+
+  .transaction-history-list {
+    max-height: 300px; // O la altura que prefieras
+    overflow-y: auto;
+    margin-bottom: $spacing-md;
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9em;
+
+      th, td {
+        text-align: left;
+        padding: $spacing-xs $spacing-sm;
+        border-bottom: 1px solid $color-text-light;
+      }
+      th {
+        font-weight: 600;
+        background-color: lighten($color-panel-bg, 3%);
+        position: sticky;
+        top: 0;
+      }
+      td.amount-col {
+        text-align: right;
+        font-weight: 500;
+        &.expense { color: $color-accent-red; }
+      }
+      small {
+        color: $color-text-muted;
+        font-size: 0.9em;
+      }
+    }
+  }
+  .loading-message, .empty-message {
+    text-align: center;
+    padding: $spacing-lg 0;
+    color: $color-text-muted;
+  }
+
+  .modal-close-btn {
+      position: absolute;
+      top: $spacing-md; // Ajusta según tu padding interno del modal-content
+      right: $spacing-md; // Ajusta según tu padding interno del modal-content
+      background: none;
+      border: none;
+      font-size: 1.5em; // Tamaño del icono 'x' (ej. de Font Awesome)
+      color: $color-text-muted; // Un color discreto
+      padding: $spacing-xs; // Un pequeño padding para facilitar el clic
+      line-height: 1; // Para asegurar que el icono se centre bien si es texto
+      cursor: pointer;
+      transition: color $transition-speed-fast ease-in-out, transform $transition-speed-fast ease-in-out;
+      z-index: 10; // Para asegurar que esté por encima de otros elementos del modal si es necesario
+
+      &:hover {
+        color: $color-text-dark; // Un color más oscuro al pasar el ratón
+        transform: scale(1.1);
+      }
+
+      &:active {
+        transform: scale(0.95);
+      }
+
+      &:disabled {
+        color: lighten($color-text-muted, 20%);
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      i { // Si el contenido del botón es un icono de Font Awesome <i class="fas fa-times"></i>
+        display: block; // Ayuda a la consistencia del tamaño
+      }
+    }
+}

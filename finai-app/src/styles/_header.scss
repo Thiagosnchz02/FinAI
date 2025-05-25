@@ -1,0 +1,103 @@
+// src/styles/_header.scss
+
+@import 'mixins'; // Para usar mixins responsivos
+
+
+.main-content .main-header { // Selector completo si main-header está dentro de main-content
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: $spacing-xxl; // Espacio debajo de la cabecera
+    background-color: $color-header-bg; // Color de fondo de la cabecera
+    padding: $spacing-sm $spacing-xl; // Padding interno
+    border-radius: $border-radius-md; // Bordes redondeados
+    box-shadow: $box-shadow-sm; // Sombra ligera
+
+    .header-left {
+        display: flex;
+        align-items: center;
+        gap: $spacing-md; // Espacio
+    }
+
+    .hamburger-btn {
+        display: none; // Oculto por defecto en desktop
+        font-size: 1.3em; // Usar variable
+        // Estilos del botón icono (usará _buttons.scss .btn-icon)
+    }
+
+    .header-title {
+        font-size: 1.5em; // Usar variable
+        font-weight: 800; // Usar variable
+        color: $color-text-dark; // Usar variable
+        // Si el título es el h1, este selector no sería necesario o sería diferente
+    }
+
+    .header-right {
+        display: flex;
+        align-items: center;
+        gap: $spacing-lg; // Espacio
+    }
+
+    .notification-btn {
+        position: relative;
+        // Estilos del botón icono (usará _buttons.scss .btn-icon)
+    }
+
+    .notification-badge {
+        position: absolute;
+        top: -5px; // Usar variable
+        right: -5px; // Usar variable
+        background-color: $color-accent-red; // Color del badge
+        color: $color-text-light; // Color del texto del badge
+        border-radius: 50%;
+        width: 18px; height: 18px; // Usar variable
+        font-size: 0.7em; // Usar variable
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-weight: bold;
+        border: 2px solid $color-text-light; // Borde del badge
+    }
+
+    .profile-btn {
+        // Estilos del botón icono (usará _buttons.scss .btn-icon)
+        img {
+             width: 38px; height: 38px; // Usar variable
+             border-radius: 50%;
+             object-fit: cover;
+             border: 2px solid rgba($color-text-light, 0.5); // Usar variable
+        }
+    }
+
+    // Responsive para la cabecera
+    @include mobile-only {
+        padding: $spacing-sm $spacing-md; // Padding ajustado
+        margin-bottom: $spacing-lg; // Espacio ajustado
+        gap: $spacing-md; // Espacio ajustado
+
+        .header-left { gap: $spacing-sm; } // Espacio ajustado
+        .header-title { font-size: 1.3em; } // Usar variable
+        .header-right { gap: $spacing-md; } // Espacio ajustado
+
+        .hamburger-btn { display: block; } // Mostrar botón hamburguesa
+    }
+
+    // Responsive para ocultar/mostrar elementos si es necesario
+     @include md-up {
+         .hamburger-btn { display: none; } // Ocultar hamburguesa en pantallas medianas+
+     }
+}
+
+// Estilos específicos de cabeceras de página (variantes de .page-header)
+// Estos se definen en los archivos de página, anidados dentro de .page-header
+// Ejemplo en Accounts.scss:
+/*
+.page-header {
+   // Estilos base definidos en _header.scss
+
+   &.accounts-header { // Estilos específicos de la cabecera de cuentas
+        background-color: lighten($color-primary-blue, 10%); // Usar variable y función
+        // ... otros ajustes si los hay
+   }
+}
+*/

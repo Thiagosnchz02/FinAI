@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
-import { formatCurrency, formatDate } from '../utils/formatters.js'; // Ajusta ruta
-import { getIconClass } from '../utils/iconUtils.js'; // Ajusta ruta
+import { formatCurrency, formatDate } from '../../utils/formatters.js'; // Ajusta ruta
+import { getIconClass } from '../../utils/iconUtils.js'; // Ajusta ruta
 
 // Recibe la transacción completa (con 'accounts' y 'categories' anidados desde la query)
 function TransactionRow({ transaction, onEdit, onDelete }) {

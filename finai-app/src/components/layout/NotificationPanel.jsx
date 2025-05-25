@@ -27,10 +27,11 @@ function NotificationPanel({
           <div
             key={n.id}
             className={`notification-item ${!n.is_read ? 'unread' : ''}`}
-            onClick={() => onNotificationClick(n.id)} // Llama al handler del padre
+            onClick={() => onNotificationClick(n)} // Llama al handler del padre
             role="button" // Indica que es clickeable
             tabIndex={0} // Permite foco con teclado
             onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && onNotificationClick(n.id)} // Accesibilidad teclado
+            title={n.message} // Añadir title para accesibilidad y vista previa
           >
             <span className={getNotificationIcon(n.type)}></span>
             <div className="content">

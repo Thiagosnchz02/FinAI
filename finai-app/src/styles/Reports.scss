@@ -1,0 +1,323 @@
+// Refactorizado y con Variables
+.report-generator-container {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-xxl; // Usar variable (original 25px)
+}
+
+/* --- Estilo Tarjeta/Paso (.settings-card.report-step) --- */
+// Este estilo base (.settings-card) debería estar en un partial común (ej. _components.scss).
+// Aquí solo refactorizamos la variante específica (.settings-card.report-step) y sus contenidos.
+.settings-card.report-step {
+    // Usar '&.' para referirse a la combinación de clases
+     background-color: lighten($color-border, 5%); // Usar variable y función (original #f8f9fa)
+    border-radius: $border-radius-md; // Usar variable
+    padding: $spacing-lg $spacing-xl; // Usar variables (original 20px 25px)
+    box-shadow: $box-shadow-sm; // Usar variable (original 0 4px 10px rgba(0, 0, 0, 0.05))
+    border: 1px solid lighten($color-border, 10%); // Usar variable y función (original #e9ecef)
+
+    h2 {
+        // Título del paso
+        font-size: 1.1em; // Usar variable si aplica
+        font-weight: 700; // Usar variable
+        color: $color-text-dark; // Usar variable (original #4a5568)
+        margin: 0 0 $spacing-lg 0; // Usar variable (original 20px)
+        padding-bottom: $spacing-sm; // Usar variable (original 10px)
+        border-bottom: 1px solid $color-border; // Usar variable (original #e0e0e0)
+        display: flex;
+        align-items: center;
+        gap: $spacing-sm; // Usar variable (original 10px)
+    }
+
+    .step-number {
+        // Número del paso
+        background-color: $color-accent-purple; // Usar variable
+        color: $color-text-light; // Usar variable
+        border-radius: 50%;
+        width: 24px;
+        height: 24px; // Usar variable si aplica
+        @include flex-center; // Usar mixin
+        font-size: 0.8em; // Usar variable si aplica
+        font-weight: bold;
+    }
+
+
+    /* --- Sección Filtros (.filter-group) --- */
+    .filter-group {
+        display: none; // Oculto por defecto (controlado por JS)
+        animation: fadeIn 0.4s; // Asegúrate de que @keyframes fadeIn esté definido globalmente
+        // Si la animación fadeIn no está en _base.scss, añádela allí o en un partial de animaciones.
+         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    }
+
+    .filter-group.active {
+        display: block;
+    }
+
+
+    .date-range-filter {
+        // Contenedor de inputs de fecha (grid)
+        display: grid;
+        grid-template-columns: 1fr 1fr; // Dos columnas
+        gap: $spacing-md; // Usar variable (original 15px)
+
+        // Responsive para el filtro de rango de fechas
+        @include mobile-only {
+            // En pantallas pequeñas
+            grid-template-columns: 1fr; // Una columna
+            gap: $spacing-sm; // Menos espacio
+        }
+    }
+
+    /* Selector Tipo Ingreso/Gasto (.type-selector) */
+    .type-selector {
+        // Contenedor de opciones de tipo
+        display: flex;
+        gap: $spacing-sm; // Usar variable (original 10px)
+        flex-wrap: wrap;
+        margin-top: $spacing-xs; // Usar variable (original 5px)
+
+        .type-option {
+            // Cada opción de tipo (usará estilos base de botón/badge)
+            padding: $spacing-xs $spacing-md; // Usar variables (original 8px 15px)
+            border: 1px solid $color-border; // Usar variable
+            @include pill-shape; // Usar mixin
+            background-color: $color-panel-bg; // Usar variable (original #fff)
+            cursor: pointer;
+            font-size: 0.9em; // Usar variable
+            @include transition-smooth((background-color, color, border-color)); // Usar mixin
+            color: $color-text-dark; // Usar variable (original #555)
+            // text-align: center; // Si quieres centrar texto
+
+            &:hover {
+                border-color: $color-accent-purple;
+                background-color: lighten($color-border, 5%);
+            }
+
+            // Usar variables y función
+            &.active {
+                // Estado activo
+                background-color: $color-accent-purple; // Usar variable
+                color: $color-text-light; // Usar variable
+                border-color: $color-accent-purple; // Usar variable
+                // box-shadow: 0 2px 5px rgba($color-accent-purple, 0.3); // Si quieres sombra al activar
+            }
+        }
+
+        // Responsive para el selector de tipo
+        @include mobile-only {
+            gap: $spacing-xs; // Menos espacio
+
+            .type-option {
+                padding: $spacing-xs $spacing-sm;
+                font-size: 0.85em;
+            }
+
+            // Ajustar padding/fuente
+        }
+    }
+
+    /* Filas Cuenta/Categoría (.setting-item) */
+    .setting-item {
+        display: flex; // Usar flexbox para alinear contenido
+        justify-content: space-between; // Espacio entre label y valor/editable
+        align-items: center; // Centrar verticalmente
+        padding: $spacing-sm $spacing-xs; // Usar variables (original 10px 5px)
+        border-bottom: 1px solid lighten($color-border, 10%); // Usar variable y función (original #f1f1f1)
+        cursor: pointer; // Indicar que es clickeable/seleccionable
+        @include transition-smooth(background-color); // Transición suave al pasar el ratón
+    
+        &:hover {
+            background-color: rgba($color-shadow, 0.03); // Usar rgba y variable (original rgba(0, 0, 0, 0.03))
+        }
+    
+        span:first-child { // Etiqueta (Nombre de la configuración/filtro)
+            font-weight: 600;
+            color: $color-text-dark; // Usar variable (original #4a5568)
+            font-size: 0.95em; // Usar variable
+            display: flex; // Para alinear icono y texto si hay
+            align-items: center;
+            gap: $spacing-sm; // Usar variable (original 8px)
+        }
+    
+        .setting-value-editable { // Contenedor del valor editable (ej. Nombre, Email)
+            font-weight: 600; // Usar variable
+            color: $color-accent-blue; // Usar variable (original #2b6cb0)
+            display: flex; // Para alinear valor e icono de edición
+            align-items: center;
+            gap: $spacing-xs; // Usar variable (original 5px)
+    
+            i { font-size: 0.8em; } // Icono de edición
+        }
+    
+        // Puedes añadir estilos para el estado activo si se usa (.active)
+        // &.active { ... }
+    
+        // Responsive para setting-item si necesita ajustes (menos padding, etc.)
+        @include mobile-only {
+            padding: $spacing-xs $spacing-xs; // Ajustar padding
+            span:first-child { font-size: 0.9em; gap: $spacing-xs; }
+            .setting-value-editable { font-size: 0.9em; gap: $spacing-xs/2; }
+        }
+    }
+
+    /* --- Selector Formato (.format-selector) --- */
+    .format-selector {
+        // Contenedor de opciones de formato
+        display: flex;
+        gap: $spacing-md; // Usar variable (original 15px)
+        flex-wrap: wrap;
+
+        .format-option {
+            // Cada opción de formato
+            flex-grow: 1;
+            padding: $spacing-md; // Usar variable (original 15px)
+            border: 2px solid $color-border; // Usar variable (original #e0e0e0)
+            border-radius: $border-radius-md; // Usar variable (original 12px)
+            background-color: $color-panel-bg; // Usar variable (original #fff)
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: $spacing-sm; // Usar variable (original 8px)
+            font-weight: 700; // Usar variable
+            @include transition-smooth((border-color, background-color, box-shadow)); // Usar mixin
+            color: $color-text-dark; // Usar variable (original #555)
+            text-align: center;
+            font-size: 0.95em; // Usar variable
+
+            i {
+                font-size: 2em;
+                margin-bottom: $spacing-xs;
+            }
+
+            // Usar variable (original 5px)
+
+            &:hover {
+                border-color: $color-accent-purple;
+                background-color: lighten($color-border, 5%);
+            }
+
+            // Usar variables y función
+            &.active {
+                // Estado activo (CSV)
+                border-color: $color-accent-green; // Usar variable
+                background-color: lighten($color-accent-green, 20%); // Usar variable y función
+                color: darken($color-accent-green, 10%); // Usar variable y función
+                box-shadow: 0 0 8px rgba($color-accent-green, 0.3); // Usar variable y rgba
+
+                i {
+                    color: darken($color-accent-green, 15%);
+                }
+
+                // Usar variable y función
+            }
+
+            &.disabled {
+                // Estado deshabilitado
+                cursor: not-allowed;
+                opacity: 0.5;
+                background-color: lighten($color-border, 10%); // Usar variable y función
+                border-color: $color-border; // Usar variable
+
+                &:hover {
+                    transform: none;
+                    box-shadow: none;
+                }
+            }
+        }
+
+        // Responsive para el selector de formato
+        @include mobile-only {
+            flex-direction: column; // Apilar opciones
+            gap: $spacing-sm; // Menos espacio
+
+            .format-option {
+                padding: $spacing-md;
+                font-size: 0.9em;
+            }
+
+            // Ajustar padding/fuente
+        }
+    }
+
+
+    /* --- Sección Acción (.action-section) --- */
+    .action-section {
+        // Contenedor del botón de acción (Generar)
+        margin-top: $spacing-md; // Usar variable (original 15px)
+        text-align: center;
+
+        // El botón .btn-generate usará estilos de _buttons.scss
+        // Si tiene estilos específicos no genéricos de _buttons.scss, anidarlos aquí.
+        .btn-generate {
+            font-size: 1.1em; // Usar variable
+            padding: $spacing-md $spacing-xxxl; // Usar variables (original 12px 30px)
+            font-weight: 800; // Usar variable
+            background-color: $color-accent-purple; // Si es el color principal
+            &:hover { background-color: darken($color-accent-purple, 10%); }
+        }
+    }
+}
+
+
+
+// Responsive General (Movida y Anidada)
+// @media (max-width: 768px) { ... } // Se convierte en @include md-up
+
+        @include md-up {
+    
+            // En tabletas (menos de 768px)
+            // .page-container { max-width: 95%; } // Si aplica a page-container, en _layout.scss
+            .settings-card.report-step {
+                padding: $spacing-md $spacing-lg;
+            }
+    
+            // Anidado en .settings-card.report-step
+            .report-type-selector,
+            .format-selector {
+                flex-direction: column;
+            }
+    
+            // Anidado en sus selectores
+            .date-range-filter {
+                grid-template-columns: 1fr;
+            }
+    
+            // Anidado en .date-range-filter
+        }
+    
+// @media (max-width: 600px) { ... } // Se convierte en @include mobile-only
+
+        @include mobile-only {
+            // En móviles (menos de 600px)
+            // body { padding-top: 0; padding-bottom: 0; } // Si aplica a body, en _base.scss
+            // .page-container { max-width: 100%; border-radius: 0; padding: 15px; min-height: 100vh;} // Si aplica a page-container, en _layout.scss
+            // .page-header h1 { font-size: 1.5em; } // Si aplica a h1 en cabecera, en _layout.scss o _header.scss
+        }
+
+
+// Estilos de Selection Modal (.selection-options, label, input[type="radio"])
+// Estos estilos DEBERÍAN estar en un partial común (ej. _modals.scss o _components.scss)
+.selection-options label {
+    display: block;
+    padding: $spacing-md $spacing-md; // Usar variables (original 12px 15px)
+    margin-bottom: $spacing-sm; // Usar variable (original 8px)
+    border: 1px solid $color-border; // Usar variable (original #e0e0e0)
+    border-radius: $border-radius-sm; // Usar variable (original 10px)
+    cursor: pointer;
+    @include transition_smooth((background-color, border-color)); // Usar mixin
+    font-weight: 600;
+    color: $color-text-dark; // Usar variable (original #555)
+}
+
+.selection-options label:hover {
+    background-color: lighten($color-border, 5%); // Usar variable y función (original #f5f5f5)
+    border-color: darken($color-border, 10%); // Usar variable y función (original #ccc)
+}
+
+.selection-options input[type="radio"] {
+    margin-right: $spacing-sm; // Usar variable (original 10px)
+    accent-color: $color-accent-purple; // Usar variable
+    vertical-align: middle;
+}

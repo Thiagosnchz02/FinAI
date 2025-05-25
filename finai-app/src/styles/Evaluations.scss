@@ -1,0 +1,299 @@
+// Refactorizado y con Variables
+.period-selector-container {
+    text-align: center;
+    margin-bottom: $spacing-xl; // Usar variable
+
+    label {
+        font-weight: 700;
+        color: $color-text-dark; // Usar variable
+        margin-right: $spacing-sm; // Usar variable
+    }
+
+    input[type="month"] {
+        padding: $spacing-sm $spacing-md; // Usar variables
+        border: 1px solid $color-border; // Usar variable
+        border-radius: $border-radius-sm; // Usar variable
+        font-size: $base-font-size; // Usar variable
+        background-color: $color-panel-bg; // Usar variable
+        cursor: pointer;
+        font-family: $font-family-base; // Usar variable
+        @include transition-smooth((border-color, box-shadow)); // Usar mixin
+
+        &:focus {
+            border-color: $color-accent-purple; // Usar variable
+            box-shadow: 0 0 0 2px rgba($color-accent-purple, 0.2);
+            outline: none;
+        }
+    }
+}
+
+
+/* --- Tarjeta Principal Evaluación (.evaluation-card) --- */
+// Refactorizado y Anidado
+.evaluation-card {
+    background-color: lighten($color-primary-blue, 10%); // Usar variable y función
+    border-radius: $border-radius-lg; // Usar variable
+    padding: $spacing-xxxl; // Usar variable
+    // box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08); // Si no está en partial, añadir @include card-shadow;
+    margin-top: $spacing-sm; // Usar variable
+    @include card-shadow; // Aplicar sombra si es una tarjeta destacada
+
+    h2 {
+        // Título de la tarjeta
+        text-align: center;
+        font-size: 1.4em;
+        font-weight: 800;
+        color: $color-accent-purple; // Usar variable
+        margin-top: 0;
+        margin-bottom: $spacing-xxxl; // Usar variable
+        // border-bottom y padding-bottom si es un título con separador
+    }
+
+    /* --- Grid para Inputs (.evaluation-grid) --- */
+    .evaluation-grid {
+        // Contenedor del formulario
+        display: grid;
+        grid-template-columns: 1fr 1fr; // Dos columnas por defecto
+        gap: $spacing-lg $spacing-xxl; // Espacio vertical y horizontal (usar variables)
+        margin-bottom: $spacing-xl; // Usar variable
+
+        .evaluation-column {
+            // Cada columna del grid
+            display: flex;
+            flex-direction: column;
+            gap: $spacing-md; // Espacio entre inputs (usar variable)
+        }
+
+        // Responsive para el grid de inputs
+        @include mobile-only {
+            // En pantallas pequeñas
+            grid-template-columns: 1fr; // Una sola columna
+            gap: $spacing-md; // Menos espacio
+        }
+    }
+
+    /* --- Grupo de Input Estilizado (.input-group) --- */
+    // Si estos estilos son genéricos de formularios, muévelos a un partial (_forms.scss).
+    // Si solo aplican aquí, anidarlos dentro del contenedor relevante (ej. .evaluation-grid o .evaluation-card).
+    // Asumimos que se quedan aquí y se aplican dentro del formulario.
+    .input-group {
+        position: relative; // Para iconos
+
+        label {
+            display: flex;
+            align-items: center;
+            gap: $spacing-sm; // Usar variable
+            font-weight: 700; // Usar variable
+            font-size: 0.95em; // Usar variable
+            color: $color-text-dark; // Usar variable (o un gris)
+            margin-bottom: $spacing-xs * 1.5; // Usar variable
+        }
+
+        label i {
+            // Iconos dentro de labels
+            font-size: 1.1em; // Usar variable
+            width: 20px; // Usar variable
+            text-align: center;
+            opacity: 0.8;
+            /* Colores específicos - usar variables si están en _variables.scss o definir aquí si son únicos */
+        }
+
+        // Clases de color para iconos si no están en _variables.scss o _utilities.scss
+        .icon-green {
+            color: $color-accent-green;
+        }
+
+        .icon-blue {
+            color: $color-accent-blue;
+        }
+
+        .icon-red {
+            color: $color-accent-red;
+        }
+
+        .icon-orange {
+            color: $color-accent-orange;
+        }
+
+        .icon-blue-dark {
+            color: darken($color-accent-blue, 10%);
+        }
+
+        .icon-lightblue {
+            color: lighten($color-accent-blue, 15%);
+        }
+
+        .icon-purple {
+            color: $color-accent-purple;
+        }
+
+        .icon-gray {
+            color: $color-text-muted;
+        }
+
+
+        input[type="number"],
+        textarea {
+            width: 100%;
+            padding: $spacing-sm $spacing-md; // Usar variables
+            border: 1px solid $color-border; // Usar variable
+            border-radius: $border-radius-sm; // Usar variable
+            font-size: 1.05em; // Usar variable
+            font-weight: 600;
+            box-sizing: border-box;
+            background-color: lighten($color-border, 5%); // Usar variable y función
+            @include transition-smooth((border-color, box-shadow, background-color)); // Usar mixin
+
+            &:focus {
+                border-color: $color-accent-purple; // Usar variable
+                box-shadow: 0 0 0 3px rgba($color-accent-purple, 0.2);
+                outline: none;
+                background-color: $color-panel-bg; // Usar variable
+            }
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        // Usar variable
+    }
+
+    /* --- Sección de Balance (.balance-checks) --- */
+    .balance-checks {
+        // Contenedor de checks de balance
+        display: flex;
+        justify-content: space-around;
+        background-color: lighten($color-border, 5%); // Usar variable y función
+        padding: $spacing-sm; // Usar variable
+        border-radius: $border-radius-sm; // Usar variable
+        margin-bottom: $spacing-xxxl; // Usar variable
+        border: 1px solid $color-border; // Usar variable
+        font-size: 0.9em; // Usar variable
+
+        .balance-item {
+            // Cada línea de balance (descuadre)
+            color: $color-text-muted; // Usar variable
+
+            span {
+                font-weight: 700;
+                margin-left: $spacing-xs;
+            }
+
+            // Usar variable
+            span.balanced {
+                color: $color-accent-green;
+            }
+
+            // Usar variable
+            span.unbalanced {
+                color: $color-accent-red;
+            }
+
+            // Usar variable
+            i {
+                margin-left: $spacing-xs;
+            }
+
+            // Icono de check
+        }
+
+        // Responsive para los checks de balance
+        @include mobile-only {
+            flex-direction: column; // Apilar items
+            gap: $spacing-xs; // Menos espacio
+            padding: $spacing-sm; // Ajustar padding
+        }
+    }
+
+
+    /* --- Área de Gráficos (.chart-area) --- */
+    .chart-area {
+        // Contenedor principal de gráficos
+        display: grid;
+        grid-template-columns: 1fr 1fr; // Dos columnas por defecto
+        gap: $spacing-xxxl; // Espacio (usar variable)
+        align-items: center; // Centrar verticalmente
+        margin-bottom: $spacing-xxxl; // Usar variable
+
+        .chart-container {
+            // Contenedor de un gráfico individual
+            text-align: center;
+            position: relative; // Para la hucha si aplica
+
+            h3 {
+                // Título del gráfico
+                font-size: $base-font-size; // Usar variable
+                color: $color-text-dark; // Usar variable
+                margin-bottom: $spacing-sm; // Usar variable
+                font-weight: 700;
+            }
+
+            canvas {
+                // El elemento canvas del gráfico
+                max-width: 100%;
+                height: auto;
+                max-height: 220px; // Límite altura (usar variable)
+            }
+        }
+
+        // Estilo específico para el primer contenedor de gráfico (si es el gráfico principal)
+        #chartArea .chart-container:first-child {
+            // Usar el ID si es necesario, o solo .chart-container:first-child
+            grid-column: 1 / -1; // Ocupa todas las columnas
+            max-width: 400px; // Ancho máximo (usar variable)
+            margin: 0 auto; // Centrar
+        }
+
+        // Estilo para la imagen de la hucha sobre el gráfico (si aplica)
+        .chart-piggy {
+            position: absolute;
+            bottom: 40%; // Ajustar posición (usar variable o %)
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40px; // Usar variable
+            height: auto;
+            opacity: 0.7;
+        }
+
+        // Responsive para el área de gráficos
+        @include mobile-only {
+            // En pantallas pequeñas
+            grid-template-columns: 1fr; // Una sola columna (apilar gráficos)
+            gap: $spacing-xl; // Menos espacio
+        }
+    }
+
+
+    /* --- Área de Notas (.notes-area) --- */
+    .notes-area {
+        // Contenedor del textarea de notas
+        margin-bottom: $spacing-lg; // Usar variable
+        // input-group dentro de aquí usará estilos definidos arriba
+    }
+
+
+    /* --- Sección Botón Guardar (.action-section) --- */
+    .action-section {
+        // Contenedor del botón de acción
+        text-align: center;
+        margin-top: $spacing-md; // Usar variable
+
+        // El botón .btn-save usará estilos de _buttons.scss
+        .btn-save {
+            // Si tiene estilos específicos no genéricos de _buttons.scss
+            background-color: $color-accent-orange; // Color específico (usar variable)
+            font-size: 1.1em; // Usar variable
+            padding: $spacing-md $spacing-xxxxl; // Usar variables
+
+            // @include transition-smooth; // Si tiene transición específica
+            &:hover {
+                background-color: darken($color-accent-orange, 10%);
+            }
+
+            // Usar función
+        }
+    }
+}
+    

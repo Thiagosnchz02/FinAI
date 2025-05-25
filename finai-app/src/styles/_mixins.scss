@@ -1,0 +1,54 @@
+// src/styles/_mixins.scss
+
+// Mixins para Media Queries
+// Uso: @include mobile-only { ... estilos ... }
+@mixin mobile-only {
+  @media (max-width: ($breakpoint-sm - 1px)) { @content; }
+}
+
+@mixin sm-up {
+  @media (min-width: $breakpoint-sm) { @content; }
+}
+
+@mixin md-up {
+  @media (min-width: $breakpoint-md) { @content; }
+}
+
+@mixin lg-up {
+  @media (min-width: $breakpoint-lg) { @content; }
+}
+
+@mixin xl-up {
+  @media (min-width: $breakpoint-xl) { @content; }
+}
+
+// Otros Mixins Comunes
+@mixin flex-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+@mixin card-shadow {
+  box-shadow: $box-shadow-md;
+  transition: box-shadow $transition-speed-normal $transition-ease;
+  &:hover { box-shadow: $box-shadow-lg; }
+}
+
+@mixin subtle-border-bottom {
+  border-bottom: 1px solid $color-border;
+}
+
+@mixin pill-shape {
+  border-radius: $border-radius-pill;
+}
+
+@mixin transition-smooth($property: all) {
+  transition: $property $transition-speed-normal $transition-ease;
+}
+
+@mixin text-ellipsis {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

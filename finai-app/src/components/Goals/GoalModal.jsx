@@ -1,39 +1,67 @@
 import React, { useState, useEffect } from 'react';
+import { formatCurrency } from '../../utils/formatters.js'; // Importar para tooltips
+import { PREDEFINED_ICONS } from '../../utils/iconConstants.js';
+
 
 function GoalModal({ isOpen, onClose, onSubmit, mode, initialData, accounts = [], isSaving, error }) {
-  const [formData, setFormData] = useState({
-    name: '', target_amount: '', current_amount: '0.00', target_date: '',
-    icon: '', related_account_id: '', notes: ''
-  });
+  const defaultFormData = {
+        name: '', target_amount: '', current_amount: '0.00', target_date: '',
+        icon: '', related_account_id: '', notes: ''
+    };
+  const [formData, setFormData] = useState(defaultFormData);
   const [localError, setLocalError] = useState('');
 
   useEffect(() => {
-    setLocalError(error);
-    if (isOpen) {
-      if (mode === 'edit' && initialData) {
-        setFormData({
-          name: initialData.name || '',
-          target_amount: initialData.target_amount || '',
-          // current_amount NO es editable en modo 'edit' aquí
-          current_amount: initialData.current_amount || '0.00',
-          target_date: initialData.target_date ? initialData.target_date.split('T')[0] : '',
-          icon: initialData.icon || '',
-          related_account_id: initialData.related_account_id || '',
-          notes: initialData.notes || ''
-        });
-      } else { // add
-        setFormData({ name: '', target_amount: '', current_amount: '0.00', target_date: '', icon: '', related_account_id: '', notes: '' });
-      }
-    } else {
-        setLocalError('');
-    }
-  }, [isOpen, mode, initialData, error]);
+        setLocalError(error || ''); // Mostrar error del padre si existe
+        if (isOpen) {
+            // --- LÓGICA DE INICIALIZACIÓN MODIFICADA ---
+            if (mode === 'edit' && initialData) {
+                // Modo EDITAR: Cargar datos de la meta existente
+                setFormData({
+                    name: initialData.name || '',
+                    target_amount: initialData.target_amount || '',
+                    current_amount: initialData.current_amount || '0.00', // No editable aquí
+                    target_date: initialData.target_date ? initialData.target_date.split('T')[0] : '',
+                    icon: initialData.icon || '',
+                    related_account_id: initialData.related_account_id || '',
+                    notes: initialData.notes || ''
+                });
+            } else if (mode === 'add' && initialData) {
+                // Modo AÑADIR, PERO CON DATOS INICIALES (ej. desde un viaje)
+                console.log("GoalModal: Modo 'add' con initialData:", initialData);
+                setFormData({
+                    name: initialData.name || '', // Usar nombre del viaje
+                    target_amount: initialData.target_amount || '', // Usar presupuesto del viaje
+                    current_amount: initialData.current_amount || '0.00', // Podría ser 0 o un valor pasado
+                    target_date: initialData.target_date ? initialData.target_date.split('T')[0] : '', // Usar fecha inicio del viaje
+                    icon: initialData.icon || 'fas fa-flag-checkered', // Icono por defecto para meta de viaje
+                    related_account_id: initialData.related_account_id || '', // Cuenta asociada si viene
+                    notes: initialData.notes || `Meta para el viaje: ${initialData.name || ''}` // Nota por defecto
+                });
+            } else { 
+                // Modo AÑADIR normal (sin datos iniciales) o si initialData es null
+                setFormData(defaultFormData); // Resetear a valores por defecto
+            }
+            // --- FIN LÓGICA DE INICIALIZACIÓN ---
+        } else {
+            setLocalError(''); // Limpiar al cerrar
+        }
+    }, [isOpen, mode, initialData, error]); // Dependencias correctas
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
     if (localError) setLocalError('');
   };
+
+  // --- NUEVO: Manejador para cuando se selecciona un icono de la lista ---
+    const handleIconSelect = (iconClassName) => {
+        setFormData(prevData => ({
+            ...prevData,
+            icon: iconClassName, // Actualiza el campo 'icon' en formData
+        }));
+        if (localError) setLocalError('');
+    };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -51,6 +79,7 @@ function GoalModal({ isOpen, onClose, onSubmit, mode, initialData, accounts = []
   };
 
   if (!isOpen) return null;
+  const isDisabled = isSaving;
 
   return (
     <div className="modal-overlay active" style={{ display: 'flex' }} onClick={(e) => { if (e.target === e.currentTarget && !isSaving) onClose(); }}>
@@ -75,8 +104,52 @@ function GoalModal({ isOpen, onClose, onSubmit, mode, initialData, accounts = []
             )}
 
           <div className="input-group"> <label htmlFor="goalTargetDateM">Fecha Objetivo</label> <input type="date" id="goalTargetDateM" name="target_date" value={formData.target_date} onChange={handleChange} disabled={isSaving}/> </div>
-          <div className="input-group"> <label htmlFor="goalIconM">Icono (Font Awesome)</label> <input type="text" id="goalIconM" name="icon" placeholder="Ej: fas fa-plane-departure" value={formData.icon} onChange={handleChange} disabled={isSaving}/> <small>Busca en <a href="https://fontawesome.com/search?m=free&s=solid" target="_blank" rel="noopener noreferrer">Font Awesome</a>.</small> </div>
-          <div className="input-group"> <label htmlFor="goalAccountM">Cuenta Asociada</label> <select id="goalAccountM" name="related_account_id" value={formData.related_account_id} onChange={handleChange} disabled={isSaving}><option value="">(Ninguna)</option>{accounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}</select> <small>Dónde guardas el dinero.</small> </div>
+          <div className="input-group">
+            <label htmlFor="goalIconM">Icono</label>
+              <div className="icon-selector-container"> {/* Usa la misma clase que en CategoryModal */}
+                {PREDEFINED_ICONS.map(iconObj => ( // Renombrado a iconObj para claridad
+                  <button
+                    type="button"
+                    key={iconObj.className}
+                    className={`icon-selector-btn ${formData.icon === iconObj.className ? 'selected' : ''}`}
+                    title={iconObj.name} // Mostrar el nombre del icono en el hover
+                    onClick={() => handleIconSelect(iconObj.className)}
+                    disabled={isDisabled}
+                  >
+                    <i className={iconObj.className}></i>
+                  </button>
+                ))}
+              </div>
+                <input 
+                type="text" 
+                id="goalIconM" 
+                name="icon" // El name debe ser 'icon' para que handleChange lo actualice
+                placeholder="O pega una clase Font Awesome (ej: fas fa-piggy-bank)" 
+                value={formData.icon} 
+                onChange={handleChange} 
+                disabled={isDisabled}
+                style={{marginTop: '10px'}}
+              />
+              <small>Selecciona un icono de la lista o introduce una clase de <a href="https://fontawesome.com/search?m=free&s=solid" target="_blank" rel="noopener noreferrer">Font Awesome (Solid)</a>.</small>
+            </div>
+          <div className="input-group">
+            <label htmlFor="goalAccountM">Cuenta Asociada</label>
+            <select 
+              id="goalAccountM" 
+              name="related_account_id" 
+              value={formData.related_account_id} 
+              onChange={handleChange} 
+              disabled={isSaving}
+            >
+            <option value="">(Ninguna - Meta abstracta)</option>
+              {accounts.map(a => ( // Asumiendo que 'accounts' es la lista de cuentas activas
+                <option key={a.id} value={a.id}>{a.name}</option>
+              ))}
+            </select>
+            <small className="input-field-description">
+              Si vinculas una cuenta, tus ahorros para esta meta se reflejarán en ella y se registrarán como transferencias.
+            </small>
+          </div>
           <div className="input-group"> <label htmlFor="goalNotesM">Notas</label> <textarea id="goalNotesM" name="notes" rows={2} value={formData.notes} onChange={handleChange} disabled={isSaving}></textarea> </div>
 
           {(localError || error) && <p className="error-message">{localError || error}</p>}
