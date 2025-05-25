@@ -1,0 +1,106 @@
+La URL de tu repositorio (algo como https://github.com/tu-usuario/FinAI-App.git) es la que usaremos.
+Inicializar Git en tu Proyecto Local (en tu terminal, dentro de la carpeta de tu proyecto):
+
+Bash
+
+git init
+Esto crea un subdirectorio oculto .git que rastrea tus cambios.
+Añadir tus Archivos al "Área de Preparación" (Staging Area):
+
+Para añadir todos los archivos y carpetas del proyecto:
+Bash
+
+git add .
+Para añadir un archivo específico:
+Bash
+
+git add nombre_del_archivo.py
+El "Staging Area" es como una caja donde pones los cambios que quieres guardar juntos.
+Confirmar los Cambios (Commit):
+
+Guarda los archivos del Staging Area en tu repositorio local con un mensaje descriptivo.
+Bash
+
+git commit -m "Commit inicial: Estructura del proyecto FinAI"
+Consejo: Los mensajes de commit deben ser claros y describir qué cambios hiciste.
+Conectar tu Repositorio Local con el Repositorio Remoto en GitHub:
+
+Reemplaza <URL_DEL_REPOSITORIO_EN_GITHUB> con la URL que copiaste del paso B1.
+Bash
+
+git remote add origin <URL_DEL_REPOSITORIO_EN_GITHUB>
+origin es el nombre estándar para tu repositorio remoto principal.
+(Opcional pero recomendado) Verificar la Conexión Remota:
+
+Bash
+
+git remote -v
+Deberías ver las URLs de Workspace y push para origin.
+Cambiar el Nombre de la Rama Principal a main (Práctica Moderna):
+
+Git a veces crea la rama por defecto como master. La convención actual es main.
+Bash
+
+git branch -M main
+Subir tus Cambios (Push) al Repositorio Remoto en GitHub:
+
+La primera vez que subes (push) a una nueva rama remota, usas -u para establecer la conexión de seguimiento.
+Bash
+
+git push -u origin main
+Te pedirá tus credenciales de GitHub (usuario y contraseña, o un token de acceso personal si tienes 2FA activado).
+¡Listo! Tus archivos ahora están en GitHub.
+
+C. Escenario 2: Ya Tienes un Proyecto Conectado y Quieres Subir NUEVOS Cambios
+Esto es para el día a día, cuando haces modificaciones y quieres actualizarlas en GitHub.
+
+(Muy Recomendado si Colaboras) Actualizar tu Repositorio Local:
+
+Antes de subir tus cambios, trae los cambios que tus amigos hayan podido subir al repositorio remoto.
+Bash
+
+git pull origin master
+Esto ayuda a evitar conflictos. Si hay conflictos, Git te lo dirá y tendrás que resolverlos antes de continuar.
+Verificar el Estado de tus Archivos:
+
+Muestra qué archivos han sido modificados, cuáles están en el Staging Area, etc.
+Bash
+
+git status
+Añadir los Archivos Modificados o Nuevos al Staging Area:
+
+Igual que en el escenario B, paso 3.
+Bash
+
+git add .  # Para todos los cambios
+o
+Bash
+
+git add nombre_del_archivo_modificado.js
+Confirmar los Cambios (Commit):
+
+Guarda tus cambios en el repositorio local con un mensaje descriptivo.
+Bash
+
+git commit -m "Añadida función de cálculo de saldo en el agente"
+Subir tus Cambios (Push) al Repositorio Remoto:
+
+Como ya estableciste la conexión de seguimiento la primera vez, ahora es más simple:
+Bash
+
+git push
+Si estás en una rama diferente a main y quieres subir a la rama remota con el mismo nombre: git push origin nombre_de_tu_rama
+
+D. Comandos Útiles Adicionales
+Ver el Historial de Commits:
+Bash
+
+git log
+Presiona q para salir de la vista del log.
+Clonar un Repositorio Existente (Para tus Amigos al Empezar):
+Si tus amigos necesitan descargar el proyecto por primera vez desde GitHub:
+Bash
+
+git clone <URL_DEL_REPOSITORIO_EN_GITHUB>
+Esto crea una copia local del proyecto y ya configura la conexión remota (origin).
+
