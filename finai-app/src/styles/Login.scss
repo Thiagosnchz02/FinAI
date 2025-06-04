@@ -129,6 +129,96 @@ body {
     // .forgot-password { ... } // Se estiliza más abajo si es específico
 }
 
+.hidden-panel {
+  display: none !important; // O la forma que uses para ocultar
+}
+
+// Estilos para los botones de cambio de método de login
+.btn.switch-to-phone,
+.btn.switch-to-email {
+  margin-top: $spacing-md;
+  background-color: transparent;
+  border: 1px solid currentColor; // O usa una variable de borde
+  padding: $spacing-xs $spacing-sm;
+  font-size: 0.9em;
+  width: 100%; // Para que ocupen el ancho del panel
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: $spacing-xs;
+
+  // Ajusta colores según el panel
+  .sign-in-panel & { // Botón dentro de sign-in para ir a teléfono
+    color: $color-text-light; // Si el panel de sign-in tiene fondo oscuro
+    &:hover {
+      background-color: rgba($color-text-light, 0.1);
+    }
+  }
+  .phone-login-panel & { // Botón dentro de phone-login para ir a email
+    color: $color-text-dark; // O el color de texto de tu panel de teléfono
+    &:hover {
+      background-color: rgba($color-text-dark, 0.05);
+    }
+  }
+}
+
+
+.phone-login-panel {
+  // Estilos específicos si el panel de teléfono necesita ser diferente
+  // background-color: lighten($color-panel-bg, 5%); // Ejemplo
+
+  h2 {
+    color: $color-accent-blue; // O el color que prefieras para este título
+  }
+
+  .otp-sent-info {
+    margin-bottom: $spacing-md;
+    font-size: 0.9em;
+    color: $color-text-muted;
+    text-align: center;
+    strong {
+      color: $color-text-dark;
+    }
+  }
+
+  // Estilos para el contenedor de PhoneInput si necesitas ajustarlo
+  .phone-input-container-login {
+    .PhoneInputInput { // El input de react-phone-number-input
+      // Hereda estilos de input[type="tel"] o puedes especificarlos
+      padding: $spacing-sm $spacing-md;
+      border: 1px solid $color-border;
+      border-radius: $border-radius-md;
+      font-size: $base-font-size;
+      width: 100%; // Importante
+      background-color: $color-panel-bg;
+      @include transition-smooth((border-color, box-shadow, background-color));
+
+      &:focus {
+        outline: none;
+        border-color: $color-accent-orange;
+        box-shadow: 0 0 0 3px rgba($color-accent-orange, 0.2);
+        background-color: $color-panel-bg;
+      }
+    }
+    // Puedes estilizar el .PhoneInputCountrySelect si es necesario
+  }
+
+  input[type="text"] { // Para el campo OTP
+    // Hereda estilos o añade específicos
+    text-align: center;
+    font-size: 1.2em; // Hacer el OTP un poco más grande
+    letter-spacing: 0.5em; // Espaciar los números
+    &::placeholder {
+        letter-spacing: normal;
+    }
+  }
+
+  .btn.full-width-btn { // Para los botones de "Enviar Código" y "Verificar"
+    width: 100%;
+    margin-top: $spacing-sm; // Espacio si el input-group no tiene suficiente margen inferior
+  }
+}
+
 .sign-up-panel {
     // Panel de Sign Up
     background-color: $color-content-bg; // Usar variable (Crema / Naranja pálido) - O #FFF3E0 si es específico
@@ -150,9 +240,23 @@ body {
         }
     }
 
-    // Estilos específicos de botones dentro de este panel (usarán estilos base de _buttons.scss)
-    // .btn-secondary { ... } // Se usa la clase genérica en _buttons.scss
-    // .btn-google { ... } // Se usa la clase genérica en _buttons.scss
+    .phone-input-container-login { // Reutiliza la clase o crea una nueva
+        .PhoneInputInput {
+            padding: $spacing-sm $spacing-md;
+            border: 1px solid $color-border;
+            border-radius: $border-radius-md;
+            font-size: $base-font-size;
+            width: 100%;
+            background-color: $color-panel-bg;
+            &:focus {
+                outline: none;
+                border-color: $color-accent-orange;
+                box-shadow: 0 0 0 3px rgba($color-accent-orange, 0.2);
+            }
+        }
+    }
+
+    
 }
 
 

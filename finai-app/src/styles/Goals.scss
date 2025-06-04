@@ -21,6 +21,72 @@
     }
 }
 
+.custom-toast-container.archive-suggestion-toast {
+  // Hereda estilos de .custom-toast-container si existe, o define aquí:
+  background-color: $color-panel-bg; // O un color específico
+  color: $color-text-dark;
+  border-radius: $border-radius-md;
+  box-shadow: $box-shadow-lg;
+  padding: $spacing-md $spacing-lg;
+  max-width: 400px; // Ajusta el ancho
+  display: flex;
+  align-items: flex-start; // Alinear icono y contenido
+  gap: $spacing-md;
+  position: relative; // Para el botón de cierre absoluto
+
+  .toast-icon {
+    font-size: 1.8em; // Tamaño del icono de celebración 🎉
+    color: $color-accent-yellow; // O el color que prefieras
+    line-height: 1; // Alinear bien el emoji
+  }
+
+  .toast-content {
+    flex-grow: 1;
+    p {
+      margin: 0;
+      line-height: 1.4;
+    }
+    .toast-title {
+      font-weight: 600;
+      font-size: 1.05em;
+      margin-bottom: $spacing-xs / 2;
+    }
+    .toast-body {
+      font-size: 0.9em;
+      color: $color-text-muted;
+      margin-bottom: $spacing-md;
+    }
+  }
+
+  .toast-actions.horizontal { // Para que los botones estén en fila
+    display: flex;
+    gap: $spacing-sm;
+    justify-content: flex-end; // O center
+    margin-top: $spacing-sm; // Espacio si el texto es largo
+    width: 100%;
+    //.btn {
+      // Heredan de .btn, .btn-sm
+      // Puedes añadir más especificidad si es necesario
+      // &.green-btn { background-color: $color-accent-green; }
+    //}
+  }
+  
+  .toast-close-btn.minimal { // Botón de cierre del toast
+    position: absolute;
+    top: $spacing-xs;
+    right: $spacing-xs;
+    background: none;
+    border: none;
+    color: $color-text-muted;
+    font-size: 1em;
+    padding: $spacing-xs / 2;
+    cursor: pointer;
+    &:hover {
+      color: $color-text-dark;
+    }
+  }
+}
+
 /* --- Tarjeta de Meta (.goal-card) --- */
 // Refactorizado y Anidado
 .goal-card {
@@ -42,6 +108,32 @@
         // border-color: $color-accent-orange;
     }
 
+    &.is-archived {
+    opacity: 0.65;
+    background-color: lighten($color-border, 5%); // Un fondo grisáceo muy claro
+    border-left-color: $color-text-muted; // Borde izquierdo gris
+
+    .card-header .goal-name,
+    .card-body .label,
+    .card-body .amount {
+      color: darken($color-text-muted, 10%); // Opcional: hacer el texto más tenue
+    }
+
+    .progress-bar-container .progress-bar {
+      background-color: $color-text-muted !important; // Forzar color gris en la barra
+    }
+    
+    &:hover {
+      opacity: 0.8; // Un poco menos de opacidad al hacer hover
+      // transform: none; // Quizás no quieres el efecto de elevación
+      // box-shadow: $box-shadow-sm; // Sombra más sutil
+    }
+    // Ocultar botones que no aplican a archivadas
+    .btn-add-savings, .btn-edit, .btn-archive-goal {
+        display: none !important;
+    }
+  }
+
 
     .card-header {
         // Encabezado de la tarjeta
@@ -50,6 +142,14 @@
         gap: $spacing-md; // Usar variable
         margin-bottom: $spacing-md; // Usar variable
         // Si tiene separador: border-bottom: 1px solid $color-border; padding-bottom: $spacing-sm;
+
+
+        .goal-archived-badge {
+            font-size: 1.3em; // Similar al de completado o un poco diferente
+            color: $color-text-muted; // Color gris
+            margin-left: $spacing-sm;
+            // animation: none; // Si no quieres animación para este
+        }
     }
 
     .goal-icon {
@@ -244,6 +344,13 @@
         padding-top: $spacing-md; // Usar variable
         border-top: 1px solid $color-border; // Usar variable
 
+        .btn-view-history {
+            color: $color-accent-blue; 
+            &:hover {
+            color: darken($color-accent-blue, 10%);
+            }
+        }
+
         .btn-icon {
             // Botones icono dentro de acciones (usarán estilos de _buttons.scss)
             font-size: 1.1em; // Usar variable
@@ -356,6 +463,70 @@
     }
 }
 
+
+.view-controls-bar.goals-controls { // Clase específica para los controles de metas
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between; // Para que el toggle de archivadas se vaya a la derecha
+  align-items: center;
+  padding: $spacing-sm $spacing-md;
+  margin-bottom: $spacing-lg;
+  // background-color: lighten($color-panel-bg, 2%); // Opcional
+  // border-radius: $border-radius-md;
+  // box-shadow: $box-shadow-sm;
+  gap: $spacing-lg; // Espacio entre los grupos de control
+
+  .filter-control,
+  .sort-control {
+    display: flex;
+    align-items: center;
+    gap: $spacing-sm;
+    
+    label {
+      font-weight: 500;
+      font-size: 0.9em;
+      color: $color-text-muted;
+      white-space: nowrap;
+    }
+
+    select {
+      padding: $spacing-xs $spacing-sm;
+      border: 1px solid $color-border;
+      border-radius: $border-radius-sm;
+      background-color: $color-panel-bg;
+      font-size: 0.9em;
+      min-width: 180px; // Ajusta
+      cursor: pointer;
+
+      &:focus {
+        border-color: $color-accent-purple;
+        box-shadow: 0 0 0 2px rgba($color-accent-purple, 0.2);
+        outline: none;
+      }
+      &:disabled {
+        background-color: lighten($color-border, 5%);
+        cursor: not-allowed;
+      }
+    }
+  }
+  
+  // El botón de archivar ya tiene .btn .btn-secondary .btn-sm
+
+  @include mobile-only {
+    flex-direction: column;
+    align-items: stretch;
+    .filter-control,
+    .sort-control {
+      justify-content: space-between;
+      margin-bottom: $spacing-sm;
+      select {
+        flex-grow: 1;
+        min-width: 0;
+      }
+    }
+    // El botón de archivar ya debería ser full-width por .btn en móvil si lo tienes así
+  }
+}
 
 // Estilos para el Modal Añadir Ahorro (#addSavingsForm)
 // Si estos estilos son genéricos de modales, muévelos a _modals.scss.

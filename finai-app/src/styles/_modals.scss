@@ -122,6 +122,165 @@
     }
 }
 
+.modal-content.goal-history-modal-content { // Clase específica para este modal
+  // Puedes heredar de .modal-content.small o definir su tamaño aquí
+  // max-width: 550px; // Un poco más ancho si la tabla tiene varias columnas
+
+  h2 { // Título principal del modal
+    text-align: center;
+    margin-bottom: $spacing-xs / 2; // Menos espacio si hay subtítulo
+  }
+
+  .goal-name-header { // Subtítulo con el nombre de la meta
+    text-align: center;
+    font-size: 1.1em;
+    font-weight: 600;
+    color: $color-primary-blue; // O tu color de acento
+    margin-top: 0;
+    margin-bottom: $spacing-lg;
+  }
+
+  .history-summary-total {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: $spacing-sm $spacing-xs; // Padding similar al de las celdas de la tabla
+    margin-top: $spacing-sm; // Espacio si la tabla no tiene margin-bottom
+    border-top: 2px solid $color-border; // Una línea separadora más gruesa
+    font-weight: 600; // Hacer el texto un poco más prominente
+    font-size: 0.9em;
+
+    .total-amount {
+      font-size: 1.1em; // Hacer el monto un poco más grande
+      color: $color-accent-green; // O el color que uses para los montos positivos
+    }
+  }
+
+  .transaction-history-list {
+    max-height: 350px; // Altura máxima antes de que aparezca el scroll
+    overflow-y: auto;
+    margin-bottom: $spacing-lg;
+    border: 1px solid $color-text-light;
+    border-radius: $border-radius-sm;
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85em; // Texto un poco más pequeño para la tabla
+
+      th, td {
+        text-align: left;
+        padding: $spacing-sm $spacing-xs; // Ajusta padding
+        border-bottom: 1px solid $color-text-light; // Separador de fila más sutil
+
+        &:last-child { // Última columna (importe)
+          text-align: right;
+        }
+      }
+      th {
+        font-weight: 600;
+        background-color: lighten($color-panel-bg, 3%); // Fondo ligero para encabezados
+        position: sticky; // Para que los encabezados se queden fijos al hacer scroll
+        top: 0;
+        z-index: 1; // Para que esté sobre el contenido de la tabla al hacer scroll
+      }
+      td {
+        small { // Para las notas de la transacción
+          display: block;
+          color: $color-text-muted;
+          font-size: 0.9em;
+          margin-top: 2px;
+        }
+        // El color del importe ya se aplica inline
+      }
+      tbody tr:hover {
+        background-color: lighten($color-primary-blue, 15%); // Efecto hover en filas
+      }
+    }
+  }
+
+  .loading-message, .empty-message, .error-message {
+    text-align: center;
+    padding: $spacing-xl 0;
+    color: $color-text-muted;
+    font-style: italic;
+    i { margin-right: $spacing-xs; }
+  }
+  .error-message {
+      color: $color-accent-red;
+      font-style: normal;
+  }
+
+}
+
+.modal-content.phone-verification-modal-content {
+  // Puedes heredar de .modal-content.small o definir tamaño
+  // max-width: 480px;
+  
+
+  h2 {
+    text-align: center;
+    margin-bottom: $spacing-md;
+  }
+
+  .modal-intro-text {
+    font-size: 0.95em;
+    color: $color-text-muted;
+    margin-bottom: $spacing-lg;
+    line-height: 1.5;
+    text-align: center;
+    strong {
+      color: $color-text-dark;
+      font-weight: 600;
+    }
+  }
+
+  .input-group {
+    margin-bottom: $spacing-lg;
+    //label {
+      // tus estilos de label
+    //}
+    // Estilos para PhoneInput dentro del modal
+    .phone-input-container-modal {
+      .PhoneInputInput {
+        padding: $spacing-sm $spacing-md;
+        border: 1px solid $color-border;
+        border-radius: $border-radius-sm;
+        font-size: 1em; // Ajusta si es necesario
+        width: 100%;
+        &:focus {
+          border-color: $color-accent-purple;
+          box-shadow: 0 0 0 2px rgba($color-accent-purple, 0.2);
+          outline: none;
+        }
+      }
+    }
+    .otp-input { // Estilo para el input del OTP
+      //@extend input[type="text"]; // Heredar estilos de input de texto si los tienes definidos globalmente
+      // O define aquí:
+      // padding: $spacing-sm $spacing-md;
+      // border: 1px solid $color-border;
+      // border-radius: $border-radius-sm;
+      // font-size: 1.2em;
+      // width: 100%;
+      text-align: center;
+      letter-spacing: 0.3em; // Espaciar los dígitos del OTP
+      font-size: 1.3em;
+      &::placeholder {
+        letter-spacing: normal;
+        color: $color-text-dark;
+      }
+    }
+  }
+
+  .modal-actions {
+    // Tus estilos para .modal-actions (ej. display: flex, justify-content: flex-end, gap)
+    // Si quieres un botón de "Cambiar número / Reenviar" a la izquierda y el principal a la derecha:
+     justify-content: space-between;
+     .btn-link { margin-right: auto; } // Empuja el link a la izquierda
+  }
+}
+
 .modal-content.trip-summary-modal-content {
   width: 90%;
   max-width: 650px; // Un poco más ancho para el gráfico y detalles
